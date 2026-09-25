@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tweetober 5</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pirata+One&family=DotGothic16&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+  /* Single look, by design: the stone keep at night. Colors come from the crest and the invitation. */
+  :root {
+    --bg: #211c14;
+    --surface: rgba(58,46,34,.78);
+    --surface-2: rgba(30,24,18,.72);
+    --surface-solid: #3a2e22;
+    --line: rgba(217,178,74,.28);
+    --line-strong: rgba(217,178,74,.6);
+    --ink: #F1E3B6;
+    --ink-2: #D9B24A;
+    --ink-3: #A08A5C;
+    --gold: #D9B24A;
+    --gold-bright: #F2D272;
+    --gold-deep: #9C7A2A;
+    --gold-glow: rgba(217,178,74,.25);
+    --purple: #2C1A3D;
+    --h333: #E6E4E0;
+    --h333-soft: rgba(230,228,224,.14);
+    --h500: #F26F96;
+    --h500-soft: rgba(242,111,150,.16);
+    --shadow: 0 14px 40px rgba(0,0,0,.55);
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    /* dark-brown veil at 70% over the stone tile: same pattern, dimmed */
+    background-color: var(--bg);
+    background-image: linear-gradient(rgba(20, 14, 8, .7), rgba(20, 14, 8, .7)), url("assets/stone.jpg");
+    background-repeat: no-repeat, repeat;
+    background-size: 100% 100%, 900px 900px;
+    background-position: 0 0, center top;
+    background-attachment: scroll;
+    color: var(--ink);
+    font-family: "DotGothic16", "IBM Plex Mono", "Courier New", monospace;
+    font-size: 19px;
+    line-height: 1.6;
+    letter-spacing: .045em;
+    word-spacing: .06em;
+    padding-inline: 16px;
+    padding-block: 0 72px;
+  }
+  a { color: var(--gold); }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 3px; }
+  img { max-width: 100%; }
+
+  .wrap { max-width: 1100px; margin-inline: auto; display: grid; gap: 56px; }
+
+  /* ---------- Type ---------- */
+  .heading { font-family: "Pirata One", "DotGothic16", serif; font-weight: 400; letter-spacing: .03em; text-wrap: balance;
+             color: var(--gold); text-shadow: 0 2px 0 rgba(0,0,0,.6), 0 0 18px rgba(217,178,74,.25); }
+  .eyebrow { font-family: "DotGothic16", "IBM Plex Mono", monospace; font-weight: 400; font-size: .85rem; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); }
+  .num { font-variant-numeric: tabular-nums; }
+  .muted { color: var(--ink-3); }
+  .display { font-family: "Pirata One", serif; font-weight: 400; }
+
+  /* ---------- Banner ---------- */
+  .banner { text-align: center; padding-block: 48px 8px; display: grid; gap: 16px; justify-items: center; }
+  .banner-img { width: min(100%, 880px); height: auto; filter: drop-shadow(0 6px 14px rgba(0,0,0,.7)); }
+  .banner h1 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); margin: 0; }
+  .banner .sub { font-size: 1rem; max-width: 46ch; color: var(--ink); margin: 0; }
+  .rule { display: flex; align-items: center; gap: 12px; color: var(--gold); font-size: .85rem; letter-spacing: .3em; }
+  .rule::before, .rule::after { content: ""; height: 1px; width: 90px; background: linear-gradient(90deg, transparent, var(--gold)); }
+  .rule::after { background: linear-gradient(90deg, var(--gold), transparent); }
+  .nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 22px; margin-top: 4px; }
+  .nav a { font-size: .9rem; letter-spacing: .1em; text-transform: uppercase; text-decoration: none; color: var(--ink-2); border-bottom: 1px solid transparent; padding-block: 4px; }
+  .nav a:hover { color: var(--gold-bright); border-bottom-color: var(--gold-bright); }
+
+  /* ---------- Sections ---------- */
+  section { display: grid; gap: 18px; scroll-margin-top: 24px; }
+  .sec-head { display: grid; gap: 4px; }
+  .sec-head h2 { margin: 0; font-size: clamp(1.9rem, 4vw, 2.6rem); line-height: 1.1; }
+  .sec-head p { margin: 0; color: var(--ink); max-width: 62ch; font-size: .92rem; line-height: 1.5; }
+
+  /* ---------- Panels (shared) ---------- */
+  .cup, .scroll, .house, .ledger, .panel, .decree {
+    background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow);
+    backdrop-filter: blur(2px);
+  }
+  .cup::before, .house::before, .panel::before { content: ""; position: absolute; inset: 6px; border: 1px solid var(--line); pointer-events: none; }
+
+  /* ---------- House Cup tally ---------- */
+  .cup { padding: 26px 24px; display: grid; gap: 18px; position: relative; }
+  .cup-row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; gap: 16px; }
+  .cup-side { display: grid; gap: 2px; }
+  .cup-side.right { text-align: right; }
+  .cup-side .name { font-weight: 700; font-size: 1.05rem; letter-spacing: .04em; }
+  .cup-side .score { font-family: "Pirata One", serif; font-size: clamp(2.4rem, 7vw, 4rem); line-height: 1; text-shadow: 0 2px 0 rgba(0,0,0,.6); }
+  .h333 .score, .h333 .name { color: var(--h333); }
+  .h500 .score, .h500 .name { color: var(--h500); }
+  .vs { font-family: "Pirata One", serif; color: var(--gold); font-size: 1.4rem; padding-bottom: 10px; }
+  .tug { height: 14px; border-radius: 7px; background: var(--surface-2); border: 1px solid var(--line-strong); overflow: hidden; display: flex; }
+  .tug > span { height: 100%; display: block; }
+  .tug .a { background: var(--h333); }
+  .tug .b { background: var(--h500); }
+  .tug .gap { width: 2px; background: var(--surface-solid); }
+  .cup-foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 16px; font-size: .95rem; color: var(--ink-2); }
+  .weeks { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; border-top: 1px solid var(--line); padding-top: 14px; }
+  .wk { display: grid; gap: 3px; text-align: center; padding: 8px 4px; background: var(--surface-2); border: 1px solid var(--line); min-width: 0; }
+  .wk .label { font-size: .7rem; }
+  .wk .dates { font-size: .8rem; color: var(--ink-3); }
+  .wk .pair { display: flex; justify-content: center; gap: 8px; font-weight: 700; font-variant-numeric: tabular-nums; font-size: 1rem; flex-wrap: wrap; }
+  .wk .pair .h333 { color: var(--h333); } .wk .pair .h500 { color: var(--h500); }
+  .wk.won-h333 { border-color: var(--h333); } .wk.won-h500 { border-color: var(--h500); }
+  .wk .crown { font-size: .75rem; color: var(--gold); letter-spacing: .06em; min-height: 1em; }
+  @media (max-width: 760px) { .weeks { grid-template-columns: repeat(auto-fit, minmax(105px, 1fr)); } }
+
+  /* ---------- Scroll of Honor ---------- */
+  .scroll { padding: 22px 24px; display: grid; gap: 10px; }
+  .scroll-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .scroll-head h3 { margin: 0; font-size: 1.7rem; }
+  .board { list-style: none; margin: 0; padding: 0; display: grid; }
+  .board li { display: grid; grid-template-columns: 2.2rem 1fr auto; align-items: center; gap: 12px; padding: 9px 4px; border-bottom: 1px solid var(--line); }
+  .board li:last-child { border-bottom: 0; }
+  .board .rank { font-weight: 700; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+  .board li:nth-child(1) .rank { color: var(--gold-bright); }
+  .board .who { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .board .who a { color: var(--ink); text-decoration: none; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .board .who a:hover { color: var(--gold-bright); }
+  .chip { flex: none; font-size: .7rem; font-weight: 700; letter-spacing: .08em; padding: 2px 7px; border: 1px solid currentColor; }
+  .chip.h333 { color: var(--h333); background: var(--h333-soft); }
+  .chip.h500 { color: var(--h500); background: var(--h500-soft); }
+  .board .pts { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--gold-bright); }
+  .board .bar { grid-column: 2 / 4; height: 4px; background: var(--surface-2); border-radius: 2px; overflow: hidden; }
+  .board .bar > span { display: block; height: 100%; }
+  .board .bar.h333 > span { background: var(--h333); } .board .bar.h500 > span { background: var(--h500); }
+  .empty { color: var(--ink-3); margin: 0; }
+
+  /* ---------- Houses ---------- */
+  .houses { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 22px; }
+  .house { padding: 0 0 22px; display: grid; gap: 18px; position: relative; }
+  .house-top { padding: 24px 22px 18px; display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: center; border-bottom: 1px solid var(--line); }
+  .house.h333 .house-top { background: linear-gradient(180deg, var(--h333-soft), transparent); }
+  .house.h500 .house-top { background: linear-gradient(180deg, var(--h500-soft), transparent); }
+  .emblem { width: 74px; height: 96px; object-fit: cover; border: 2px solid var(--gold); box-shadow: 0 0 0 3px rgba(0,0,0,.4), 0 6px 14px rgba(0,0,0,.5); }
+  .house h3 { margin: 0; font-size: 1.9rem; line-height: 1; }
+  .house.h333 h3 { color: var(--h333); }
+  .house.h500 h3 { color: var(--h500); }
+  .motto { margin: 4px 0 0; color: var(--ink-2); font-size: .95rem; }
+  .leader { margin: 0 22px; display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: center; padding: 10px 14px; border: 1px solid var(--line-strong); background: var(--surface-2); text-decoration: none; color: inherit; }
+  .leader:hover { border-color: var(--gold-bright); }
+  .leader .av { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; border: 2px solid var(--gold); }
+  .h500 .leader .av { border-color: var(--h500); }
+  .h333 .leader .av { border-color: var(--h333); }
+  .leader .who { display: grid; }
+  .leader .who b { font-size: 1.05rem; }
+  .leader .who span { font-size: .85rem; color: var(--ink-2); }
+  .roster { list-style: none; margin: 0; padding: 0 22px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 14px; }
+  .roster li { display: flex; align-items: center; gap: 8px; font-size: 1rem; }
+  .roster li::before { content: ""; width: 6px; height: 6px; transform: rotate(45deg); background: var(--gold); flex: none; }
+  .roster a { color: var(--ink); text-decoration: none; border-bottom: 1px dotted var(--line-strong); }
+  .roster a:hover { color: var(--gold-bright); border-bottom-style: solid; }
+  .count { margin: 0 22px; font-size: .9rem; color: var(--ink-3); }
+
+  /* ---------- Ledger ---------- */
+  .ledger { display: grid; grid-template-columns: 1fr auto; gap: 18px; align-items: center; padding: 24px 26px; border-left: 6px solid var(--gold); }
+  .ledger p { margin: 6px 0 0; color: var(--ink); max-width: 60ch; font-size: .92rem; line-height: 1.5; }
+  .btn { display: inline-flex; align-items: center; gap: 10px; padding: 14px 22px; background: linear-gradient(180deg, var(--gold-bright), var(--gold-deep)); color: #1E160C; text-decoration: none; font-weight: 700; letter-spacing: .08em; font-size: .95rem; text-transform: uppercase; border: 1px solid var(--gold-bright); box-shadow: 0 0 0 4px var(--gold-glow), 0 6px 14px rgba(0,0,0,.5); white-space: nowrap; }
+  .btn:hover { filter: brightness(1.08); }
+  .btn svg { width: 18px; height: 18px; }
+
+  /* ---------- Events ---------- */
+  .events { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+  .event { background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); padding: 18px 20px; display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: start; text-decoration: none; color: inherit; }
+  .event:hover { border-color: var(--gold-bright); }
+  .event .cal { display: grid; text-align: center; border: 1px solid var(--line-strong); background: var(--surface-2); min-width: 58px; padding: 6px 8px; }
+  .event .cal .mo { font-size: .7rem; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); }
+  .event .cal .d { font-family: "Pirata One", serif; font-size: 1.7rem; line-height: 1; color: var(--ink); }
+  .event h3 { margin: 0; font-size: 1.5rem; line-height: 1.05; }
+  .event .when { margin: 4px 0 0; font-size: .9rem; color: var(--ink-2); }
+  .event .note { margin: 6px 0 0; font-size: .95rem; }
+  .event .rsvp { margin-top: 8px; font-size: .85rem; letter-spacing: .1em; text-transform: uppercase; color: var(--gold); }
+  .event.past { opacity: .6; }
+
+  /* ---------- Decree ---------- */
+  .decree { padding: 28px 26px; display: grid; grid-template-columns: auto 1fr; gap: 26px; align-items: center; }
+  .decree img { width: 150px; height: auto; filter: drop-shadow(0 6px 12px rgba(0,0,0,.6)); }
+  .decree p { margin: 0 0 10px; max-width: 64ch; }
+  .decree p:last-child { margin-bottom: 0; }
+  .tags { color: var(--ink-2); font-size: .95rem; }
+
+  /* ---------- Hall: feed + notices ---------- */
+  .hall { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 22px; align-items: start; }
+  .panel { padding: 20px; display: grid; gap: 14px; min-width: 0; position: relative; }
+  .panel h2 { margin: 0; font-size: 1.7rem; }
+  .feed-slot { min-height: 400px; border: 1px dashed var(--line-strong); padding: 6px; background: var(--surface-2); }
+  .feed-wait { margin: 16px; color: var(--ink-2); }
+  .feed-note { font-size: .9rem; color: var(--ink-3); margin: 0; }
+  .fame { display: grid; gap: 10px; }
+  .post { border: 1px solid var(--line); background: var(--surface-2); padding: 14px 16px; display: grid; gap: 8px; min-width: 0; text-decoration: none; color: inherit; position: relative; }
+  .post:hover { border-color: var(--gold-bright); }
+  .post .top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: .95rem; }
+  .post .top b { font-weight: 600; }
+  .post .top .h333 { color: var(--h333); } .post .top .h500 { color: var(--h500); }
+  .post .text { margin: 0; font-size: 1rem; line-height: 1.5; }
+  .post .foot { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: .85rem; color: var(--ink-2); }
+  .post .laurel { font-family: "Pirata One", serif; color: var(--gold); font-size: 1.05rem; letter-spacing: .04em; }
+  .post .open { color: var(--gold); }
+  .post.embed { padding: 12px 12px 4px; }
+  .post.embed .laurel { padding: 0 4px 6px; }
+  .post.embed .twitter-tweet { margin: 0 auto !important; max-width: 100%; }
+  .post.embed blockquote.twitter-tweet:not(.twitter-tweet-rendered) { color: var(--ink); font-size: .95rem; padding: 8px 4px 12px; border: 0; }
+  .post.embed blockquote.twitter-tweet:not(.twitter-tweet-rendered) a { color: var(--ink); text-decoration: none; }
+  .stamp { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: .85rem; color: var(--ink-3); }
+  .pill { display: inline-block; padding: 2px 8px; border: 1px solid var(--line-strong); font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); }
+
+  footer { text-align: center; color: var(--ink-3); font-size: .9rem; display: grid; gap: 6px; justify-items: center; }
+  footer img { width: 64px; height: auto; opacity: .9; }
+
+  @media (max-width: 760px) {
+    .hall, .ledger, .roster, .decree { grid-template-columns: 1fr; }
+    .decree { justify-items: center; text-align: center; }
+  }
+  @media (max-width: 440px) {
+    .tiles { grid-template-columns: 1fr; }
+    .rule::before, .rule::after { width: 40px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="banner">
+    <h1>Tweetober 5</h1>
+    <img class="banner-img" src="assets/banner.png" alt="Tweetober 5" width="1100" height="211">
+    <p class="sub">Thirty-one days. Two houses. A winning house, and a single winner who joins the Tweetober Royal Family.</p>
+    <div class="rule">MMXXVI</div>
+    <nav class="nav" aria-label="Sections">
+      <a href="#ledger">The Ledger</a>
+      <a href="#cup">House Cup</a>
+      <a href="#hall">The Hall</a>
+      <a href="#events">Events</a>
+      <a href="#houses">The Houses</a>
+      <a href="#decree">The Decree</a>
+    </nav>
+  </header>
+
+  <!-- ---------- Ledger ---------- -->
+  <section id="ledger">
+    <div class="ledger">
+      <div>
+        <div class="eyebrow">Record your count</div>
+        <h2 class="heading" style="margin:4px 0 0;font-size:2rem;line-height:1">The Ledger</h2>
+        <p>Enter how many tweets you made each day in the shared sheet. It tallies every five days and adds up the month after the 31st.</p>
+      </div>
+      <a class="btn" id="ledgerLink" href="#" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11l5 5v11H4z"/><path d="M15 4v5h5M8 13h8M8 17h8"/></svg>
+        Open the Ledger
+      </a>
+    </div>
+  </section>
+
+  <!-- ---------- House Cup tally ---------- -->
+  <section id="cup">
+    <div class="sec-head">
+      <div class="eyebrow">Standings</div>
+      <h2 class="heading">The House Cup</h2>
+      <p>Combined tweets from every member since the first of the month, as recorded in the Ledger.</p>
+    </div>
+    <div class="cup">
+      <div class="cup-row">
+        <div class="cup-side h333"><span class="name" id="cupNameA">House of 333</span><span class="score num" id="cupScoreA">0</span></div>
+        <div class="vs">vs</div>
+        <div class="cup-side right h500"><span class="name" id="cupNameB">House of 500</span><span class="score num" id="cupScoreB">0</span></div>
+      </div>
+      <div class="tug" role="img" aria-label="Share of total tweets by house"><span class="a" id="tugA"></span><span class="gap"></span><span class="b" id="tugB"></span></div>
+      <div class="cup-foot"><span id="cupDay">Day 0 of 31</span><span id="cupUpdated">Tally from the Ledger</span></div>
+      <div class="weeks" id="weeks"></div>
+    </div>
+    <div class="scroll">
+      <div class="scroll-head">
+        <h3 class="heading">The Scroll of Honor</h3>
+        <span class="muted" id="boardNote">The current top 10 as recorded in the Ledger</span>
+      </div>
+      <ol class="board" id="board"></ol>
+    </div>
+  </section>
+
+  <!-- ---------- Hall: feed + notices ---------- -->
+  <section id="hall">
+    <div class="sec-head">
+      <div class="eyebrow">Live</div>
+      <h2 class="heading">The Hall</h2>
+      <p>What the houses are tweeting right now.</p>
+    </div>
+    <div class="hall">
+      <div class="panel">
+        <h2 class="heading">The Scrying Glass</h2>
+        <div class="feed-slot" id="feedSlot"></div>
+        <p class="feed-note">Feed of the Tweetober list on Twitter. If it looks empty, the list may be private or Twitter's embed is blocked in this viewer.</p>
+      </div>
+      <div class="panel">
+        <h2 class="heading">The Trophy Room</h2>
+        <p class="feed-note" style="margin-top:-6px">The tweets that took it to another level.</p>
+        <div class="fame" id="fame"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------- Events ---------- -->
+  <section id="events">
+    <div class="sec-head">
+      <div class="eyebrow">Gatherings</div>
+      <h2 class="heading">Events</h2>
+      <p>Tweetober-affiliated gatherings. RSVP on Partiful.</p>
+    </div>
+    <div class="events" id="eventsGrid"></div>
+  </section>
+
+  <!-- ---------- Houses ---------- -->
+  <section id="houses">
+    <div class="sec-head">
+      <div class="eyebrow">Roster</div>
+      <h2 class="heading">The Two Houses</h2>
+      <p>Each house is led by a past Tweetober champion. Click a name to find them on Twitter.</p>
+    </div>
+    <div class="houses" id="housesGrid"></div>
+  </section>
+
+  <!-- ---------- Decree ---------- -->
+  <section id="decree">
+    <div class="sec-head">
+      <div class="eyebrow">The rules</div>
+      <h2 class="heading">The Decree</h2>
+    </div>
+    <div class="decree">
+      <img src="assets/crest.png" alt="Tweetober 5 crest" width="150" height="188">
+      <div>
+        <p>This year, for the first time in Tweetober history, Tweetobies compete in two houses, each led by a previous Tweetober winner: <a href="https://x.com/mickal500" target="_blank" rel="noopener">@mickal500</a> and <a href="https://x.com/trinity333__" target="_blank" rel="noopener">@trinity333__</a>.</p>
+        <p>Placements were decided by the Tweetober Draft. There will be both a winning house and a single winning user, who joins the Tweetober Royal Family.</p>
+        <p>Not yet entered? Send a DM to <a href="https://x.com/Tweetober2026" target="_blank" rel="noopener">@Tweetober2026</a> to join the Tweetober group chat.</p>
+        <p class="tags">#Tweetober2026 #Teamtober #TweetoberDraft</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <img src="assets/crest.png" alt="">
+    <div>Tweetober is a friendly competition among friends.</div>
+  </footer>
+</div>
+
+<script>
+/* =====================================================================
+   CONFIG — everything you need to change lives in this block.
+   ===================================================================== */
+const CONFIG = {
+  // The Ledger: the Google Sheet where participants log their counts (the link the button opens)
+  docUrl: "https://docs.google.com/spreadsheets/d/1b3AqoSgvyc1s-21rQQuVK0-HBeTz6cZVUJuWW9BRKy4/edit",
+
+  // CSV view of the Ledger sheet (first tab). Works while the sheet is shared as "Anyone with the link".
+  // (If sharing is ever restricted, use File > Share > Publish to web > CSV and paste that link instead.)
+  // Leave empty to show the sample rows below.
+  sheetCsvUrl: "https://docs.google.com/spreadsheets/d/1b3AqoSgvyc1s-21rQQuVK0-HBeTz6cZVUJuWW9BRKy4/gviz/tq?tqx=out:csv",
+
+  // Two more tabs in the same sheet feed the Trophy Room and Events sections.
+  // Tab names must match exactly. Columns, in order:
+  //   Trophy Room: Link | Handle | House | Honor | Tweet text
+  //   (the Link alone is enough: the tweet is embedded; the rest is optional, and used if the embed can't load)
+  //   Events:      Name | Date | Time | Place | Note | Link
+  // Leave either URL empty to use the lists further down instead.
+  trophyCsvUrl: "https://docs.google.com/spreadsheets/d/1b3AqoSgvyc1s-21rQQuVK0-HBeTz6cZVUJuWW9BRKy4/gviz/tq?tqx=out:csv&sheet=Trophy%20Room",
+  eventsCsvUrl: "https://docs.google.com/spreadsheets/d/1b3AqoSgvyc1s-21rQQuVK0-HBeTz6cZVUJuWW9BRKy4/gviz/tq?tqx=out:csv&sheet=Events",
+
+  // How often to re-read the sheet, in minutes
+  refreshMinutes: 5,
+  // How many names to show on the Scroll of Honor
+  boardSize: 10,
+
+  // Twitter List of all participants. Use the numeric list ID from the URL x.com/i/lists/<ID>
+  listId: "REPLACE_WITH_LIST_ID",
+  listName: "Tweetober 2026",
+
+  startDate: "2026-10-01",
+  endDate:   "2026-10-31",
+
+  // The Trophy Room fallback list, used only if the Trophy Room tab can't be read.
+  // house: 333 or 500. url: the tweet's link on Twitter. Any field but handle and text can be left out.
+  hallOfFame: [],
+
+  // Events fallback list, used only if the Events tab can't be read. date as YYYY-MM-DD.
+  events: [],
+
+  houses: [
+    {
+      key: "h333",
+      name: "House of 333",
+      motto: "Three hundred thirty-three, and not one fewer.",
+      leader: { handle: "trinity333__", title: "Head of House · past Tweetober champion", avatar: "assets/head-333.jpg" },
+      // Image shown on the house card. Drop a new file in assets/ and change the name here.
+      emblem: "assets/emblem-333.png",
+      // Roster from the House Draft doc. Used until the sheet loads; once it does, the sheet's House column decides membership.
+      members: ["paleomagnetizm", "juulingkills", "jadore808", "nectarineavery", "ryjbot", "iikkaaaaa", "trinitybellaa", "d0gtired", "intimateemoji", "womanwqualities", "0atmik", "corporatemaiden", "weirdassfishes", "mouse_cafe", "ok___but", "megab00f", "anteluca", "daradrat227", "champagnenoona", "ematearecee", "semalations", "degogo_"]
+    },
+    {
+      key: "h500",
+      name: "House of 500",
+      motto: "Five hundred a day keeps the silence away.",
+      leader: { handle: "mickal500", title: "Head of House · past Tweetober champion", avatar: "assets/head-500.jpg" },
+      emblem: "assets/emblem-500.png",
+      members: ["chloe247365", "shell_beloved", "visceraldream", "rafajohnmisty", "ohnoidontknow", "galil2a", "decemberhunting", "ourfirstcaress", "out_of_eggs", "fish_oii", "sn0oozey", "our_decay", "alivegirI001101", "smellagillis", "o8040", "muol291945", "tiny_charm", "malemanlpulator", "thatdaigle", "24hrheadlock", "notscreaming", "slyzieboo"]
+    }
+  ]
+};
+
+
+
+/* ---------- helpers ---------- */
+const $ = (s) => document.querySelector(s);
+const fmt = (n) => Number(n).toLocaleString("en-US");
+const houseOf = (key) => CONFIG.houses.find(h => h.key === key) || {};
+const esc = (v) => String(v ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+const safeUrl = (u) => /^https?:\/\//i.test(String(u || "").trim()) ? esc(String(u).trim()) : "";
+const xUrl = (h) => `https://x.com/${encodeURIComponent(String(h).replace(/^@/, ""))}`;
+const isDark = () => document.documentElement.dataset.theme === "dark" ||
+  (document.documentElement.dataset.theme !== "light" && matchMedia("(prefers-color-scheme: dark)").matches);
+
+const EMBLEM = { h333: CONFIG.houses[0].emblem, h500: CONFIG.houses[1].emblem };
+const SHIELD_UNUSED = (key) => `
+<svg class="shield" viewBox="0 0 64 72" aria-hidden="true">
+  <path d="M32 3 58 12v22c0 17-12 28-26 35C18 62 6 51 6 34V12z" fill="var(--${key}-soft)" stroke="var(--${key})" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M32 3v66M6 34h52" stroke="var(--${key})" stroke-width="1.2" opacity=".6"/>
+  <text x="32" y="31" text-anchor="middle" font-family="Cinzel, serif" font-weight="700" font-size="15" fill="var(--${key})">${key === "h333" ? "333" : "500"}</text>
+  <path d="M24 44h16M26 50h12" stroke="var(--${key})" stroke-width="2" stroke-linecap="round"/>
+</svg>`;
+
+/* ---------- Ledger ---------- */
+$("#ledgerLink").href = CONFIG.docUrl;
+
+/* ---------- Ledger CSV ---------- */
+function parseCsv(text) {
+  const rows = []; let row = [], cell = "", q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) { if (c === '"') { if (text[i+1] === '"') { cell += '"'; i++; } else q = false; } else cell += c; }
+    else if (c === '"') q = true;
+    else if (c === ",") { row.push(cell); cell = ""; }
+    else if (c === "\n" || c === "\r") { if (c === "\r" && text[i+1] === "\n") i++; row.push(cell); rows.push(row); row = []; cell = ""; }
+    else cell += c;
+  }
+  if (cell !== "" || row.length) { row.push(cell); rows.push(row); }
+  return rows.filter(r => r.some(v => v.trim() !== ""));
+}
+const num = (v) => Number(String(v ?? "").replace(/[^0-9.-]/g, "")) || 0;
+const houseKeyFrom = (v) => { const d = String(v ?? "").match(/\d+/); return d ? "h" + d[0] : null; };
+
+/* Turns CSV text into [{handle, house, score, weeks:[...] }] using header names, so the
+   sheet's title row, extra columns or a different column order are all fine.
+   Score = "Grand total" column if present, otherwise the sum of the day columns. */
+function readLedger(text) {
+  const rows = parseCsv(text);
+  const hi = rows.findIndex(r => r.some(v => /handle/i.test(v)));
+  if (hi < 0 || rows.length < hi + 2) return [];
+  const head = rows[hi].map(h => h.trim().toLowerCase());
+  const col = (re) => head.findIndex(h => re.test(h));
+  let iH = col(/handle|name|user/), iHouse = col(/house/), iG = col(/grand/);
+  let weekCols = head.map((h, i) => /(week\s*\d+|tally)/.test(h) && !/grand/.test(h) ? i : -1).filter(i => i >= 0);
+  const dayCols = head.map((h, i) => /\boct\b\s*\d/.test(h) || /^\d{1,2}\/\d{1,2}/.test(h) ? i : -1).filter(i => i >= 0);
+  // Google's CSV export blanks the labels of numeric columns (House, Tally N, Grand total),
+  // so fall back to position: House sits right after Handle, Grand total is the last column,
+  // and the remaining unlabeled columns between the day columns are the tallies.
+  const blanks = head.map((h, i) => h === "" ? i : -1).filter(i => i >= 0);
+  if (iHouse < 0 && head[iH + 1] === "") iHouse = iH + 1;
+  if (iG < 0 && head[head.length - 1] === "" && dayCols.length) iG = head.length - 1;
+  if (!weekCols.length && dayCols.length) weekCols = blanks.filter(i => i !== iHouse && i !== iG && i > dayCols[0]);
+  return rows.slice(hi + 1).map(r => {
+    const handle = String(r[iH] ?? "").trim().replace(/^@/, "");
+    const house = houseKeyFrom(r[iHouse]);
+    const weeks = weekCols.map(i => num(r[i]));
+    const score = iG >= 0 ? num(r[iG]) : (dayCols.length ? dayCols.reduce((a, i) => a + num(r[i]), 0) : weeks.reduce((a, b) => a + b, 0));
+    return { handle, house, score: Math.max(0, score), weeks };
+  }).filter(p => p.handle && p.house && !/^how to use/i.test(p.handle));
+}
+
+let LEDGER = [];
+
+async function loadLedger() {
+  if (!CONFIG.sheetCsvUrl) return;
+  try {
+    const r = await fetch(CONFIG.sheetCsvUrl, { cache: "no-store" });
+    if (!r.ok) throw new Error(r.status);
+    const rows = readLedger(await r.text());
+    if (rows.length) { LEDGER = rows; renderHouses(); renderCup(); renderBoard(); }
+  } catch (e) { console.warn("Ledger fetch failed", e); }
+}
+
+const houseTotals = () => Object.fromEntries(CONFIG.houses.map(h => [h.key, LEDGER.filter(p => p.house === h.key).reduce((s, p) => s + p.score, 0)]));
+
+/* ---------- Houses ---------- */
+function renderHouses() {
+  $("#housesGrid").innerHTML = CONFIG.houses.map(h => {
+    const fromLedger = LEDGER.filter(p => p.house === h.key && p.handle.toLowerCase() !== h.leader.handle.toLowerCase()).map(p => p.handle);
+    const members = fromLedger.length ? fromLedger : h.members;
+    return houseCard(h, members);
+  }).join("");
+}
+function houseCard(h, members) { return `
+  <article class="house ${h.key}">
+    <div class="house-top">
+      <img class="emblem" src="${h.key === "h333" ? EMBLEM.h333 : EMBLEM.h500}" alt="" width="74" height="96">
+      <div><h3 class="heading">${h.name}</h3><p class="motto">${h.motto}</p></div>
+    </div>
+    <a class="leader" href="${xUrl(h.leader.handle)}" target="_blank" rel="noopener">
+      <img class="av" src="${h.leader.avatar}" alt="" width="52" height="52">
+      <span class="who"><b>@${h.leader.handle}</b><span>${h.leader.title}</span></span>
+    </a>
+    <ul class="roster">
+      ${members.map(m => `<li><a href="${xUrl(m)}" target="_blank" rel="noopener">@${esc(m)}</a></li>`).join("")}
+    </ul>
+    <p class="count">${members.length + 1} members including the Head of House</p>
+  </article>`; }
+
+/* ---------- House Cup ---------- */
+function renderCup(totals) {
+  const [a, b] = CONFIG.houses;
+  const t = totals || houseTotals();
+  const ta = t[a.key] ?? 0, tb = t[b.key] ?? 0;
+  $("#cupNameA").textContent = a.name; $("#cupNameB").textContent = b.name;
+  $("#cupScoreA").textContent = fmt(ta); $("#cupScoreB").textContent = fmt(tb);
+  const sum = ta + tb;
+  $("#tugA").style.width = (sum ? ta / sum * 100 : 50) + "%";
+  $("#tugB").style.width = (sum ? tb / sum * 100 : 50) + "%";
+  const start = new Date(CONFIG.startDate + "T00:00:00"), end = new Date(CONFIG.endDate + "T23:59:59");
+  const now = new Date();
+  const dayN = Math.min(31, Math.max(0, Math.floor((now - start) / 864e5) + 1));
+  $("#cupDay").textContent = now < start ? "The gates open October 1" : now > end ? "The month is done" : `Day ${dayN} of 31`;
+  $("#cupUpdated").textContent = sum === 0 ? "No tweets logged yet"
+    : ta === tb ? "Dead even" : `${ta > tb ? a.name : b.name} leads by ${fmt(Math.abs(ta - tb))}`;
+  renderWeeks();
+}
+
+/* ---------- Tallies (every five days) ---------- */
+const TALLY_SPANS = ["Oct 1–5", "Oct 6–10", "Oct 11–15", "Oct 16–20", "Oct 21–25", "Oct 26–31"];
+function renderWeeks() {
+  const [a, b] = CONFIG.houses;
+  const n = Math.max(TALLY_SPANS.length, ...LEDGER.map(p => p.weeks.length));
+  const sumWeek = (key, i) => LEDGER.filter(p => p.house === key).reduce((s, p) => s + (p.weeks[i] || 0), 0);
+  $("#weeks").innerHTML = Array.from({ length: n }, (_, i) => {
+    const ta = sumWeek(a.key, i), tb = sumWeek(b.key, i);
+    const won = ta === tb ? "" : ta > tb ? "won-h333" : "won-h500";
+    const crown = ta + tb === 0 ? "" : ta === tb ? "tied" : `${ta > tb ? "333" : "500"} takes it`;
+    const label = i === n - 1 && n >= 6 ? "Final tally" : `Tally ${i + 1}`;
+    return `<div class="wk ${won}"><div class="eyebrow label">${label}</div><div class="dates">${TALLY_SPANS[i] || ""}</div>
+      <div class="pair"><span class="h333">${fmt(ta)}</span><span class="muted">·</span><span class="h500">${fmt(tb)}</span></div><div class="crown">${crown}</div></div>`;
+  }).join("");
+}
+
+/* ---------- Scroll of Honor ---------- */
+function renderBoard() {
+  const ranked = LEDGER.filter(p => p.score > 0).sort((x, y) => y.score - x.score).slice(0, CONFIG.boardSize);
+  const top = ranked[0]?.score || 1;
+  $("#boardNote").textContent = `The current top ${CONFIG.boardSize} as recorded in the Ledger`;
+  $("#board").innerHTML = ranked.length ? ranked.map((p, i) => `
+    <li>
+      <span class="rank">${i + 1}</span>
+      <span class="who"><a href="${xUrl(p.handle)}" target="_blank" rel="noopener">@${esc(p.handle)}</a><span class="chip ${p.house}">${p.house.slice(1)}</span></span>
+      <span class="pts">${fmt(p.score)}</span>
+      <span class="bar ${p.house}"><span style="width:${Math.round(p.score / top * 100)}%"></span></span>
+    </li>`).join("") : `<p class="empty">No tweets logged yet. The scroll fills in as the Ledger does.</p>`;
+}
+
+/* ---------- Extra sheet tabs (Trophy Room, Events) ---------- */
+/* Reads a tab whose columns are in a known order. Header names are used when Google keeps them;
+   numeric columns come back unlabeled from Google's CSV export, so position is the fallback. */
+function readTab(text, keys, aliases) {
+  const rows = parseCsv(text); if (!rows.length) return [];
+  const head = rows[0].map(h => h.trim().toLowerCase());
+  const looksLikeHeader = head.some(h => Object.values(aliases).flat().some(a => h.includes(a)));
+  const idx = {};
+  keys.forEach((k, i) => {
+    const found = looksLikeHeader ? head.findIndex(h => h && (aliases[k] || [k]).some(a => h.includes(a))) : -1;
+    idx[k] = found >= 0 ? found : i;
+  });
+  return rows.slice(looksLikeHeader ? 1 : 0).map(r => Object.fromEntries(keys.map(k => [k, String(r[idx[k]] ?? "").trim()])));
+}
+const toIso = (v) => {
+  if (!v) return "";
+  if (/^\d{4}-\d{2}-\d{2}/.test(v)) return v.slice(0, 10);
+  const d = new Date(v); return isNaN(d) ? "" : `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+const tidyTime = (v) => v.replace(/(\d{1,2}:\d{2}):00(\s*[AP]M)/i, "$1$2");
+const prettyDate = (v) => { if (!v) return ""; const iso = toIso(v); if (!iso) return v; const d = new Date(iso + "T00:00:00"); return d.toLocaleString("en-US", { month: "short", day: "numeric" }); };
+let TROPHY = null, EVENTS = null;
+async function loadTrophy() {
+  if (!CONFIG.trophyCsvUrl) return;
+  try {
+    const r = await fetch(CONFIG.trophyCsvUrl, { cache: "no-store" }); if (!r.ok) throw new Error(r.status);
+    const rows = readTab(await r.text(), ["url", "handle", "house", "honor", "text", "likes", "reposts", "date"],
+      { url: ["link", "url"], handle: ["handle", "user"], house: ["house"], honor: ["honor", "title", "award"], text: ["tweet", "text"], likes: ["like"], reposts: ["retweet", "repost"], date: ["date"] });
+    TROPHY = rows.filter(p => (p.handle && p.text) || /\/status\/\d+/.test(p.url)).map(p => ({ ...p, handle: (p.handle || (p.url.match(/(?:x|twitter)\.com\/([^/]+)\/status/i) || [])[1] || "").replace(/^@/, ""), date: prettyDate(p.date), likes: p.likes ? num(p.likes) : null, reposts: p.reposts ? num(p.reposts) : null }));
+    renderFame();
+  } catch (e) { console.warn("Trophy Room tab not read", e); }
+}
+async function loadEvents() {
+  if (!CONFIG.eventsCsvUrl) return;
+  try {
+    const r = await fetch(CONFIG.eventsCsvUrl, { cache: "no-store" }); if (!r.ok) throw new Error(r.status);
+    const rows = readTab(await r.text(), ["name", "date", "time", "place", "note", "url"],
+      { name: ["name", "event", "title"], date: ["date"], time: ["time"], place: ["place", "where", "location"], note: ["note", "detail", "description"], url: ["link", "url", "partiful"] });
+    EVENTS = rows.filter(e => e.name && toIso(e.date)).map(e => ({ ...e, date: toIso(e.date), time: tidyTime(e.time) }));
+    renderEvents();
+  } catch (e) { console.warn("Events tab not read", e); }
+}
+
+/* ---------- The Trophy Room ---------- */
+function renderFame() {
+  const list = TROPHY ?? (CONFIG.hallOfFame || []);
+  $("#fame").innerHTML = list.length ? list.map(p => {
+    const hk = houseKeyFrom(p.house) || "";
+    const statusUrl = (p.url || "").match(/^https?:\/\/(?:www\.|mobile\.)?(?:x|twitter)\.com\/(\w{1,15})\/status\/(\d+)/i);
+    if (statusUrl) {
+      // Embed the real tweet. The link is rewritten to twitter.com, which the widget script expects.
+      const canon = `https://twitter.com/${statusUrl[1]}/status/${statusUrl[2]}`;
+      return `<div class="post embed">
+        ${p.honor ? `<div class="laurel">✦ ${esc(p.honor)}</div>` : ""}
+        <blockquote class="twitter-tweet" data-theme="dark" data-dnt="true" data-conversation="none"><a href="${canon}">@${esc(p.handle || statusUrl[1])}${p.text ? ": " + esc(p.text) : ""}</a></blockquote>
+      </div>`;
+    }
+    const stats = [p.likes != null && `${fmt(p.likes)} likes`, p.reposts != null && `${fmt(p.reposts)} retweets`].filter(Boolean).join(" · ");
+    const link = safeUrl(p.url);
+    const tag = link ? "a" : "div";
+    return `<${tag} class="post" ${link ? `href="${link}" target="_blank" rel="noopener"` : ""}>
+      ${p.honor ? `<div class="laurel">✦ ${esc(p.honor)}</div>` : ""}
+      <div class="top"><b class="${hk}">@${esc(p.handle)}</b>${hk ? `<span class="chip ${hk}">${hk.slice(1)}</span>` : ""}${p.date ? `<span class="muted">${esc(p.date)}</span>` : ""}</div>
+      <p class="text">${esc(p.text)}</p>
+      <div class="foot"><span>${stats}</span>${link ? `<span class="open">View on Twitter ↗</span>` : ""}</div>
+    </${tag}>`;
+  }).join("") : `<p class="empty">No tweets have earned a place here yet.</p>`;
+  if (window.twttr?.widgets?.load) window.twttr.widgets.load($("#fame"));
+}
+
+/* ---------- Events ---------- */
+function renderEvents() {
+  const list = [...(EVENTS ?? CONFIG.events ?? [])].sort((a, b) => a.date.localeCompare(b.date));
+  const today = new Date(); today.setHours(0,0,0,0);
+  $("#eventsGrid").innerHTML = list.length ? list.map(e => {
+    const d = new Date(e.date + "T00:00:00");
+    const past = d < today;
+    const mo = d.toLocaleString("en-US", { month: "short" }), day = d.getDate();
+    const when = [d.toLocaleString("en-US", { weekday: "long", month: "long", day: "numeric" }), e.time].filter(Boolean).join(" · ");
+    const link = safeUrl(e.url), tag = link ? "a" : "div";
+    return `<${tag} class="event ${past ? "past" : ""}" ${link ? `href="${link}" target="_blank" rel="noopener"` : ""}>
+      <div class="cal"><span class="mo">${mo}</span><span class="d">${day}</span></div>
+      <div>
+        <h3 class="heading">${esc(e.name)}</h3>
+        <p class="when">${esc(when)}${e.place ? ` · ${esc(e.place)}` : ""}</p>
+        ${e.note ? `<p class="note">${esc(e.note)}</p>` : ""}
+        <div class="rsvp">${past ? "Past event" : link ? "RSVP on Partiful ↗" : "Details soon"}</div>
+      </div>
+    </${tag}>`;
+  }).join("") : `<p class="empty">No gatherings announced yet.</p>`;
+}
+
+/* ---------- Feed embed (Twitter List timeline) ---------- */
+function mountFeed() {
+  const slot = $("#feedSlot");
+  const hasList = /^\d+$/.test(String(CONFIG.listId));
+  const url = `https://x.com/i/lists/${CONFIG.listId}`;
+  slot.innerHTML = !hasList ? `<p class="feed-wait">The live feed opens once the Tweetober list is linked.</p>` : `<a class="twitter-timeline" data-height="600" data-dnt="true" data-theme="dark" href="https://twitter.com/i/lists/${CONFIG.listId}?ref_src=twsrc%5Etfw">Loading the ${CONFIG.listName} list…</a>`;
+  const s = document.createElement("script");
+  s.async = true; s.src = "https://platform.twitter.com/widgets.js"; s.charset = "utf-8";
+  s.onload = () => { window.twttr?.widgets?.load($("#fame")); };
+  s.onerror = () => { if (hasList) slot.innerHTML = `<p style="margin:16px;color:var(--ink-2)">The feed could not load here. <a href="${url}" target="_blank" rel="noopener">Open the ${CONFIG.listName} list on Twitter</a>.</p>`; };
+  document.body.appendChild(s);
+}
+
+/* ---------- boot ---------- */
+renderHouses();
+renderCup();
+renderBoard();
+renderFame();
+renderEvents();
+mountFeed();
+loadLedger(); loadTrophy(); loadEvents();
+setInterval(() => { loadLedger(); loadTrophy(); loadEvents(); }, Math.max(1, CONFIG.refreshMinutes) * 60 * 1000);
+</script>
+</body>
+</html>
