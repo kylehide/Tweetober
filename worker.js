@@ -87,20 +87,3 @@ export default {
     return env.ASSETS.fetch(request);
   },
 };
-
-If wrangler.jsonc won't download either, you can create it the same way. Here's its full contents, with your database ID already filled in:
-
-jsonc
-{
-  "name": "tweetober",
-  "main": "worker.js",
-  "compatibility_date": "2026-09-01",
-  "assets": { "directory": "./", "binding": "ASSETS" },
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "tweetober-hall",
-      "database_id": "33c23461-6817-4fc6-a68b-e10ebe489030"
-    }
-  ]
-}
