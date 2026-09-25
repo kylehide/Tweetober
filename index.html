@@ -261,6 +261,45 @@
   /* ---------- Hall: feed + notices ---------- */
   .hall { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 22px; align-items: start; }
   .panel { padding: 20px; display: grid; gap: 14px; min-width: 0; position: relative; }
+  .board-panel { grid-column: 1 / -1; }
+  .board-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .board-head h2 { margin: 0; font-size: 1.24rem; }
+  .board-status { font-size: .75rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
+  .board-status.live::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #8FE3B6; margin-right: 7px; box-shadow: 0 0 6px #8FE3B6; vertical-align: 1px; }
+  .tavern { list-style: none; margin: 0; padding: 12px 14px; display: grid; gap: 10px; align-content: start; max-height: 420px; min-height: 140px; overflow-y: auto; background: var(--surface-2); border: 1px dashed var(--line-strong); overscroll-behavior: contain; }
+  .tavern li { display: grid; gap: 2px; line-height: 1.35; overflow-wrap: anywhere; }
+  .tavern .who { display: flex; flex-wrap: wrap; column-gap: 10px; align-items: baseline; }
+  .tavern .who b { font-weight: 400; font-size: 1.05rem; letter-spacing: .02em; }
+  .tavern .who time { font-size: .7rem; color: var(--ink-3); letter-spacing: .06em; }
+  .tavern .body { color: var(--ink); }
+  .tavern .empty { color: var(--ink-3); }
+  .tavern .sample { font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); text-align: center; }
+  .tavern-form { display: grid; gap: 12px; }
+  .tf-row { display: flex; gap: 14px; flex-wrap: wrap; align-items: end; }
+  .tf-field { display: grid; gap: 4px; min-width: 0; border: 0; margin: 0; padding: 0; }
+  .tf-field .eyebrow { font-size: .72rem; display: flex; justify-content: space-between; gap: 10px; }
+  .tf-field em { font-style: normal; color: var(--ink-3); letter-spacing: .04em; }
+  .tf-name { flex: 1 1 200px; } .tf-colors { flex: 1 1 280px; } .tf-body { width: 100%; }
+  .tavern-form input, .tavern-form textarea { font: inherit; font-size: 1rem; color: var(--ink); background: var(--surface-2); border: 1px solid var(--line-strong); padding: 8px 10px; width: 100%; outline: none; resize: vertical; }
+  .tavern-form input:focus, .tavern-form textarea:focus { border-color: var(--gold-bright); box-shadow: 0 0 0 3px var(--gold-glow); }
+  /* color picker as a pennant banner: flags hang from a sagging rope */
+  .swatches { position: relative; display: flex; gap: 6px; flex-wrap: nowrap; padding: 6px 8px 4px; width: max-content; max-width: 100%; }
+  .swatches::before { content: ""; position: absolute; left: 0; right: 0; top: -4px; height: 12px; border-bottom: 2px solid #8A6A2A; border-radius: 0 0 50% 50% / 0 0 100% 100%; pointer-events: none; }
+  .swatch { position: relative; width: 30px; height: 40px; padding: 0; border: 0; background: none; cursor: pointer;
+            transform: translateY(var(--sag, 0px)); transform-origin: 50% 0; transition: transform .18s ease, filter .18s ease;
+            filter: drop-shadow(0 3px 3px rgba(0,0,0,.55)); }
+  .swatch .flag { position: absolute; inset: 0; background: var(--c); clip-path: polygon(0 0, 100% 0, 50% 100%); }
+  .swatch .flag::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent 50%, rgba(0,0,0,.16) 50%); }
+  .swatch::before { content: ""; position: absolute; top: -3px; left: 50%; width: 6px; height: 6px; margin-left: -3px; border-radius: 50%; background: #B8902E; z-index: 1; }
+  .swatch:hover { transform: translateY(var(--sag, 0px)) rotate(-6deg); }
+  .swatch[aria-checked="true"] { transform: translateY(calc(var(--sag, 0px) + 6px)) scale(1.12);
+            filter: drop-shadow(0 0 0 #F2D272) drop-shadow(0 0 1.5px #F2D272) drop-shadow(0 0 1.5px #F2D272) drop-shadow(0 4px 4px rgba(0,0,0,.6)); }
+  .swatch:focus-visible { outline: none; filter: drop-shadow(0 0 2px #fff) drop-shadow(0 0 2px #fff); }
+  @media (prefers-reduced-motion: reduce) { .swatch { transition: none; } }
+  .tf-code { flex: 0 1 180px; }
+  .tf-send .btn { padding-block: 10px; }
+  .tf-msg { margin: 0; flex: 1 1 200px; font-size: .85rem; color: var(--ink-3); min-height: 1.2em; }
+  .tf-msg.err { color: var(--h500); }
   .panel h2 { margin: 0; font-size: 1.24rem; }
   .feed-slot { min-height: 400px; border: 1px dashed var(--line-strong); padding: 6px; background: var(--surface-2); }
   .feed-wait { margin: 16px; color: var(--ink-2); }
@@ -411,6 +450,34 @@
         <p class="feed-note" style="margin-top:-6px">The tweets that took it to another level.</p>
         <div class="fame" id="fame"></div>
       </div>
+      <div class="panel board-panel">
+        <div class="board-head">
+          <h2 class="heading">The Tavern Board</h2>
+          <span class="board-status" id="tavernStatus" aria-live="polite"></span>
+        </div>
+        <p class="feed-note" style="margin-top:-6px">Leave word for the houses. Messages appear for everyone within a few seconds.</p>
+        <ol class="tavern" id="tavern" aria-label="Messages"></ol>
+        <form class="tavern-form" id="tavernForm" autocomplete="off">
+          <div class="tf-row">
+            <label class="tf-field tf-name"><span class="eyebrow">Name</span>
+              <input id="tfName" maxlength="24" placeholder="Sir Tweetsalot" required>
+            </label>
+            <fieldset class="tf-field tf-colors"><legend class="eyebrow">Color</legend>
+              <div class="swatches" id="tfColors"></div>
+            </fieldset>
+          </div>
+          <label class="tf-field tf-body"><span class="eyebrow">Message <em id="tfCount">0 / 280</em></span>
+            <textarea id="tfBody" maxlength="280" rows="2" placeholder="Hear ye, hear ye…" required></textarea>
+          </label>
+          <div class="tf-row tf-send">
+            <label class="tf-field tf-code" id="tfCodeWrap" hidden><span class="eyebrow">Password</span>
+              <input id="tfCode" type="password" autocapitalize="off" spellcheck="false" placeholder="••••••">
+            </label>
+            <button class="btn" type="submit" id="tfSend">Post</button>
+            <p class="tf-msg" id="tfMsg" aria-live="polite"></p>
+          </div>
+        </form>
+      </div>
     </div>
   </section>
 
@@ -536,6 +603,10 @@ const CONFIG = {
 
   // How often to re-read the sheet, in minutes
   refreshMinutes: 5,
+
+  // The Tavern Board's server address. On the Cloudflare site this is just "/api/messages".
+  hallApi: "/api/messages",
+  hallPollSeconds: 5,
   // How many names to show on the Scroll of Honor
   boardSize: 10,
 
@@ -621,7 +692,7 @@ const SHIELD_UNUSED = (key) => `
     try { url = await unlock(code); } catch (err) { console.warn(err); }
     if (url) {
       msg.textContent = "";
-      try { localStorage.setItem("tweetober-ledger", url); } catch {}
+      try { localStorage.setItem("tweetober-ledger", url); localStorage.setItem("tweetober-code", code); } catch {}
       reveal(url);
     } else {
       msg.textContent = "The gate does not open."; msg.classList.add("err");
@@ -867,6 +938,110 @@ function mountFeed() {
   s.onerror = () => { if (hasList) slot.innerHTML = `<p style="margin:16px;color:var(--ink-2)">The feed could not load here. <a href="${url}" target="_blank" rel="noopener">Open the ${CONFIG.listName} list on Twitter</a>.</p>`; };
   document.body.appendChild(s);
 }
+
+/* ---------- The Tavern Board (live messages) ---------- */
+(function tavern() {
+  const list = $("#tavern"), form = $("#tavernForm"); if (!list || !form) return;
+  const COLORS = ["#F26F96", "#E6E4E0", "#F2D272", "#B99CFF", "#8CC8FF", "#8FE3B6", "#FF9D5C", "#FFB3C7"];
+  const NAMES = ["Rose", "Silver", "Gold", "Amethyst", "Sky", "Mint", "Ember", "Blush"];
+  const status = $("#tavernStatus"), msg = $("#tfMsg"), nameIn = $("#tfName"), bodyIn = $("#tfBody"), codeIn = $("#tfCode"), codeWrap = $("#tfCodeWrap"), count = $("#tfCount"), sendBtn = $("#tfSend");
+  const store = { get: (k) => { try { return localStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch {} } };
+  let color = COLORS.includes(store.get("tweetober-color")) ? store.get("tweetober-color") : COLORS[0];
+  nameIn.value = store.get("tweetober-name") || "";
+  const savedCode = () => store.get("tweetober-code") || "";
+
+  // color swatches (radio group)
+  const sw = $("#tfColors");
+  sw.setAttribute("role", "radiogroup");
+  const sagAt = (i) => (6 * Math.sin(Math.PI * (i + 0.5) / COLORS.length)).toFixed(1);   // follow the rope's curve
+  sw.innerHTML = COLORS.map((c, i) => `<button type="button" class="swatch" role="radio" aria-label="${NAMES[i]}" title="${NAMES[i]}" data-c="${c}" style="--c:${c};--sag:${sagAt(i)}px" aria-checked="${c === color}"><span class="flag"></span></button>`).join("");
+  sw.addEventListener("click", (e) => {
+    const b = e.target.closest(".swatch"); if (!b) return;
+    color = b.dataset.c; store.set("tweetober-color", color);
+    sw.querySelectorAll(".swatch").forEach(s => s.setAttribute("aria-checked", s === b));
+    nameIn.style.color = color;
+  });
+  nameIn.style.color = color;
+  bodyIn.addEventListener("input", () => { count.textContent = `${bodyIn.value.length} / 280`; });
+  bodyIn.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); form.requestSubmit(); } });
+
+  const ago = (t) => {
+    const s = Math.max(0, (Date.now() - t) / 1000);
+    if (s < 45) return "just now"; if (s < 3600) return `${Math.round(s / 60)}m ago`; if (s < 86400) return `${Math.round(s / 3600)}h ago`;
+    return new Date(t).toLocaleString("en-US", { month: "short", day: "numeric" });
+  };
+  const safeColor = (c) => COLORS.includes(c) ? c : COLORS[0];
+  const row = (m) => `<li data-id="${Number(m.id)}"><span class="who"><b style="color:${safeColor(m.color)}">${esc(m.name)}</b><time data-t="${Number(m.created)}">${ago(m.created)}</time></span><span class="body">${esc(m.body)}</span></li>`;
+
+  let lastId = 0, online = false, sample = false, everOnline = false;
+  const atBottom = () => list.scrollHeight - list.scrollTop - list.clientHeight < 40;
+  function render(msgs, replace) {
+    const stick = replace || atBottom();
+    if (replace) list.innerHTML = "";
+    if (!msgs.length && replace) { list.innerHTML = `<li class="empty">The board is quiet. Be the first to speak.</li>`; return; }
+    list.querySelector(".empty")?.remove();
+    list.insertAdjacentHTML("beforeend", msgs.map(row).join(""));
+    while (list.children.length > 200) list.firstElementChild.remove();
+    if (msgs.length) lastId = Math.max(lastId, ...msgs.map(m => Number(m.id) || 0));
+    if (stick) list.scrollTop = list.scrollHeight;
+  }
+  function setStatus(on, text) { online = on; status.textContent = text; status.classList.toggle("live", on); }
+  function showSample() {
+    // Shown only where the board's server doesn't exist (e.g. a preview copy of the page).
+    sample = true;
+    const now = Date.now();
+    render([
+      { id: 1, name: "Sir Tweetsalot", color: "#8CC8FF", body: "The gates are open. 500 has already begun its assault on the timeline.", created: now - 540000 },
+      { id: 2, name: "trinity333__", color: "#E6E4E0", body: "333 does not fear numbers. 333 IS numbers.", created: now - 300000 },
+      { id: 3, name: "mickal500", color: "#F26F96", body: "see you on the scroll of honor ❤", created: now - 60000 },
+    ], true);
+    list.insertAdjacentHTML("afterbegin", `<li class="sample">Sample messages · the live board runs on the Tweetober site</li>`);
+    setStatus(false, "Preview");
+  }
+  async function poll(full) {
+    if (sample) return;
+    try {
+      const r = await fetch(CONFIG.hallApi + (full || !lastId ? "" : `?after=${lastId}`), { cache: "no-store" });
+      if (r.status === 404 || !(r.headers.get("content-type") || "").includes("json")) { showSample(); return; }
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || r.status);
+      codeWrap.hidden = !data.needsCode || !!savedCode();
+      render(data.messages || [], full || !lastId);
+      everOnline = true; setStatus(true, "Live");
+    } catch (e) { if (!everOnline) { showSample(); return; } setStatus(false, "Reconnecting…"); }
+  }
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (sample) { msg.textContent = "Posting works on the live Tweetober site."; msg.classList.remove("err"); return; }
+    const code = codeWrap.hidden ? savedCode() : codeIn.value.trim().toLowerCase();
+    const payload = { name: nameIn.value, color, body: bodyIn.value, code };
+    sendBtn.disabled = true; msg.textContent = "Posting…"; msg.classList.remove("err");
+    try {
+      const r = await fetch(CONFIG.hallApi, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        msg.textContent = data.error || "That didn't post. Try again."; msg.classList.add("err");
+        if (r.status === 403) { codeWrap.hidden = false; store.set("tweetober-code", ""); codeIn.focus(); }
+        return;
+      }
+      if (!codeWrap.hidden && code) { store.set("tweetober-code", code); codeWrap.hidden = true; }
+      store.set("tweetober-name", nameIn.value.trim());
+      bodyIn.value = ""; count.textContent = "0 / 280"; msg.textContent = "";
+      if (data.message) { render([data.message], false); list.scrollTop = list.scrollHeight; }
+    } catch { msg.textContent = "Couldn't reach the board. Check your connection."; msg.classList.add("err"); }
+    finally { sendBtn.disabled = false; }
+  });
+
+  poll(true);
+  let ticks = 0;
+  setInterval(() => {
+    if (document.hidden) return;
+    ticks++;
+    poll(ticks % 12 === 0);   // a full refresh every minute picks up deletions
+    list.querySelectorAll("time[data-t]").forEach(t => { t.textContent = ago(Number(t.dataset.t)); });
+  }, Math.max(3, CONFIG.hallPollSeconds) * 1000);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) poll(false); });
+})();
 
 /* ---------- Fanfare: synthesized brass, played from the trumpet button ---------- */
 const fanfare = (() => {
