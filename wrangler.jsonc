@@ -1,0 +1,14 @@
+{
+  "name": "tweetober",
+  "main": "worker.js",
+  "compatibility_date": "2026-09-01",
+  "assets": { "directory": "./", "binding": "ASSETS" },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "tweetober-hall",
+      // Paste the Database ID from Cloudflare (Storage & databases -> D1 -> tweetober-hall) here:
+      "database_id": "33c23461-6817-4fc6-a68b-e10ebe489030"
+    }
+  ]
+}
