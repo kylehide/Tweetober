@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Tweetober 5</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pirata+One&family=DotGothic16&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pirata+One&family=VT323&family=IBM+Plex+Mono:wght@400;600&display=swap">
 <style>
   /* Single look, by design: the stone keep at night. Colors come from the crest and the invitation. */
   :root {
@@ -32,6 +32,7 @@
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; }
+  html { font-size: 22px; }
   body {
     /* dark-brown veil at 70% over the stone tile: same pattern, dimmed */
     background-color: var(--bg);
@@ -41,11 +42,9 @@
     background-position: 0 0, center top;
     background-attachment: scroll;
     color: var(--ink);
-    font-family: "DotGothic16", "IBM Plex Mono", "Courier New", monospace;
-    font-size: 19px;
-    line-height: 1.6;
-    letter-spacing: .045em;
-    word-spacing: .06em;
+    font-family: "VT323", "IBM Plex Mono", "Courier New", monospace;
+    font-size: 1.05rem;
+    line-height: 1.45;
     padding-inline: 16px;
     padding-block: 0 72px;
   }
@@ -56,9 +55,9 @@
   .wrap { max-width: 1100px; margin-inline: auto; display: grid; gap: 56px; }
 
   /* ---------- Type ---------- */
-  .heading { font-family: "Pirata One", "DotGothic16", serif; font-weight: 400; letter-spacing: .03em; text-wrap: balance;
+  .heading { font-family: "Pirata One", "VT323", serif; font-weight: 400; letter-spacing: .03em; text-wrap: balance;
              color: var(--gold); text-shadow: 0 2px 0 rgba(0,0,0,.6), 0 0 18px rgba(217,178,74,.25); }
-  .eyebrow { font-family: "DotGothic16", "IBM Plex Mono", monospace; font-weight: 400; font-size: .85rem; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); }
+  .eyebrow { font-family: "VT323", "IBM Plex Mono", monospace; font-weight: 400; font-size: .9rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold); }
   .num { font-variant-numeric: tabular-nums; }
   .muted { color: var(--ink-3); }
   .display { font-family: "Pirata One", serif; font-weight: 400; }
@@ -78,7 +77,7 @@
   /* ---------- Sections ---------- */
   section { display: grid; gap: 18px; scroll-margin-top: 24px; }
   .sec-head { display: grid; gap: 4px; }
-  .sec-head h2 { margin: 0; font-size: clamp(1.9rem, 4vw, 2.6rem); line-height: 1.1; }
+  .sec-head h2 { margin: 0; font-size: clamp(1.38rem, 4vw, 1.89rem); line-height: 1.1; }
   .sec-head p { margin: 0; color: var(--ink); max-width: 62ch; font-size: .92rem; line-height: 1.5; }
 
   /* ---------- Panels (shared) ---------- */
@@ -94,10 +93,10 @@
   .cup-side { display: grid; gap: 2px; }
   .cup-side.right { text-align: right; }
   .cup-side .name { font-weight: 700; font-size: 1.05rem; letter-spacing: .04em; }
-  .cup-side .score { font-family: "Pirata One", serif; font-size: clamp(2.4rem, 7vw, 4rem); line-height: 1; text-shadow: 0 2px 0 rgba(0,0,0,.6); }
+  .cup-side .score { font-family: "Pirata One", serif; font-size: clamp(1.75rem, 7vw, 2.91rem); line-height: 1; text-shadow: 0 2px 0 rgba(0,0,0,.6); }
   .h333 .score, .h333 .name { color: var(--h333); }
   .h500 .score, .h500 .name { color: var(--h500); }
-  .vs { font-family: "Pirata One", serif; color: var(--gold); font-size: 1.4rem; padding-bottom: 10px; }
+  .vs { font-family: "Pirata One", serif; color: var(--gold); font-size: 1.02rem; padding-bottom: 10px; }
   .tug { height: 14px; border-radius: 7px; background: var(--surface-2); border: 1px solid var(--line-strong); overflow: hidden; display: flex; }
   .tug > span { height: 100%; display: block; }
   .tug .a { background: var(--h333); }
@@ -117,9 +116,9 @@
   /* ---------- Scroll of Honor ---------- */
   .scroll { padding: 22px 24px; display: grid; gap: 10px; }
   .scroll-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
-  .scroll-head h3 { margin: 0; font-size: 1.7rem; }
+  .scroll-head h3 { margin: 0; font-size: 1.24rem; }
   .board { list-style: none; margin: 0; padding: 0; display: grid; }
-  .board li { display: grid; grid-template-columns: 2.2rem 1fr auto; align-items: center; gap: 12px; padding: 9px 4px; border-bottom: 1px solid var(--line); }
+  .board li { display: grid; grid-template-columns: 1.6rem 1fr auto; align-items: center; gap: 12px; padding: 9px 4px; border-bottom: 1px solid var(--line); }
   .board li:last-child { border-bottom: 0; }
   .board .rank { font-weight: 700; color: var(--ink-3); font-variant-numeric: tabular-nums; }
   .board li:nth-child(1) .rank { color: var(--gold-bright); }
@@ -142,7 +141,7 @@
   .house.h333 .house-top { background: linear-gradient(180deg, var(--h333-soft), transparent); }
   .house.h500 .house-top { background: linear-gradient(180deg, var(--h500-soft), transparent); }
   .emblem { width: 74px; height: 96px; object-fit: cover; border: 2px solid var(--gold); box-shadow: 0 0 0 3px rgba(0,0,0,.4), 0 6px 14px rgba(0,0,0,.5); }
-  .house h3 { margin: 0; font-size: 1.9rem; line-height: 1; }
+  .house h3 { margin: 0; font-size: 1.38rem; line-height: 1; }
   .house.h333 h3 { color: var(--h333); }
   .house.h500 h3 { color: var(--h500); }
   .motto { margin: 4px 0 0; color: var(--ink-2); font-size: .95rem; }
@@ -174,8 +173,8 @@
   .event:hover { border-color: var(--gold-bright); }
   .event .cal { display: grid; text-align: center; border: 1px solid var(--line-strong); background: var(--surface-2); min-width: 58px; padding: 6px 8px; }
   .event .cal .mo { font-size: .7rem; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); }
-  .event .cal .d { font-family: "Pirata One", serif; font-size: 1.7rem; line-height: 1; color: var(--ink); }
-  .event h3 { margin: 0; font-size: 1.5rem; line-height: 1.05; }
+  .event .cal .d { font-family: "Pirata One", serif; font-size: 1.24rem; line-height: 1; color: var(--ink); }
+  .event h3 { margin: 0; font-size: 1.09rem; line-height: 1.05; }
   .event .when { margin: 4px 0 0; font-size: .9rem; color: var(--ink-2); }
   .event .note { margin: 6px 0 0; font-size: .95rem; }
   .event .rsvp { margin-top: 8px; font-size: .85rem; letter-spacing: .1em; text-transform: uppercase; color: var(--gold); }
@@ -191,7 +190,7 @@
   /* ---------- Hall: feed + notices ---------- */
   .hall { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 22px; align-items: start; }
   .panel { padding: 20px; display: grid; gap: 14px; min-width: 0; position: relative; }
-  .panel h2 { margin: 0; font-size: 1.7rem; }
+  .panel h2 { margin: 0; font-size: 1.24rem; }
   .feed-slot { min-height: 400px; border: 1px dashed var(--line-strong); padding: 6px; background: var(--surface-2); }
   .feed-wait { margin: 16px; color: var(--ink-2); }
   .feed-note { font-size: .9rem; color: var(--ink-3); margin: 0; }
