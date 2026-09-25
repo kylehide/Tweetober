@@ -252,9 +252,9 @@
   @media (max-width: 860px) { .code-grid { grid-template-columns: 1fr; } }
 
   /* ---------- Decree ---------- */
-  .decree { padding: 28px 26px; display: grid; grid-template-columns: auto 1fr; gap: 26px; align-items: center; }
-  .decree img { width: 150px; height: auto; filter: drop-shadow(0 6px 12px rgba(0,0,0,.6)); }
-  .decree p { margin: 0 0 10px; max-width: 64ch; }
+  .decree { padding: 30px 34px; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 36px; align-items: center; }
+  .decree img { width: 200px; height: auto; filter: drop-shadow(0 6px 12px rgba(0,0,0,.6)); }
+  .decree p { margin: 0 0 12px; max-width: none; line-height: 1.4; }
   .decree p:last-child { margin-bottom: 0; }
   .tags { color: var(--ink-2); font-size: .95rem; }
 
@@ -327,7 +327,8 @@
 
   @media (max-width: 760px) {
     .hall, .ledger, .roster, .decree { grid-template-columns: 1fr; }
-    .decree { justify-items: center; text-align: center; }
+    .decree { justify-items: center; text-align: center; gap: 20px; }
+    .decree img { width: 150px; }
   }
   @media (max-width: 440px) {
     .tiles { grid-template-columns: 1fr; }
