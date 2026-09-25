@@ -31,6 +31,7 @@
     color-scheme: dark;
   }
   * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
   html, body { margin: 0; }
   html { font-size: 22px; }
   body {
@@ -70,9 +71,34 @@
   .rule { display: flex; align-items: center; gap: 12px; color: var(--gold); font-size: .85rem; letter-spacing: .3em; }
   .rule::before, .rule::after { content: ""; height: 1px; width: 90px; background: linear-gradient(90deg, transparent, var(--gold)); }
   .rule::after { background: linear-gradient(90deg, var(--gold), transparent); }
-  .nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 22px; margin-top: 4px; }
-  .nav a { font-size: .9rem; letter-spacing: .1em; text-transform: uppercase; text-decoration: none; color: var(--ink-2); border-bottom: 1px solid transparent; padding-block: 4px; }
-  .nav a:hover { color: var(--gold-bright); border-bottom-color: var(--gold-bright); }
+  .nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 10px; margin-top: 10px; }
+  .nav a {
+    position: relative; display: inline-block;
+    font-size: .8rem; letter-spacing: .12em; text-transform: uppercase; text-decoration: none; color: #1E1B17;
+    padding: 9px 14px 9px; line-height: 1;
+    background: linear-gradient(180deg, #F4F3F0 0%, #CFCCC6 45%, #A9A59E 55%, #E2DFDA 100%);
+    border: 1px solid #5E5B56; border-radius: 3px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.7), inset 0 -1px 0 rgba(0,0,0,.35), 0 2px 0 #3E3B37, 0 4px 10px rgba(0,0,0,.5);
+    text-shadow: 0 1px 0 rgba(255,255,255,.5);
+    transition: transform .12s ease, filter .12s ease;
+  }
+  .nav a::before, .nav a::after {
+    content: ""; position: absolute; width: 4px; height: 4px; border-radius: 50%; top: 50%; transform: translateY(-50%);
+    background: radial-gradient(circle at 35% 35%, #ffffff, #5E5B56 70%);
+  }
+  .nav a::before { left: 5px; } .nav a::after { right: 5px; }
+  .nav a:hover, .nav a:focus-visible { filter: brightness(1.08); transform: translateY(-1px); }
+  .nav a:active { transform: translateY(1px); box-shadow: inset 0 1px 0 rgba(255,255,255,.5), inset 0 -1px 0 rgba(0,0,0,.35), 0 1px 0 #3E3B37, 0 2px 6px rgba(0,0,0,.5); }
+  /* sword that slides in beneath the plaque on hover */
+  .nav a span { position: relative; z-index: 1; }
+  .nav a i {
+    position: absolute; left: 6px; right: 6px; bottom: -13px; height: 12px; pointer-events: none;
+    background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20120%2012%22%3E%3Cpath%20d%3D%22M2%206%20L100%206%22%20stroke%3D%22%23F2D272%22%20stroke-width%3D%222%22/%3E%3Cpath%20d%3D%22M2%206%20L8%203%20L8%209%20Z%22%20fill%3D%22%23F2D272%22/%3E%3Cpath%20d%3D%22M100%206%20L106%202%20L106%2010%20Z%22%20fill%3D%22%23D9B24A%22/%3E%3Crect%20x%3D%22104%22%20y%3D%221.5%22%20width%3D%223%22%20height%3D%229%22%20rx%3D%221%22%20fill%3D%22%23D9B24A%22/%3E%3Crect%20x%3D%22107%22%20y%3D%224%22%20width%3D%229%22%20height%3D%224%22%20rx%3D%221%22%20fill%3D%22%239C7A2A%22/%3E%3Ccircle%20cx%3D%22118%22%20cy%3D%226%22%20r%3D%222.2%22%20fill%3D%22%23F2D272%22/%3E%3C/svg%3E") center / contain no-repeat;
+    opacity: 0; transform: translateX(-10px) scaleX(.6); transform-origin: left center;
+    transition: opacity .18s ease, transform .22s ease;
+  }
+  .nav a:hover i, .nav a:focus-visible i { opacity: 1; transform: translateX(0) scaleX(1); }
+  @media (prefers-reduced-motion: reduce) { .nav a, .nav a i { transition: none; } }
 
   /* ---------- Sections ---------- */
   section { display: grid; gap: 18px; scroll-margin-top: 24px; }
@@ -89,6 +115,26 @@
 
   /* ---------- House Cup tally ---------- */
   .cup { padding: 26px 24px; display: grid; gap: 18px; position: relative; }
+  .horn-row { margin-top: 6px; display: flex; align-items: center; justify-content: center; gap: 14px; }
+  .trumpet { width: 96px; height: 48px; flex: none; opacity: 0; transform: scale(.6) translateY(6px); transform-origin: center; filter: drop-shadow(0 3px 4px rgba(0,0,0,.6)); pointer-events: none; }
+  .horn-row.playing .trumpet { animation: heraldIn .45s cubic-bezier(.2,1.4,.4,1) forwards, toot .5s ease-in-out .5s 4 alternate; }
+  .horn-row.playing .trumpet.left { animation-name: heraldInL, tootL; }
+  .horn-row.playing .notes path { animation: noteRise 1.6s ease-out infinite; opacity: 0; }
+  .horn-row.playing .notes .n2 { animation-delay: .8s; }
+  .horn-row.fading .trumpet { animation: heraldOut .4s ease-in forwards; }
+  @keyframes heraldIn { from { opacity: 0; transform: scale(.6) translateY(6px) rotate(8deg); } to { opacity: 1; transform: scale(1) translateY(0) rotate(-6deg); } }
+  @keyframes heraldInL { from { opacity: 0; transform: scale(.6) translateY(6px) rotate(-8deg); } to { opacity: 1; transform: scale(1) translateY(0) rotate(6deg); } }
+  @keyframes toot { from { transform: scale(1) rotate(-6deg); } to { transform: scale(1.04) rotate(-10deg); } }
+  @keyframes tootL { from { transform: scale(1) rotate(6deg); } to { transform: scale(1.04) rotate(10deg); } }
+  @keyframes noteRise { 0% { opacity: 0; transform: translate(0, 4px); } 20% { opacity: 1; } 100% { opacity: 0; transform: translate(6px, -16px); } }
+  @keyframes heraldOut { to { opacity: 0; transform: scale(.7) translateY(6px); } }
+  @media (prefers-reduced-motion: reduce) { .horn-row.playing .trumpet { animation: none; opacity: 1; transform: none; } .horn-row.playing .notes path { animation: none; opacity: 1; } }
+  @media (max-width: 480px) { .trumpet { width: 64px; height: 32px; } }
+  .horn { margin-top: 0; display: inline-flex; align-items: center; gap: 8px; background: none; border: 1px solid var(--line); color: var(--ink-3); font: inherit; font-size: .75rem; letter-spacing: .12em; text-transform: uppercase; padding: 6px 12px; cursor: pointer; }
+  .horn svg { width: 16px; height: 16px; }
+  .horn:hover { color: var(--gold); border-color: var(--gold); }
+  .horn.playing { color: var(--gold-bright); border-color: var(--gold-bright); }
+  #confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50; }
   .cup-row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; gap: 16px; }
   .cup-side { display: grid; gap: 2px; }
   .cup-side.right { text-align: right; }
@@ -163,6 +209,18 @@
   /* ---------- Ledger ---------- */
   .ledger { display: grid; grid-template-columns: 1fr auto; gap: 18px; align-items: center; padding: 24px 26px; border-left: 6px solid var(--gold); }
   .ledger p { margin: 6px 0 0; color: var(--ink); max-width: 60ch; font-size: .92rem; line-height: 1.5; }
+  .gate { display: grid; gap: 8px; justify-items: end; min-width: 0; }
+  .gate-form { display: grid; gap: 6px; justify-items: end; }
+  .gate-row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+  .gate input { font: inherit; font-size: 1rem; letter-spacing: .2em; width: 11ch; padding: 12px 14px; background: var(--surface-2); color: var(--ink); border: 1px solid var(--line-strong); outline: none; }
+  .gate input:focus { border-color: var(--gold-bright); box-shadow: 0 0 0 3px var(--gold-glow); }
+  .gate .btn { padding-block: 12px; }
+  .gate-msg { margin: 0; font-size: .85rem; color: var(--ink-3); min-height: 1.2em; text-align: right; }
+  .gate-msg.err { color: var(--h500); }
+  .gate.shake { animation: shake .35s; }
+  @keyframes shake { 20%, 60% { transform: translateX(-5px); } 40%, 80% { transform: translateX(5px); } }
+  @media (prefers-reduced-motion: reduce) { .gate.shake { animation: none; } }
+  @media (max-width: 760px) { .gate, .gate-form { justify-items: start; } .gate-row { justify-content: flex-start; } .gate-msg { text-align: left; } }
   .btn { display: inline-flex; align-items: center; gap: 10px; padding: 14px 22px; background: linear-gradient(180deg, var(--gold-bright), var(--gold-deep)); color: #1E160C; text-decoration: none; font-weight: 700; letter-spacing: .08em; font-size: .95rem; text-transform: uppercase; border: 1px solid var(--gold-bright); box-shadow: 0 0 0 4px var(--gold-glow), 0 6px 14px rgba(0,0,0,.5); white-space: nowrap; }
   .btn:hover { filter: brightness(1.08); }
   .btn svg { width: 18px; height: 18px; }
@@ -179,6 +237,19 @@
   .event .note { margin: 6px 0 0; font-size: .95rem; }
   .event .rsvp { margin-top: 8px; font-size: .85rem; letter-spacing: .1em; text-transform: uppercase; color: var(--gold); }
   .event.past { opacity: .6; }
+
+  /* ---------- The Code: rules + honor ---------- */
+  .code-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 22px; align-items: stretch; }
+  .rules, .honor { background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); padding: 24px 26px; position: relative; display: grid; gap: 16px; align-content: start; }
+  .rules::before, .honor::before { content: ""; position: absolute; inset: 6px; border: 1px solid var(--line); pointer-events: none; }
+  .rules h3, .honor h3 { margin: 0; font-size: 1.35rem; line-height: 1.1; }
+  .rule-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; max-width: 64ch; }
+  .rule-list li { display: grid; grid-template-columns: 14px 1fr; gap: 12px; align-items: start; line-height: 1.45; }
+  .rule-list li::before { content: ""; width: 8px; height: 8px; margin-top: .55em; transform: rotate(45deg); background: var(--gold); }
+  .honor { text-align: center; justify-items: center; align-content: center; }
+  .pledge { margin: 0; max-width: 40ch; font-style: italic; line-height: 1.5; color: var(--ink); }
+  .oath { margin: 0; font-size: 1.5rem; line-height: 1.1; }
+  @media (max-width: 860px) { .code-grid { grid-template-columns: 1fr; } }
 
   /* ---------- Decree ---------- */
   .decree { padding: 28px 26px; display: grid; grid-template-columns: auto 1fr; gap: 26px; align-items: center; }
@@ -226,7 +297,9 @@
 </style>
 </head>
 <body>
+<canvas id="confetti" aria-hidden="true"></canvas>
 <div class="wrap">
+
 
   <header class="banner">
     <h1>Tweetober 5</h1>
@@ -234,29 +307,65 @@
     <p class="sub">Thirty-one days. Two houses. A winning house, and a single winner who joins the Tweetober Royal Family.</p>
     <div class="rule">MMXXVI</div>
     <nav class="nav" aria-label="Sections">
-      <a href="#ledger">The Ledger</a>
-      <a href="#cup">House Cup</a>
-      <a href="#hall">The Hall</a>
-      <a href="#events">Events</a>
-      <a href="#houses">The Houses</a>
-      <a href="#decree">The Decree</a>
+      <a href="#cup"><span>House Cup</span><i aria-hidden="true"></i></a>
+      <a href="#hall"><span>The Hall</span><i aria-hidden="true"></i></a>
+      <a href="#events"><span>Events</span><i aria-hidden="true"></i></a>
+      <a href="#ledger"><span>The Ledger</span><i aria-hidden="true"></i></a>
+      <a href="#houses"><span>The Houses</span><i aria-hidden="true"></i></a>
+      <a href="#decree"><span>The Decree</span><i aria-hidden="true"></i></a>
+      <a href="#code"><span>The Code</span><i aria-hidden="true"></i></a>
     </nav>
-  </header>
-
-  <!-- ---------- Ledger ---------- -->
-  <section id="ledger">
-    <div class="ledger">
-      <div>
-        <div class="eyebrow">Record your count</div>
-        <h2 class="heading" style="margin:4px 0 0;font-size:2rem;line-height:1">The Ledger</h2>
-        <p>Enter how many tweets you made each day in the shared sheet. It tallies every five days and adds up the month after the 31st.</p>
-      </div>
-      <a class="btn" id="ledgerLink" href="#" target="_blank" rel="noopener">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11l5 5v11H4z"/><path d="M15 4v5h5M8 13h8M8 17h8"/></svg>
-        Open the Ledger
-      </a>
+    <div class="horn-row" id="hornRow">
+      <svg class="trumpet left" viewBox="0 0 120 60" aria-hidden="true"><g transform="translate(120 0) scale(-1 1)">
+        <!-- banner hanging from the tube -->
+        <rect x="46" y="27" width="26" height="24" rx="1" fill="#F26F96"/>
+        <path d="M46 51 L59 44 L72 51 Z" fill="var(--bg)"/>
+        <path d="M46 27 h26" stroke="#7A5C1C" stroke-width="1.5"/>
+        <!-- tube -->
+        <path d="M6 27 h72" stroke="#F2D272" stroke-width="5" stroke-linecap="round"/>
+        <path d="M6 25.5 h72" stroke="#fff7d6" stroke-width="1.2" stroke-linecap="round" opacity=".8"/>
+        <!-- mouthpiece -->
+        <circle cx="5" cy="27" r="3.6" fill="#D9B24A" stroke="#7A5C1C" stroke-width="1"/>
+        <!-- ferrules -->
+        <rect x="40" y="22.5" width="4" height="9" rx="1" fill="#B8902E"/>
+        <rect x="74" y="22.5" width="4" height="9" rx="1" fill="#B8902E"/>
+        <!-- bell -->
+        <path d="M78 27 C90 27 98 18 116 8 L116 46 C98 36 90 27 78 27 Z" fill="#E4C463" stroke="#7A5C1C" stroke-width="1"/>
+        <path d="M84 27 C94 25 102 18 114 11" stroke="#fff7d6" stroke-width="1.2" fill="none" opacity=".7"/>
+        <!-- notes -->
+        <g class="notes" fill="#F2D272">
+          <path class="n1" d="M112 4 v-9 l6 -2 v9 a3 2.2 0 1 1 -1 -2.2 v-4 l-4 1.3 v6 a3 2.2 0 1 1 -1 -2.2 z"/>
+          <path class="n2" d="M118 18 v-8 h1.5 v8 a2.5 1.8 0 1 1 -1.5 -1.7 z"/>
+        </g>
+      </g></svg>
+      <button class="horn" id="horn" type="button" title="Sound the trumpets" aria-label="Sound the trumpets">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10v4h3l5 4V6L6 10H3z"/><path d="M14 9a4 4 0 0 1 0 6"/><path d="M17 6.5a8 8 0 0 1 0 11"/></svg>
+      <span>Sound the trumpets</span>
+    </button>
+      <svg class="trumpet" viewBox="0 0 120 60" aria-hidden="true">
+        <!-- banner hanging from the tube -->
+        <rect x="46" y="27" width="26" height="24" rx="1" fill="#E6E4E0"/>
+        <path d="M46 51 L59 44 L72 51 Z" fill="var(--bg)"/>
+        <path d="M46 27 h26" stroke="#7A5C1C" stroke-width="1.5"/>
+        <!-- tube -->
+        <path d="M6 27 h72" stroke="#F2D272" stroke-width="5" stroke-linecap="round"/>
+        <path d="M6 25.5 h72" stroke="#fff7d6" stroke-width="1.2" stroke-linecap="round" opacity=".8"/>
+        <!-- mouthpiece -->
+        <circle cx="5" cy="27" r="3.6" fill="#D9B24A" stroke="#7A5C1C" stroke-width="1"/>
+        <!-- ferrules -->
+        <rect x="40" y="22.5" width="4" height="9" rx="1" fill="#B8902E"/>
+        <rect x="74" y="22.5" width="4" height="9" rx="1" fill="#B8902E"/>
+        <!-- bell -->
+        <path d="M78 27 C90 27 98 18 116 8 L116 46 C98 36 90 27 78 27 Z" fill="#E4C463" stroke="#7A5C1C" stroke-width="1"/>
+        <path d="M84 27 C94 25 102 18 114 11" stroke="#fff7d6" stroke-width="1.2" fill="none" opacity=".7"/>
+        <!-- notes -->
+        <g class="notes" fill="#F2D272">
+          <path class="n1" d="M112 4 v-9 l6 -2 v9 a3 2.2 0 1 1 -1 -2.2 v-4 l-4 1.3 v6 a3 2.2 0 1 1 -1 -2.2 z"/>
+          <path class="n2" d="M118 18 v-8 h1.5 v8 a2.5 1.8 0 1 1 -1.5 -1.7 z"/>
+        </g>
+      </svg>
     </div>
-  </section>
+  </header>
 
   <!-- ---------- House Cup tally ---------- -->
   <section id="cup">
@@ -310,9 +419,34 @@
     <div class="sec-head">
       <div class="eyebrow">Gatherings</div>
       <h2 class="heading">Events</h2>
-      <p>Tweetober-affiliated gatherings. RSVP on Partiful.</p>
+      <p>Tweetober-affiliated gatherings.</p>
     </div>
     <div class="events" id="eventsGrid"></div>
+  </section>
+
+  <!-- ---------- Ledger ---------- -->
+  <section id="ledger">
+    <div class="ledger">
+      <div>
+        <div class="eyebrow">Record your count</div>
+        <h2 class="heading" style="margin:4px 0 0;font-size:2rem;line-height:1">The Ledger</h2>
+        <p>Enter how many tweets you made each day in the shared sheet. It tallies every five days and adds up the month after the 31st.</p>
+      </div>
+      <div class="gate" id="gate">
+        <form class="gate-form" id="gateForm" autocomplete="off">
+          <label class="eyebrow" for="gateCode">Speak the password</label>
+          <div class="gate-row">
+            <input id="gateCode" name="code" type="password" inputmode="text" autocapitalize="off" spellcheck="false" placeholder="••••••" aria-describedby="gateMsg">
+            <button class="btn" type="submit">Enter</button>
+          </div>
+          <p class="gate-msg" id="gateMsg" aria-live="polite"></p>
+        </form>
+        <a class="btn" id="ledgerLink" href="#" target="_blank" rel="noopener" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11l5 5v11H4z"/><path d="M15 4v5h5M8 13h8M8 17h8"/></svg>
+          Open the Ledger
+        </a>
+      </div>
+    </div>
   </section>
 
   <!-- ---------- Houses ---------- -->
@@ -328,7 +462,7 @@
   <!-- ---------- Decree ---------- -->
   <section id="decree">
     <div class="sec-head">
-      <div class="eyebrow">The rules</div>
+      <div class="eyebrow">The proclamation</div>
       <h2 class="heading">The Decree</h2>
     </div>
     <div class="decree">
@@ -338,6 +472,34 @@
         <p>Placements were decided by the Tweetober Draft. There will be both a winning house and a single winning user, who joins the Tweetober Royal Family.</p>
         <p>Not yet entered? Send a DM to <a href="https://x.com/Tweetober2026" target="_blank" rel="noopener">@Tweetober2026</a> to join the Tweetober group chat.</p>
         <p class="tags">#Tweetober2026 #Teamtober #TweetoberDraft</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------- The Code: rules + honor ---------- -->
+  <section id="code">
+    <div class="sec-head">
+      <div class="eyebrow">Code of conduct</div>
+      <h2 class="heading">The Code</h2>
+    </div>
+    <div class="code-grid">
+      <div class="rules">
+        <h3 class="heading">Rules and Regulations</h3>
+        <ul class="rule-list">
+          <li>The Tweetober tally drops every 5 days.</li>
+          <li>Each Tweetobie must count their daily tweets and report them to the Committee in the Ledger.</li>
+          <li>Only original tweets count.</li>
+          <li>Retweets do not count.</li>
+          <li>Quote tweets count, but you must add something of substance to the quoted tweet. No Tweetdecking.</li>
+          <li>Replies do not count.</li>
+          <li>Threads count. You may reply to yourself.</li>
+          <li>Deleted tweets do not count.</li>
+        </ul>
+      </div>
+      <div class="honor">
+        <h3 class="heading">The Honor Code</h3>
+        <p class="pledge">Tweetober is a noble pursuit, ruled by chivalry and honor. I will only post quality tweets. I will not try to beat the system. I tweet good and true, for the love of the game.</p>
+        <p class="oath heading">May the best tweeter win.</p>
       </div>
     </div>
   </section>
@@ -353,8 +515,10 @@
    CONFIG — everything you need to change lives in this block.
    ===================================================================== */
 const CONFIG = {
-  // The Ledger: the Google Sheet where participants log their counts (the link the button opens)
-  docUrl: "https://docs.google.com/spreadsheets/d/1b3AqoSgvyc1s-21rQQuVK0-HBeTz6cZVUJuWW9BRKy4/edit",
+  // The Ledger link is locked behind a password. Neither the password nor the link is stored in
+  // plain text here: the link is encrypted with the password, and only the right password unlocks it.
+  // To change the password or link, ask for a new ledgerGate block (it has to be generated).
+  ledgerGate: {"salt": "mYi/8h1e1sQGObiX3Uo1bA==", "iv": "nPmevE5Q6BpgZ3GV", "cipher": "9Uy/5Lv3nUmOmF/IwTLXEUojfcF0L6Q0cY8C85N2U/dKoE7D0u70jyD0/n7ahWNi8EVedYQXAqSHklMLBLtt1W9RUOsx7aluLnZ72ajf+A3akiS0rKPflGDzUV9qxLOWABXhkgME4xw=", "hash": "g3EGAdehLWUifwpCfsqW97rQ2xoqpQArvJfPMtCcTnY="},
 
   // CSV view of the Ledger sheet (first tab). Works while the sheet is shared as "Anyone with the link".
   // (If sharing is ever restricted, use File > Share > Publish to web > CSV and paste that link instead.)
@@ -386,7 +550,7 @@ const CONFIG = {
   // house: 333 or 500. url: the tweet's link on Twitter. Any field but handle and text can be left out.
   hallOfFame: [],
 
-  // Events fallback list, used only if the Events tab can't be read. date as YYYY-MM-DD.
+  // Events fallback list, used only if the Events tab can't be read. date as YYYY-MM-DD. url is optional (any RSVP link).
   events: [],
 
   houses: [
@@ -433,7 +597,39 @@ const SHIELD_UNUSED = (key) => `
 </svg>`;
 
 /* ---------- Ledger ---------- */
-$("#ledgerLink").href = CONFIG.docUrl;
+(function gate() {
+  const G = CONFIG.ledgerGate, form = $("#gateForm"), msg = $("#gateMsg"), link = $("#ledgerLink"), box = $("#gate");
+  const enc = new TextEncoder(), b64 = (s) => Uint8Array.from(atob(s), c => c.charCodeAt(0)), b64e = (a) => btoa(String.fromCharCode(...new Uint8Array(a)));
+  const norm = (v) => String(v || "").trim().toLowerCase();
+  const reveal = (url) => { link.href = url; link.hidden = false; form.hidden = true; };
+  try { const saved = localStorage.getItem("tweetober-ledger"); if (saved && /^https:\/\/docs\.google\.com\//.test(saved)) reveal(saved); } catch {}
+  async function unlock(code) {
+    const salt = b64(G.salt);
+    const hash = b64e(await crypto.subtle.digest("SHA-256", enc.encode(code + ":" + G.salt)));
+    if (hash !== G.hash) return null;
+    const km = await crypto.subtle.importKey("raw", enc.encode(code), "PBKDF2", false, ["deriveKey"]);
+    const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations: 150000, hash: "SHA-256" }, km, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+    const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64(G.iv) }, key, b64(G.cipher));
+    return new TextDecoder().decode(plain);
+  }
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const code = norm($("#gateCode").value);
+    if (!code) return;
+    msg.textContent = "Checking…"; msg.classList.remove("err");
+    let url = null;
+    try { url = await unlock(code); } catch (err) { console.warn(err); }
+    if (url) {
+      msg.textContent = "";
+      try { localStorage.setItem("tweetober-ledger", url); } catch {}
+      reveal(url);
+    } else {
+      msg.textContent = "The gate does not open."; msg.classList.add("err");
+      $("#gateCode").value = ""; $("#gateCode").focus();
+      box.classList.remove("shake"); void box.offsetWidth; box.classList.add("shake");
+    }
+  });
+})();
 
 /* ---------- Ledger CSV ---------- */
 function parseCsv(text) {
@@ -653,7 +849,7 @@ function renderEvents() {
         <h3 class="heading">${esc(e.name)}</h3>
         <p class="when">${esc(when)}${e.place ? ` · ${esc(e.place)}` : ""}</p>
         ${e.note ? `<p class="note">${esc(e.note)}</p>` : ""}
-        <div class="rsvp">${past ? "Past event" : link ? "RSVP on Partiful ↗" : "Details soon"}</div>
+        ${past ? `<div class="rsvp">Past event</div>` : link ? `<div class="rsvp">RSVP ↗</div>` : ""}
       </div>
     </${tag}>`;
   }).join("") : `<p class="empty">No gatherings announced yet.</p>`;
@@ -671,6 +867,87 @@ function mountFeed() {
   s.onerror = () => { if (hasList) slot.innerHTML = `<p style="margin:16px;color:var(--ink-2)">The feed could not load here. <a href="${url}" target="_blank" rel="noopener">Open the ${CONFIG.listName} list on Twitter</a>.</p>`; };
   document.body.appendChild(s);
 }
+
+/* ---------- Fanfare: synthesized brass, played from the trumpet button ---------- */
+const fanfare = (() => {
+  let ac = null;
+  function voice(freq, t0, dur, gainPeak) {
+    // brass-ish: two detuned saws + a square through a lowpass with a quick swell
+    const out = ac.createGain(); out.gain.setValueAtTime(0, t0);
+    out.gain.linearRampToValueAtTime(gainPeak, t0 + 0.03); out.gain.setValueAtTime(gainPeak, t0 + dur - 0.06); out.gain.linearRampToValueAtTime(0, t0 + dur);
+    const lp = ac.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.setValueAtTime(900, t0); lp.frequency.linearRampToValueAtTime(2600, t0 + 0.08); lp.Q.value = 0.8;
+    [["sawtooth", 0, 0.55], ["sawtooth", 7, 0.35], ["square", -5, 0.18]].forEach(([type, cents, g]) => {
+      const o = ac.createOscillator(), og = ac.createGain(); o.type = type; o.frequency.value = freq; o.detune.value = cents; og.gain.value = g;
+      o.connect(og); og.connect(lp); o.start(t0); o.stop(t0 + dur + 0.05);
+    });
+    lp.connect(out); out.connect(ac.destination);
+  }
+  function play() {
+    try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); } catch { return false; }
+    if (ac.state === "suspended") ac.resume();
+    const t = ac.currentTime + 0.02, N = { G4: 392, C5: 523.25, E5: 659.25, G5: 783.99, C6: 1046.5 };
+    // ta-ta-ta-TAAA, ta-ta-ta-TAAA (higher), then the chord
+    const seq = [[N.G4, 0, .14], [N.G4, .16, .14], [N.G4, .32, .14], [N.C5, .5, .42],
+                 [N.C5, 1.0, .14], [N.C5, 1.16, .14], [N.C5, 1.32, .14], [N.E5, 1.5, .42],
+                 [N.G5, 2.05, .8], [N.E5, 2.05, .8], [N.C5, 2.05, .8], [N.C6, 2.35, .55]];
+    seq.forEach(([f, at, d]) => voice(f, t + at, d, 0.16));
+    return true;
+  }
+  return play;
+})();
+(function armFanfare() {
+  const btn = document.getElementById("horn"), row = document.getElementById("hornRow"); if (!btn) return;
+  let tm1, tm2;
+  btn.addEventListener("click", () => {
+    if (!fanfare()) return;
+    clearTimeout(tm1); clearTimeout(tm2);
+    btn.classList.add("playing"); row.classList.remove("fading"); row.classList.remove("playing"); void row.offsetWidth; row.classList.add("playing");
+    tm1 = setTimeout(() => { row.classList.add("fading"); btn.classList.remove("playing"); }, 3000);
+    tm2 = setTimeout(() => { row.classList.remove("playing", "fading"); }, 3450);
+  });
+})();
+
+/* ---------- Confetti: two bursts from the sides on arrival ---------- */
+(function confetti() {
+  const c = document.getElementById("confetti"); if (!c) return;
+  const ctx = c.getContext("2d"), dpr = Math.min(2, devicePixelRatio || 1);
+  const size = () => { c.width = innerWidth * dpr; c.height = innerHeight * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); };
+  size();
+  const colors = ["#F26F96", "#F26F96", "#E6E4E0", "#C9C6C0", "#D9B24A"];
+  const P = [];
+  const burst = (x, y, dir, n) => {
+    for (let i = 0; i < n; i++) {
+      const ang = (dir > 0 ? 0 : Math.PI) + (Math.random() - 0.5) * 1.3 - 0.35;   // fan, angled slightly upward
+      const sp = 9 + Math.random() * 13;
+      P.push({ x, y, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp - 4, w: 6 + Math.random() * 6, h: 4 + Math.random() * 4,
+        r: Math.random() * Math.PI, vr: (Math.random() - 0.5) * 0.3, c: colors[(Math.random() * colors.length) | 0],
+        life: 1, decay: 0.006 + Math.random() * 0.006, wob: Math.random() * Math.PI * 2 });
+    }
+  };
+  const H = innerHeight, W = innerWidth;
+  burst(-10, H * 0.55, 1, W < 600 ? 70 : 110);
+  burst(W + 10, H * 0.55, -1, W < 600 ? 70 : 110);
+  setTimeout(() => { burst(-10, H * 0.35, 1, 50); burst(W + 10, H * 0.35, -1, 50); }, 220);
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min(2, (now - last) / 16.7); last = now;
+    ctx.clearRect(0, 0, W, H);
+    let alive = 0;
+    for (const p of P) {
+      if (p.life <= 0) continue; alive++;
+      p.vy += 0.28 * dt; p.vx *= Math.pow(0.985, dt); p.vy *= Math.pow(0.992, dt);
+      p.wob += 0.12 * dt; p.x += (p.vx + Math.sin(p.wob) * 0.6) * dt; p.y += p.vy * dt; p.r += p.vr * dt;
+      if (p.y > H + 20) { p.life = 0; continue; }
+      p.life -= p.decay * dt;
+      ctx.save(); ctx.globalAlpha = Math.max(0, Math.min(1, p.life * 1.4)); ctx.translate(p.x, p.y); ctx.rotate(p.r);
+      ctx.fillStyle = p.c; ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h * (0.4 + 0.6 * Math.abs(Math.cos(p.wob))));
+      ctx.restore();
+    }
+    if (alive) requestAnimationFrame(frame); else c.remove();
+  }
+  requestAnimationFrame(frame);
+  addEventListener("resize", size, { once: true });
+})();
 
 /* ---------- boot ---------- */
 renderHouses();
