@@ -1,4 +1,3 @@
-js
 // Tweetober 5 - serves the site, plus a tiny message board API for The Hall.
 //
 //   GET    /api/messages            -> latest 60 messages (oldest first)
