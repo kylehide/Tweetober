@@ -475,6 +475,18 @@
   .gt-text { margin: 0; line-height: 1.4; font-size: 1em; color: #EFE9DC; overflow-wrap: anywhere; white-space: pre-line; }
   .gt-text a { color: var(--gold); text-decoration: none; }
   .gt-text a.mention.h333 { color: var(--h333); } .gt-text a.mention.h500 { color: var(--h500); }
+  .gt-media { display: grid; gap: 2px; border-radius: 12px; overflow: hidden; border: 1px solid var(--line-strong); margin-top: 4px; max-width: 520px; }
+  .gt-media.n2, .gt-media.n4 { grid-template-columns: 1fr 1fr; }
+  .gt-media.n3 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+  .gt-media.n3 > :first-child { grid-row: 1 / 3; }
+  .gt-media.n2 .gt-m, .gt-media.n3 .gt-m, .gt-media.n4 .gt-m { aspect-ratio: 1 / 1; }
+  .gt-media.n1 .gt-m { max-height: 420px; }
+  .gt-m { display: block; position: relative; width: 100%; min-height: 0; overflow: hidden; background: #000; }
+  .gt-m img, .gt-m video, video.gt-m { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .gt-media.n1 .gt-m img, .gt-media.n1 video { object-fit: contain; max-height: 420px; }
+  .gt-vid { cursor: pointer; }
+  .gt-play { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 54px; height: 54px; border-radius: 50%; border: 2px solid #fff; background: rgba(0,0,0,.55); color: #fff; font-size: 20px; padding-left: 4px; cursor: pointer; }
+  .gt-vid:hover .gt-play { background: rgba(0,0,0,.75); }
   .gt-foot { display: flex; gap: 16px; font-size: .9em; color: var(--ink-3); }
   .gt-foot a { margin-left: auto; color: var(--gold); text-decoration: none; }
   .gt-more { display: block; padding: 10px 14px; text-align: center; font-size: .82rem; letter-spacing: .08em; text-transform: uppercase; color: var(--gold); text-decoration: none; border-top: 1px dashed var(--line); }
@@ -1282,6 +1294,20 @@ function mountFeed() {
     .replace(/https?:\/\/[^\s<]+/g, (u) => `<a href="${u}" target="_blank" rel="noopener">${u.replace(/^https?:\/\/(www\.)?/, "").slice(0, 32)}${u.length > 40 ? "…" : ""}</a>`)
     .replace(/(^|[^\w&])@(\w{1,15})/g, (m, pre, h) => `${pre}<a class="mention ${houseOfHandle(h)}" href="https://x.com/${h}" target="_blank" rel="noopener">@${h}</a>`)
     .replace(/(^|[^\w&])#(\w+)/g, (m, pre, t) => `${pre}<a href="https://x.com/hashtag/${t}" target="_blank" rel="noopener">#${t}</a>`);
+  const twMedia = (u) => /^https:\/\/(pbs|video)\.twimg\.com\//.test(String(u || "")) ? esc(u) : "";
+  const mediaHtml = (list, link) => {
+    const items = (list || []).filter(m => twMedia(m.img) || twMedia(m.video)).slice(0, 4);
+    if (!items.length) return "";
+    const one = items.length === 1, ratio = (m) => (m.w && m.h) ? `aspect-ratio:${m.w}/${m.h};` : "";
+    return `<div class="gt-media n${items.length}">${items.map(m => {
+      const img = twMedia(m.img), vid = twMedia(m.video), style = one ? ratio(m) : "";
+      if (m.type === "gif" && vid) return `<video class="gt-m" style="${style}" src="${vid}" ${img ? `poster="${img}"` : ""} autoplay muted loop playsinline preload="metadata"></video>`;
+      if (m.type === "video" && vid) return `<div class="gt-m gt-vid" style="${style}" data-src="${vid}">${img ? `<img src="${img}" alt="" loading="lazy" referrerpolicy="no-referrer">` : ""}<button type="button" class="gt-play" aria-label="Play video">▶</button></div>`;
+      return img ? `<a class="gt-m" style="${style}" href="${link}" target="_blank" rel="noopener"><img src="${img}${/pbs\.twimg\.com\/media\//.test(img) && !/[?&]name=/.test(img) ? (img.includes("?") ? "&" : "?") + "name=small" : ""}" alt="" loading="lazy" referrerpolicy="no-referrer"></a>` : "";
+    }).join("")}</div>`;
+  };
+  // text ends with a t.co link that just points at the attached media; hide it when we're showing the media
+  const trimMediaLink = (txt, has) => has ? String(txt || "").replace(/\s*https:\/\/t\.co\/\w+\s*$/, "") : txt;
   const tweetHtml = (t) => {
     const a = t.author || {}, hk = houseOfHandle(a.userName);
     const link = safeUrl(t.url) || `https://x.com/${encodeURIComponent(a.userName)}/status/${encodeURIComponent(t.id)}`;
@@ -1290,7 +1316,8 @@ function mountFeed() {
       <a class="gt-av" href="${xUrl(a.userName)}" target="_blank" rel="noopener">${av ? `<img src="${av}" alt="" width="40" height="40" loading="lazy" referrerpolicy="no-referrer">` : ""}</a>
       <div class="gt-main">
         <div class="gt-head"><a class="gt-name" href="${xUrl(a.userName)}" target="_blank" rel="noopener">${esc(a.name || a.userName)}</a><span class="gt-handle">@${esc(a.userName)}</span><a class="gt-time" href="${link}" target="_blank" rel="noopener" title="${esc(new Date(t.created).toLocaleString())}" data-t="${Number(t.created)}">${ago(t.created)}</a></div>
-        <p class="gt-text">${linkify(t.text)}</p>
+        ${trimMediaLink(t.text, (t.media || []).length) ? `<p class="gt-text">${linkify(trimMediaLink(t.text, (t.media || []).length))}</p>` : ""}
+        ${mediaHtml(t.media, link)}
         <div class="gt-foot"><span>♥ ${fmt(t.likes || 0)}</span><span>⟲ ${fmt(t.retweets || 0)}</span><span>✎ ${fmt(t.replies || 0)}</span><a href="${link}" target="_blank" rel="noopener">View ↗</a></div>
       </div></li>`;
   };
@@ -1332,6 +1359,12 @@ function mountFeed() {
   s.onload = () => { window.twttr?.widgets?.load($("#fame")); };
   document.body.appendChild(s);
 
+  slot.addEventListener("click", (e) => {
+    const v = e.target.closest(".gt-vid"); if (!v || v.querySelector("video")) return;
+    const src = twMedia(v.dataset.src); if (!src) return;
+    const poster = v.querySelector("img")?.getAttribute("src") || "";
+    v.innerHTML = `<video src="${src}" ${poster ? `poster="${poster}"` : ""} controls autoplay playsinline></video>`;
+  });
   let live = false;
   async function refresh() {
     try {
@@ -1341,6 +1374,7 @@ function mountFeed() {
       const d = await r.json();
       if (!r.ok || !Array.isArray(d.tweets)) { if (!live) { embed(); setTimeout(card, 12000); } return; }   // not configured yet
       live = true;
+      if ([...slot.querySelectorAll(".gt-vid video")].some(v => !v.paused)) return;   // don't interrupt someone watching a video
       const keep = slot.querySelector(".gt-list")?.scrollTop || 0;
       drawGlass(d.tweets.slice(0, 40));
       const l = slot.querySelector(".gt-list"); if (l) l.scrollTop = keep;
