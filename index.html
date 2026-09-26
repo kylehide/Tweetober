@@ -25,7 +25,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="assets/favicon-512.png">
 <link rel="apple-touch-icon" href="assets/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pirata+One&family=VT323&family=IBM+Plex+Mono:wght@400;600&family=Caveat:wght@500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pirata+One&family=VT323&family=IBM+Plex+Mono:wght@400;600&family=Metamorphous&display=swap">
 <style>
   /* Single look, by design: the stone keep at night. Colors come from the crest and the invitation. */
   :root {
@@ -401,14 +401,14 @@
   .tavern .who { display: flex; flex-wrap: wrap; column-gap: 10px; align-items: baseline; }
   .tavern .who b { font-weight: 400; font-size: 1.05rem; letter-spacing: .02em; }   /* names in the site's pixel font; messages below in handwriting */
   .tavern .who time { font-size: .68rem; color: #7A5E3A; letter-spacing: .06em; }
-  .tavern .body { font-family: "Caveat", "Segoe Script", "Bradley Hand", cursive; font-weight: 500; font-size: 1.25rem; color: #2B1A0E; text-shadow: 0 0 .5px rgba(43,26,14,.4); }
+  .tavern .body { font-family: "Metamorphous", "Pirata One", Georgia, serif; font-weight: 400; font-size: 1rem; line-height: 1.45; color: #2B1A0E; text-shadow: 0 0 .5px rgba(43,26,14,.45); }   /* storybook medieval, in ink */
   /* moderator's × (only shown once the page has been opened with ?key=…) */
   .tavern .zap { display: none; margin-left: auto; width: 22px; height: 22px; padding: 0; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink-3); font: inherit; font-size: .8rem; line-height: 1; border-radius: 3px; }
   body.admin .tavern .zap { display: inline-flex; align-items: center; justify-content: center; }
   .tavern .zap:hover { color: var(--h500); border-color: var(--h500); }
   .tavern li.gone { opacity: .35; }
   .tavern li.gone .body { text-decoration: line-through; }
-  .tavern .empty { color: #6E5230; font-family: "Caveat", cursive; font-size: 1.1rem; }
+  .tavern .empty { color: #6E5230; font-family: "Metamorphous", serif; font-size: .95rem; }
   .tavern .sample { font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: #7A5E3A; text-align: center; }
   .tavern-form { display: grid; gap: 12px; }
   .tf-row { display: flex; gap: 14px; flex-wrap: wrap; align-items: end; }
@@ -573,7 +573,7 @@
   .tavern .flair, .gt .flair { display: inline-block; width: 14px; height: 13px; margin-left: 6px; vertical-align: -1px; background: center / contain no-repeat; filter: drop-shadow(0 1px 0 rgba(0,0,0,.6)); }
   .tavern .flair.h333, .gt .flair.h333 { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 22'%3E%3Cpath d='M12 21 C4 15 1 11 1 6.5 A5.5 5.5 0 0 1 12 4.5 A5.5 5.5 0 0 1 23 6.5 C23 11 20 15 12 21Z' fill='%23C9C6C0' stroke='%23F4F3F0' stroke-width='1'/%3E%3C/svg%3E"); }
   .tavern .flair.h500, .gt .flair.h500 { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 22'%3E%3Cpath d='M12 21 C4 15 1 11 1 6.5 A5.5 5.5 0 0 1 12 4.5 A5.5 5.5 0 0 1 23 6.5 C23 11 20 15 12 21Z' fill='%23F26F96' stroke='%23FFB3C7' stroke-width='1'/%3E%3C/svg%3E"); }
-  .tavern .body.flip { font-weight: 700; }
+  .tavern .body.flip { font-weight: 400; }
   .tavern .body.flip.h333 { color: #3E4A56; } .tavern .body.flip.h500 { color: #9E2248; }   /* house colors in ink */
   .tavern .flair { filter: drop-shadow(0 0 .6px #3A2A18) drop-shadow(0 1px 0 rgba(58,42,24,.4)); }
   .tavern .zap { background: rgba(255,245,220,.6); border-color: #9C7A4A; color: #6E5230; }
