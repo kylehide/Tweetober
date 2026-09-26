@@ -121,25 +121,37 @@
   /* ---------- House Cup tally ---------- */
   .cup { padding: 26px 24px; display: grid; gap: 18px; position: relative; }
   .horn-row { margin-top: 22px; display: flex; align-items: center; justify-content: center; gap: 14px; }
-  .trumpet { width: 96px; height: 48px; flex: none; overflow: visible; opacity: 0; transform: scale(.6) translateY(6px); transform-origin: center; filter: drop-shadow(0 3px 4px rgba(0,0,0,.6)); pointer-events: none; }
-  .horn-row.playing .trumpet { animation: heraldIn .45s cubic-bezier(.2,1.4,.4,1) forwards, toot .5s ease-in-out .5s 4 alternate; }
-  .horn-row.playing .trumpet.left { animation-name: heraldInL, tootL; }
-  .horn-row.playing .notes .n1, .horn-row.playing .notes .n2 { animation: noteRise 1.6s ease-out infinite; opacity: 0; }
-  .horn-row.playing .notes .n2 { animation-delay: .8s; }
-  .horn-row.fading .trumpet { animation: heraldOut .4s ease-in forwards; }
+  /* .herald wraps a trumpet and its two notes; the notes are ordinary positioned elements (not SVG children),
+     because CSS transforms on elements inside an SVG behave differently in Safari and Firefox on phones. */
+  .herald { position: relative; display: block; width: 96px; height: 48px; flex: none; opacity: 0; transform: scale(.6) translateY(6px); transform-origin: center; pointer-events: none; }
+  .trumpet { display: block; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 3px 4px rgba(0,0,0,.6)); }
+  .note { position: absolute; width: 14px; height: 22px; opacity: 0; filter: drop-shadow(0 1px 1px rgba(0,0,0,.6)); }
+  .note.n2 { width: 22px; height: 23px; }
+  .herald .n1 { left: 85%; top: -14px; } .herald .n2 { left: 96%; top: -24px; }
+  .herald.left .n1 { left: auto; right: 85%; } .herald.left .n2 { left: auto; right: 96%; }
+  .horn-row.playing .herald { animation: heraldIn .45s cubic-bezier(.2,1.4,.4,1) forwards, toot .5s ease-in-out .5s 4 alternate; }
+  .horn-row.playing .herald.left { animation-name: heraldInL, tootL; }
+  .horn-row.playing .note { animation: noteRise 1.6s ease-out infinite; }
+  .horn-row.playing .herald.left .note { animation-name: noteRiseL; }
+  .horn-row.playing .n2 { animation-delay: .8s; }
+  .horn-row.fading .herald { animation: heraldOut .4s ease-in forwards; }
   @keyframes heraldIn { from { opacity: 0; transform: scale(.6) translateY(6px) rotate(8deg); } to { opacity: 1; transform: scale(1) translateY(0) rotate(-6deg); } }
   @keyframes heraldInL { from { opacity: 0; transform: scale(.6) translateY(6px) rotate(-8deg); } to { opacity: 1; transform: scale(1) translateY(0) rotate(6deg); } }
   @keyframes toot { from { transform: scale(1) rotate(-6deg); } to { transform: scale(1.04) rotate(-10deg); } }
   @keyframes tootL { from { transform: scale(1) rotate(6deg); } to { transform: scale(1.04) rotate(10deg); } }
-  @keyframes noteRise { 0% { opacity: 0; translate: 0 6px; } 20% { opacity: 1; } 100% { opacity: 0; translate: 8px -16px; } }
+  @keyframes noteRise { 0% { opacity: 0; transform: translate(0, 6px); } 20% { opacity: 1; } 100% { opacity: 0; transform: translate(8px, -16px); } }
+  @keyframes noteRiseL { 0% { opacity: 0; transform: translate(0, 6px); } 20% { opacity: 1; } 100% { opacity: 0; transform: translate(-8px, -16px); } }
   @keyframes heraldOut { to { opacity: 0; transform: scale(.7) translateY(6px); } }
-  /* Narrow screens: the button keeps one line; the trumpets appear as a pair beneath it while playing */
+  /* Narrow screens: a tighter button, smaller trumpets, still one on each side */
   @media (max-width: 560px) {
-    .horn-row { flex-wrap: wrap; gap: 6px 28px; }
-    .horn { order: -1; font-size: .7rem; }
-    .horn-row::after { content: ""; flex-basis: 100%; height: 0; order: -1; }   /* line break after the button */
-    .trumpet { display: none; margin-top: 24px; }                             /* room above for the notes */
-    .horn-row.playing .trumpet, .horn-row.fading .trumpet { display: block; }
+    .horn-row { gap: 10px; }
+    .horn { font-size: .62rem; letter-spacing: .08em; padding: 7px 9px; }
+    .horn svg { display: none; }
+    .herald { flex: 1 1 0; width: auto; max-width: 72px; min-width: 36px; height: auto; aspect-ratio: 2 / 1; }   /* fills what the button leaves */
+    .horn { flex: 0 0 auto; }
+    .herald .n1 { left: 62%; } .herald .n2 { left: 74%; }                      /* keep the notes inside the screen edge */
+    .herald.left .n1 { right: 62%; } .herald.left .n2 { right: 74%; }
+    .banner { overflow-x: clip; }
   }
   .horn { margin-top: 0; display: inline-flex; white-space: nowrap; align-items: center; gap: 8px; background: none; border: 1px solid var(--line); color: var(--ink-3); font: inherit; font-size: .75rem; letter-spacing: .12em; text-transform: uppercase; padding: 6px 12px; cursor: pointer; }
   .horn svg { width: 16px; height: 16px; }
@@ -483,7 +495,8 @@ try { if (sessionStorage.getItem("tweetober-gates") === "1") document.getElement
       <a href="#code"><span>The Code</span><i aria-hidden="true"></i></a>
     </nav>
     <div class="horn-row" id="hornRow">
-      <svg class="trumpet left" viewBox="0 0 120 60" aria-hidden="true"><g transform="translate(120 0) scale(-1 1)">
+      <span class="herald left">
+      <svg class="trumpet" viewBox="0 0 120 60" aria-hidden="true"><g transform="translate(120 0) scale(-1 1)">
         <!-- banner hanging from the tube -->
         <rect x="46" y="27" width="26" height="24" rx="1" fill="#F26F96"/>
         <path d="M46 51 L59 44 L72 51 Z" fill="var(--bg)"/>
@@ -499,27 +512,15 @@ try { if (sessionStorage.getItem("tweetober-gates") === "1") document.getElement
         <!-- bell -->
         <path d="M78 27 C90 27 98 18 116 8 L116 46 C98 36 90 27 78 27 Z" fill="#E4C463" stroke="#7A5C1C" stroke-width="1"/>
         <path d="M84 27 C94 25 102 18 114 11" stroke="#fff7d6" stroke-width="1.2" fill="none" opacity=".7"/>
-        <!-- notes -->
-        <g class="notes" fill="#F2D272" stroke="#F2D272" stroke-linecap="round">
-          <!-- single eighth note -->
-          <g class="n1" transform="translate(108 -2) scale(-1 1)">
-            <ellipse cx="0" cy="0" rx="3.6" ry="2.6" transform="rotate(-25)" stroke="none"/>
-            <path d="M3 -0.8 V-14" stroke-width="1.6" fill="none"/>
-            <path d="M3 -14 c4 2 5 5 3 9" stroke-width="1.6" fill="none"/>
-          </g>
-          <!-- beamed pair -->
-          <g class="n2" transform="translate(122 -11) scale(-.85 .85)">
-            <ellipse cx="0" cy="0" rx="3.6" ry="2.6" transform="rotate(-25)" stroke="none"/>
-            <ellipse cx="11" cy="-2" rx="3.6" ry="2.6" transform="rotate(-25 11 -2)" stroke="none"/>
-            <path d="M3 -0.8 V-13 M14 -2.8 V-15" stroke-width="1.6" fill="none"/>
-            <path d="M3 -13 L14 -15" stroke-width="3" fill="none"/>
-          </g>
-        </g>
       </g></svg>
+      <svg class="note n1" viewBox="-5 -18 14 22" aria-hidden="true"><g fill="#F2D272" stroke="#F2D272" stroke-linecap="round"><ellipse cx="0" cy="0" rx="3.6" ry="2.6" transform="rotate(-25)" stroke="none"/><path d="M3 -0.8 V-14" stroke-width="1.6" fill="none"/><path d="M3 -14 c4 2 5 5 3 9" stroke-width="1.6" fill="none"/></g></svg>
+      <svg class="note n2" viewBox="-5 -19 22 23" aria-hidden="true"><g fill="#F2D272" stroke="#F2D272" stroke-linecap="round"><ellipse cx="0" cy="0" rx="3.6" ry="2.6" transform="rotate(-25)" stroke="none"/><ellipse cx="11" cy="-2" rx="3.6" ry="2.6" transform="rotate(-25 11 -2)" stroke="none"/><path d="M3 -0.8 V-13 M14 -2.8 V-15" stroke-width="1.6" fill="none"/><path d="M3 -13 L14 -15" stroke-width="3" fill="none"/></g></svg>
+      </span>
       <button class="horn" id="horn" type="button" title="Sound the trumpets" aria-label="Sound the trumpets">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10v4h3l5 4V6L6 10H3z"/><path d="M14 9a4 4 0 0 1 0 6"/><path d="M17 6.5a8 8 0 0 1 0 11"/></svg>
       <span>Sound the trumpets</span>
     </button>
+      <span class="herald">
       <svg class="trumpet" viewBox="0 0 120 60" aria-hidden="true">
         <!-- banner hanging from the tube -->
         <rect x="46" y="27" width="26" height="24" rx="1" fill="#E6E4E0"/>
@@ -536,23 +537,10 @@ try { if (sessionStorage.getItem("tweetober-gates") === "1") document.getElement
         <!-- bell -->
         <path d="M78 27 C90 27 98 18 116 8 L116 46 C98 36 90 27 78 27 Z" fill="#E4C463" stroke="#7A5C1C" stroke-width="1"/>
         <path d="M84 27 C94 25 102 18 114 11" stroke="#fff7d6" stroke-width="1.2" fill="none" opacity=".7"/>
-        <!-- notes -->
-        <g class="notes" fill="#F2D272" stroke="#F2D272" stroke-linecap="round">
-          <!-- single eighth note -->
-          <g class="n1" transform="translate(108 -2)">
-            <ellipse cx="0" cy="0" rx="3.6" ry="2.6" transform="rotate(-25)" stroke="none"/>
-            <path d="M3 -0.8 V-14" stroke-width="1.6" fill="none"/>
-            <path d="M3 -14 c4 2 5 5 3 9" stroke-width="1.6" fill="none"/>
-          </g>
-          <!-- beamed pair -->
-          <g class="n2" transform="translate(122 -11) scale(.85)">
-            <ellipse cx="0" cy="0" rx="3.6" ry="2.6" transform="rotate(-25)" stroke="none"/>
-            <ellipse cx="11" cy="-2" rx="3.6" ry="2.6" transform="rotate(-25 11 -2)" stroke="none"/>
-            <path d="M3 -0.8 V-13 M14 -2.8 V-15" stroke-width="1.6" fill="none"/>
-            <path d="M3 -13 L14 -15" stroke-width="3" fill="none"/>
-          </g>
-        </g>
       </svg>
+      <svg class="note n1" viewBox="-5 -18 14 22" aria-hidden="true"><g fill="#F2D272" stroke="#F2D272" stroke-linecap="round"><ellipse cx="0" cy="0" rx="3.6" ry="2.6" transform="rotate(-25)" stroke="none"/><path d="M3 -0.8 V-14" stroke-width="1.6" fill="none"/><path d="M3 -14 c4 2 5 5 3 9" stroke-width="1.6" fill="none"/></g></svg>
+      <svg class="note n2" viewBox="-5 -19 22 23" aria-hidden="true"><g fill="#F2D272" stroke="#F2D272" stroke-linecap="round"><ellipse cx="0" cy="0" rx="3.6" ry="2.6" transform="rotate(-25)" stroke="none"/><ellipse cx="11" cy="-2" rx="3.6" ry="2.6" transform="rotate(-25 11 -2)" stroke="none"/><path d="M3 -0.8 V-13 M14 -2.8 V-15" stroke-width="1.6" fill="none"/><path d="M3 -13 L14 -15" stroke-width="3" fill="none"/></g></svg>
+      </span>
     </div>
     <p class="horn-count" id="hornCount" aria-live="polite"></p>
   </header>
