@@ -458,10 +458,10 @@
       </div>
       <div class="panel board-panel">
         <div class="board-head">
-          <h2 class="heading">The Tavern Board</h2>
+          <h2 class="heading">The Tea Room</h2>
           <span class="board-status" id="tavernStatus" aria-live="polite"></span>
         </div>
-        <p class="feed-note" style="margin-top:-6px">Leave word for the houses. Messages appear for everyone within a few seconds.</p>
+        <p class="feed-note" style="margin-top:-6px">Spill it. Messages appear for everyone within a few seconds.</p>
         <ol class="tavern" id="tavern" aria-label="Messages"></ol>
         <form class="tavern-form" id="tavernForm" autocomplete="off">
           <div class="tf-row">
@@ -610,7 +610,7 @@ const CONFIG = {
   // How often to re-read the sheet, in minutes
   refreshMinutes: 5,
 
-  // The Tavern Board's server address. On the Cloudflare site this is just "/api/messages".
+  // The Tea Room's server address. On the Cloudflare site this is just "/api/messages".
   hallApi: "/api/messages",
   hallPollSeconds: 5,
   // How many names to show on the Scroll of Honor
@@ -945,7 +945,7 @@ function mountFeed() {
   document.body.appendChild(s);
 }
 
-/* ---------- The Tavern Board (live messages) ---------- */
+/* ---------- The Tea Room (live messages) ---------- */
 (function tavern() {
   const list = $("#tavern"), form = $("#tavernForm"); if (!list || !form) return;
   const COLORS = ["#F26F96", "#E6E4E0", "#F2D272", "#B99CFF", "#8CC8FF", "#8FE3B6", "#FF9D5C", "#FFB3C7"];
@@ -984,7 +984,7 @@ function mountFeed() {
   function render(msgs, replace) {
     const stick = replace || atBottom();
     if (replace) list.innerHTML = "";
-    if (!msgs.length && replace) { list.innerHTML = `<li class="empty">The board is quiet. Be the first to speak.</li>`; return; }
+    if (!msgs.length && replace) { list.innerHTML = `<li class="empty">The kettle is on. Be the first to spill.</li>`; return; }
     list.querySelector(".empty")?.remove();
     list.insertAdjacentHTML("beforeend", msgs.map(row).join(""));
     while (list.children.length > 200) list.firstElementChild.remove();
@@ -1001,7 +1001,7 @@ function mountFeed() {
       { id: 2, name: "trinity333__", color: "#E6E4E0", body: "333 does not fear numbers. 333 IS numbers.", created: now - 300000 },
       { id: 3, name: "mickal500", color: "#F26F96", body: "see you on the scroll of honor ❤", created: now - 60000 },
     ], true);
-    list.insertAdjacentHTML("afterbegin", `<li class="sample">Sample messages · the live board runs on the Tweetober site</li>`);
+    list.insertAdjacentHTML("afterbegin", `<li class="sample">Sample messages · the live Tea Room runs on the Tweetober site</li>`);
     setStatus(false, "Preview");
   }
   async function poll(full) {
