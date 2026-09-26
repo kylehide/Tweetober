@@ -37,6 +37,10 @@
     --stone: url("assets/stone.jpg");
   }
   * { box-sizing: border-box; }
+  /* A pixel sword for a cursor (tip at the top-left); it turns gold over anything clickable */
+  html { cursor: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAA2ElEQVR42uXWLw7CMBTH8e8IB5hATO0AExOVeDyGkHAADsUp8HjkBAl/NAqB2A2KerAQFlrG8lr4qYq3pe+T9qXkWWrzLLUoZYBy7hvQklAXGMqi2h0AMGVhAc6XOvkvAS0JdYGkeQuaAhJTFvQpEY5Am8TpuAdgMZ/1IhGewLcl5D9t9eEKdJWQ7zarMQCT5fZlffgCvhKunccn4Crh2nm8Am2nXOLaebjvga6dT80IgHWF/a0z4Hq/pe4hcY18DvhONl+JeAQkvi+id4LxTsJP58ezpLrADXA2nNWWIHpOAAAAAElFTkSuQmCC") 1 1, auto; }
+  a, button, [role="radio"], label, summary { cursor: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAA00lEQVR42uXWIQ7CMBTG8f8IB5hATO0EU0g805wBwaEQOwN6eCQKgSQYEAhu0KkHC0lZy1heC09VvC19v7RfSp6lJs9Sg1KNUK7HBrQk1AXGsjjUSwCKsjIA5+s9+S8BLQl1gaR9C9oCUkVZMaREOAI2icvpCMB8tRtEIjyBb0vIf2z94Qr0lZDvtuvZ2/7wBXwlXCePT8BVwnXyeAVsp1zKNyfCew/0nXwxnQCw2WN+6wy43m/pe0rcIs8B32TzlYhHQMr3RdQlGG8Sfpofr5LqAg05zpzV4kF+AQAAAABJRU5ErkJggg==") 1 1, pointer; }
+  input, textarea { cursor: text; }
   [hidden] { display: none !important; }
   html, body { margin: 0; }
   html { font-size: 22px; }
@@ -79,7 +83,7 @@
   .rule::after { background: linear-gradient(90deg, var(--gold), transparent); }
   .nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 10px; margin-top: 10px; }
   .nav a {
-    position: relative; display: inline-block;
+    position: relative; display: inline-block; overflow: hidden;
     font-size: .8rem; letter-spacing: .12em; text-transform: uppercase; text-decoration: none; color: #1E1B17;
     padding: 9px 14px 9px; line-height: 1;
     background: linear-gradient(180deg, #F4F3F0 0%, #CFCCC6 45%, #A9A59E 55%, #E2DFDA 100%);
@@ -93,17 +97,24 @@
     background: radial-gradient(circle at 35% 35%, #ffffff, #5E5B56 70%);
   }
   .nav a::before { left: 5px; } .nav a::after { right: 5px; }
-  .nav a:hover, .nav a:focus-visible { filter: brightness(1.08); transform: translateY(-1px); }
-  .nav a:active { transform: translateY(1px); box-shadow: inset 0 1px 0 rgba(255,255,255,.5), inset 0 -1px 0 rgba(0,0,0,.35), 0 1px 0 #3E3B37, 0 2px 6px rgba(0,0,0,.5); }
-  /* sword that slides in beneath the plaque on hover */
   .nav a span { position: relative; z-index: 1; }
-  .nav a i {
-    position: absolute; left: 6px; right: 6px; bottom: -13px; height: 12px; pointer-events: none;
-    background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20120%2012%22%3E%3Cpath%20d%3D%22M2%206%20L100%206%22%20stroke%3D%22%23F2D272%22%20stroke-width%3D%222%22/%3E%3Cpath%20d%3D%22M2%206%20L8%203%20L8%209%20Z%22%20fill%3D%22%23F2D272%22/%3E%3Cpath%20d%3D%22M100%206%20L106%202%20L106%2010%20Z%22%20fill%3D%22%23D9B24A%22/%3E%3Crect%20x%3D%22104%22%20y%3D%221.5%22%20width%3D%223%22%20height%3D%229%22%20rx%3D%221%22%20fill%3D%22%23D9B24A%22/%3E%3Crect%20x%3D%22107%22%20y%3D%224%22%20width%3D%229%22%20height%3D%224%22%20rx%3D%221%22%20fill%3D%22%239C7A2A%22/%3E%3Ccircle%20cx%3D%22118%22%20cy%3D%226%22%20r%3D%222.2%22%20fill%3D%22%23F2D272%22/%3E%3C/svg%3E") center / contain no-repeat;
-    opacity: 0; transform: translateX(-10px) scaleX(.6); transform-origin: left center;
-    transition: opacity .18s ease, transform .22s ease;
+  /* hover / tap: the plaque turns to gold and a sheen sweeps across it */
+  .nav a:hover, .nav a:focus-visible, .nav a:active {
+    transform: translateY(-1px);
+    background: linear-gradient(180deg, #FFF0B8 0%, var(--gold-bright) 28%, var(--gold) 55%, var(--gold-deep) 100%);
+    border-color: #6E5128; text-shadow: 0 1px 0 rgba(255,255,255,.35);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.7), inset 0 -1px 0 rgba(0,0,0,.35), 0 2px 0 #4A3512, 0 4px 12px rgba(217,178,74,.35);
   }
-  .nav a:hover i, .nav a:focus-visible i { opacity: 1; transform: translateX(0) scaleX(1); }
+  .nav a:hover::before, .nav a:hover::after, .nav a:focus-visible::before, .nav a:focus-visible::after, .nav a:active::before, .nav a:active::after {
+    background: radial-gradient(circle at 35% 35%, #fff7d6, #6E5128 70%);
+  }
+  .nav a i {
+    position: absolute; top: -50%; bottom: -50%; width: 45%; left: -70%; pointer-events: none; opacity: 0;
+    background: linear-gradient(105deg, transparent 20%, rgba(255,255,255,.8) 50%, transparent 80%); transform: skewX(-20deg);
+  }
+  .nav a:hover i, .nav a:focus-visible i, .nav a:active i { animation: navSheen .9s ease-out forwards; }
+  @keyframes navSheen { from { left: -70%; opacity: 1; } to { left: 130%; opacity: 1; } }
+  .nav a:active { transform: translateY(1px); box-shadow: inset 0 1px 0 rgba(255,255,255,.5), inset 0 -1px 0 rgba(0,0,0,.35), 0 1px 0 #3E3B37, 0 2px 6px rgba(0,0,0,.5); }
 
   /* ---------- Sections ---------- */
   section { display: grid; gap: 18px; scroll-margin-top: 24px; }
@@ -135,13 +146,16 @@
   .horn-row.playing .herald.left .note { animation-name: noteRiseL; }
   .horn-row.playing .n2 { animation-delay: .8s; }
   .horn-row.fading .herald { animation: heraldOut .4s ease-in forwards; }
+  .horn-row.fading .herald.left { animation: heraldOutL .4s ease-in forwards; }
+  .horn-row.fading .note { animation: none; opacity: 0; }
   @keyframes heraldIn { from { opacity: 0; transform: scale(.6) translateY(6px) rotate(8deg); } to { opacity: 1; transform: scale(1) translateY(0) rotate(-6deg); } }
   @keyframes heraldInL { from { opacity: 0; transform: scale(.6) translateY(6px) rotate(-8deg); } to { opacity: 1; transform: scale(1) translateY(0) rotate(6deg); } }
   @keyframes toot { from { transform: scale(1) rotate(-6deg); } to { transform: scale(1.04) rotate(-10deg); } }
   @keyframes tootL { from { transform: scale(1) rotate(6deg); } to { transform: scale(1.04) rotate(10deg); } }
   @keyframes noteRise { 0% { opacity: 0; transform: translate(0, 6px); } 20% { opacity: 1; } 100% { opacity: 0; transform: translate(8px, -16px); } }
   @keyframes noteRiseL { 0% { opacity: 0; transform: translate(0, 6px); } 20% { opacity: 1; } 100% { opacity: 0; transform: translate(-8px, -16px); } }
-  @keyframes heraldOut { to { opacity: 0; transform: scale(.7) translateY(6px); } }
+  @keyframes heraldOut { from { opacity: 1; transform: scale(1) rotate(-6deg); } to { opacity: 0; transform: scale(.7) translateY(6px) rotate(-6deg); } }
+  @keyframes heraldOutL { from { opacity: 1; transform: scale(1) rotate(6deg); } to { opacity: 0; transform: scale(.7) translateY(6px) rotate(6deg); } }
   /* Narrow screens: a tighter button, smaller trumpets, still one on each side */
   @media (max-width: 560px) {
     .horn-row { gap: 10px; }
