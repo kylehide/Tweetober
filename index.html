@@ -399,7 +399,8 @@
   @media (max-width: 760px) { .tavern { border-width: 26px; border-image-width: 26px; padding: 4px 4px; } }
   .tavern li { display: grid; gap: 0; line-height: 1.2; overflow-wrap: anywhere; }
   .tavern .who { display: flex; flex-wrap: wrap; column-gap: 10px; align-items: baseline; }
-  .tavern .who b { font-weight: 400; font-size: .92rem; letter-spacing: .02em; }   /* names in their bright gem colors */   /* names in the site's pixel font; messages below in handwriting */
+  /* names in their bright gem color on a darker band of the same hue, like a highlighter */
+  .tavern .who b { font-weight: 400; font-size: .92rem; letter-spacing: .02em; line-height: 1.15; padding: 1px 7px 2px; border-radius: 3px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }   /* names in the site's pixel font; messages below in handwriting */
   .tavern .who time { font-size: .68rem; color: #7A5E3A; letter-spacing: .06em; }
   .tavern .body { font-family: "Almendra", "Pirata One", Georgia, serif; font-weight: 400; font-size: .74rem; line-height: 1.35; color: #2B1A0E; text-shadow: 0 0 .5px rgba(43,26,14,.45); }   /* a medieval book hand, in ink */
   /* moderator's × (only shown once the page has been opened with ?key=…) */
@@ -1490,7 +1491,7 @@ const emblemSrc = (code) => "data:image/svg+xml," + encodeURIComponent(emblemSvg
     const m = String(b || "").match(/^\u{1FA99}\s*(.*House of (333|500).*)$/su);
     return m ? `<span class="body flip h${m[2]}"><span class="coin">\u{1FA99}</span> ${esc(m[1])}</span>` : `<span class="body${onlyEmblems(b) ? " big" : ""}">${withEmblems(esc(b))}</span>`;
   };
-  const row = (m) => `<li data-id="${Number(m.id)}"><span class="who"><b style="color:${safeColor(m.color)}">${esc(m.name)}</b>${flair(m.name)}<time data-t="${Number(m.created)}">${ago(m.created)}</time><button type="button" class="zap" title="Remove this message" aria-label="Remove this message">×</button></span>${bodyHtml(m.body)}</li>`;
+  const row = (m) => `<li data-id="${Number(m.id)}"><span class="who"><b style="color:${safeColor(m.color)};background:${ink(m.color)}">${esc(m.name)}</b>${flair(m.name)}<time data-t="${Number(m.created)}">${ago(m.created)}</time><button type="button" class="zap" title="Remove this message" aria-label="Remove this message">×</button></span>${bodyHtml(m.body)}</li>`;
 
   // Moderation. Open the site once as tweetober.com/?key=YOUR_ADMIN_KEY and this browser remembers it (the key is
   // taken out of the address bar right away). Every message then gets a small ×. ?key=off forgets it.
