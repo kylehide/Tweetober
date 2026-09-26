@@ -25,7 +25,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="assets/favicon-512.png">
 <link rel="apple-touch-icon" href="assets/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pirata+One&family=VT323&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pirata+One&family=VT323&family=IBM+Plex+Mono:wght@400;600&family=Caveat:wght@500;700&display=swap">
 <style>
   /* Single look, by design: the stone keep at night. Colors come from the crest and the invitation. */
   :root {
@@ -391,20 +391,25 @@
   .board-head h2 { margin: 0; font-size: 1.24rem; }
   .board-status { font-size: .75rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
   .board-status.live::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #8FE3B6; margin-right: 7px; box-shadow: 0 0 6px #8FE3B6; vertical-align: 1px; }
-  .tavern { list-style: none; margin: 0; padding: 12px 14px; display: grid; gap: 10px; align-content: start; max-height: 420px; min-height: 140px; overflow-y: auto; background: var(--surface-2); border: 1px dashed var(--line-strong); overscroll-behavior: contain; }
-  .tavern li { display: grid; gap: 2px; line-height: 1.35; overflow-wrap: anywhere; }
+  /* the board is an old sheet of paper with torn, singed edges (a 9-slice keeps the edges crisp at any size) */
+  .tavern { list-style: none; margin: 0; padding: 6px 10px; display: grid; gap: 12px; align-content: start; max-height: 440px; min-height: 160px; overflow-y: auto; overscroll-behavior: contain;
+    border: 34px solid transparent; border-image: url("assets/paper.webp") 48 fill / 34px / 0 stretch;
+    background: none; filter: drop-shadow(0 8px 14px rgba(0,0,0,.5));
+    color: #2B1A0E; scrollbar-color: #A08050 transparent; }
+  @media (max-width: 760px) { .tavern { border-width: 26px; border-image-width: 26px; padding: 4px 4px; } }
+  .tavern li { display: grid; gap: 0; line-height: 1.2; overflow-wrap: anywhere; }
   .tavern .who { display: flex; flex-wrap: wrap; column-gap: 10px; align-items: baseline; }
-  .tavern .who b { font-weight: 400; font-size: 1.05rem; letter-spacing: .02em; }
-  .tavern .who time { font-size: .7rem; color: var(--ink-3); letter-spacing: .06em; }
-  .tavern .body { color: var(--ink); }
+  .tavern .who b { font-weight: 400; font-size: 1.05rem; letter-spacing: .02em; }   /* names in the site's pixel font; messages below in handwriting */
+  .tavern .who time { font-size: .68rem; color: #7A5E3A; letter-spacing: .06em; }
+  .tavern .body { font-family: "Caveat", "Segoe Script", "Bradley Hand", cursive; font-weight: 500; font-size: 1.25rem; color: #2B1A0E; text-shadow: 0 0 .5px rgba(43,26,14,.4); }
   /* moderator's × (only shown once the page has been opened with ?key=…) */
   .tavern .zap { display: none; margin-left: auto; width: 22px; height: 22px; padding: 0; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink-3); font: inherit; font-size: .8rem; line-height: 1; border-radius: 3px; }
   body.admin .tavern .zap { display: inline-flex; align-items: center; justify-content: center; }
   .tavern .zap:hover { color: var(--h500); border-color: var(--h500); }
   .tavern li.gone { opacity: .35; }
   .tavern li.gone .body { text-decoration: line-through; }
-  .tavern .empty { color: var(--ink-3); }
-  .tavern .sample { font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); text-align: center; }
+  .tavern .empty { color: #6E5230; font-family: "Caveat", cursive; font-size: 1.1rem; }
+  .tavern .sample { font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: #7A5E3A; text-align: center; }
   .tavern-form { display: grid; gap: 12px; }
   .tf-row { display: flex; gap: 14px; flex-wrap: wrap; align-items: end; }
   .tf-field { display: grid; gap: 4px; min-width: 0; border: 0; margin: 0; padding: 0; }
@@ -456,9 +461,9 @@
   .feed-slot.glass { padding: 0; display: grid; }
   .gt-note { margin: 0; padding: 8px 12px; font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); text-align: center; border-bottom: 1px dashed var(--line); }
   /* X's own typeface (Chirp) isn't public; this system stack is what it falls back to and looks the same on each device */
-  .gt-list, .gt-note, .gt-more, .feed-slot.glass .feed-wait { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; letter-spacing: normal; }
+  .gt-list, .gt-note, .feed-slot.glass .feed-wait { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; letter-spacing: normal; }
   .gt-list { font-size: .72rem; }
-  .gt-more, .gt-note { font-size: .62rem; }
+  .gt-note { font-size: .62rem; }
   .gt-list { list-style: none; margin: 0; padding: 0; max-height: 600px; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; }
   .gt { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 12px; padding: 12px 14px; border-bottom: 1px solid var(--line); border-left: 3px solid transparent; }
   .gt.h333 { border-left-color: var(--h333); } .gt.h500 { border-left-color: var(--h500); }
@@ -569,7 +574,9 @@
   .tavern .flair.h333, .gt .flair.h333 { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 22'%3E%3Cpath d='M12 21 C4 15 1 11 1 6.5 A5.5 5.5 0 0 1 12 4.5 A5.5 5.5 0 0 1 23 6.5 C23 11 20 15 12 21Z' fill='%23C9C6C0' stroke='%23F4F3F0' stroke-width='1'/%3E%3C/svg%3E"); }
   .tavern .flair.h500, .gt .flair.h500 { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 22'%3E%3Cpath d='M12 21 C4 15 1 11 1 6.5 A5.5 5.5 0 0 1 12 4.5 A5.5 5.5 0 0 1 23 6.5 C23 11 20 15 12 21Z' fill='%23F26F96' stroke='%23FFB3C7' stroke-width='1'/%3E%3C/svg%3E"); }
   .tavern .body.flip { font-weight: 700; }
-  .tavern .body.flip.h333 { color: var(--h333); } .tavern .body.flip.h500 { color: var(--h500); }
+  .tavern .body.flip.h333 { color: #3E4A56; } .tavern .body.flip.h500 { color: #9E2248; }   /* house colors in ink */
+  .tavern .flair { filter: drop-shadow(0 0 .6px #3A2A18) drop-shadow(0 1px 0 rgba(58,42,24,.4)); }
+  .tavern .zap { background: rgba(255,245,220,.6); border-color: #9C7A4A; color: #6E5230; }
   .tavern .coin { display: inline-block; animation: coinSpin 1.1s ease-out both; }
   @keyframes coinSpin { from { transform: rotateY(0) scale(1.4); } to { transform: rotateY(1080deg) scale(1); } }
 
@@ -734,7 +741,6 @@ try { if (sessionStorage.getItem("tweetober-gates") === "1") document.getElement
       <div class="panel">
         <h2 class="heading">The Scrying Glass</h2>
         <div class="feed-slot" id="feedSlot"></div>
-        <p class="feed-note">Feed of the Tweetober list on Twitter.</p>
       </div>
       <div class="panel">
         <h2 class="heading">The Trophy Room</h2>
@@ -1418,6 +1424,9 @@ function mountFeed() {
     return new Date(t).toLocaleString("en-US", { month: "short", day: "numeric" });
   };
   const safeColor = (c) => COLORS.includes(c) ? c : COLORS[0];
+  // on the papyrus each gem writes in a deeper ink of its own hue
+  const INKS = { "#F26F96": "#A3244C", "#E6E4E0": "#46525E", "#F2D272": "#8A6208", "#B99CFF": "#5B3A9E", "#8CC8FF": "#1F5A96", "#8FE3B6": "#1E6E4C", "#FF9D5C": "#A2461A", "#FFB3C7": "#A8406A" };
+  const ink = (c) => INKS[safeColor(c)];
   // House flair: a name that matches a roster handle gets a small heart beside it (grey for 333, pink for 500)
   const houseOfName = houseOfHandle;
   const flair = (name) => { const k = houseOfName(name); return k ? `<i class="flair ${k}" title="House of ${k.slice(1)}"></i>` : ""; };
@@ -1426,7 +1435,7 @@ function mountFeed() {
     const m = String(b || "").match(/^\u{1FA99}\s*(.*House of (333|500).*)$/su);
     return m ? `<span class="body flip h${m[2]}"><span class="coin">\u{1FA99}</span> ${esc(m[1])}</span>` : `<span class="body">${esc(b)}</span>`;
   };
-  const row = (m) => `<li data-id="${Number(m.id)}"><span class="who"><b style="color:${safeColor(m.color)}">${esc(m.name)}</b>${flair(m.name)}<time data-t="${Number(m.created)}">${ago(m.created)}</time><button type="button" class="zap" title="Remove this message" aria-label="Remove this message">×</button></span>${bodyHtml(m.body)}</li>`;
+  const row = (m) => `<li data-id="${Number(m.id)}"><span class="who"><b style="color:${ink(m.color)}">${esc(m.name)}</b>${flair(m.name)}<time data-t="${Number(m.created)}">${ago(m.created)}</time><button type="button" class="zap" title="Remove this message" aria-label="Remove this message">×</button></span>${bodyHtml(m.body)}</li>`;
 
   // Moderation. Open the site once as tweetober.com/?key=YOUR_ADMIN_KEY and this browser remembers it (the key is
   // taken out of the address bar right away). Every message then gets a small ×. ?key=off forgets it.
