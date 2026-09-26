@@ -239,6 +239,40 @@
   .board .bar.h333 > span { background: var(--h333); } .board .bar.h500 > span { background: var(--h500); }
   .empty { color: var(--ink-3); margin: 0; }
 
+  /* ---------- Find yourself ---------- */
+  .seek { background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); padding: 22px 24px; display: grid; gap: 14px; }
+  .seek .scroll-head h3 { margin: 0; font-size: 1.24rem; }
+  .seek-form { display: flex; gap: 10px; flex-wrap: wrap; }
+  .seek-field { flex: 1 1 220px; display: flex; align-items: center; border: 1px solid var(--line-strong); background: var(--surface-2); }
+  .seek-field:focus-within { border-color: var(--gold-bright); box-shadow: 0 0 0 3px var(--gold-glow); }
+  .seek-field .at { padding-left: 12px; color: var(--ink-3); }
+  .seek-field input { flex: 1; min-width: 0; font: inherit; font-size: 1rem; color: var(--ink); background: none; border: 0; outline: none; padding: 10px 12px 10px 4px; }
+  .seek-form .btn { padding-block: 10px; }
+  .seek-note { margin: 0; color: var(--ink-2); }
+  .seek-card { display: grid; gap: 14px; padding-top: 4px; }
+  .seek-who { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .seek-who a { font-size: 1.3rem; text-decoration: none; overflow-wrap: anywhere; }
+  .seek-card.h333 .seek-who a { color: var(--h333); } .seek-card.h500 .seek-who a { color: var(--h500); }
+  .seek-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  .seek-tile { background: var(--surface-2); border: 1px solid var(--line); padding: 10px 12px; display: grid; gap: 3px; align-content: start; min-width: 0; }
+  .seek-tile .eyebrow { font-size: .68rem; overflow-wrap: anywhere; }
+  .seek-tile .v { font-family: "Pirata One", serif; font-size: 1.7rem; line-height: 1; color: var(--ink); }
+  .seek-tile .s { font-size: .78rem; color: var(--ink-3); overflow-wrap: anywhere; }
+  .seek-chart { display: grid; gap: 6px; }
+  .seek-chart .eyebrow { font-size: .7rem; } .seek-chart .eyebrow .muted { text-transform: none; letter-spacing: .02em; }
+  .seek-plot { position: relative; background: var(--surface-2); border: 1px solid var(--line); padding: 10px 8px 4px; }
+  .seek-plot svg { display: block; max-width: 100%; height: auto; overflow: visible; }
+  .seek-plot .bar { fill: var(--h333); } .seek-plot svg.h500 .bar { fill: var(--h500); }
+  .seek-plot .axis { stroke: var(--line-strong); stroke-width: 1; }
+  .seek-plot .tally { stroke: var(--line); stroke-width: 1; stroke-dasharray: 3 3; }
+  .seek-plot .later { fill: var(--ink-3); opacity: .5; }
+  .seek-plot text { fill: var(--ink-3); font: 15px "VT323", monospace; }
+  .seek-plot .hit { fill: transparent; cursor: pointer; }
+  .seek-plot .hit.on { fill: rgba(242,210,114,.10); }
+  .seek-tip { position: absolute; top: -6px; z-index: 2; transform: translateY(-100%); background: #14100A; border: 1px solid var(--line-strong); color: var(--ink); padding: 4px 9px; font-size: .82rem; white-space: nowrap; pointer-events: none; box-shadow: 0 4px 12px rgba(0,0,0,.5); }
+  .seek-tip b { color: var(--gold-bright); font-weight: 400; margin-right: 6px; }
+  @media (max-width: 640px) { .seek-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } .seek { padding: 18px 16px; } .seek-chart .eyebrow .muted { display: none; } }
+
   /* ---------- Houses ---------- */
   .houses { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 22px; }
   .house { padding: 0 0 22px; display: grid; gap: 18px; position: relative; }
@@ -716,6 +750,18 @@ try { if (sessionStorage.getItem("tweetober-gates") === "1") document.getElement
       </div>
       <ol class="board" id="board"></ol>
     </div>
+    <div class="seek" id="seek">
+      <div class="scroll-head">
+        <h3 class="heading">Find Yourself</h3>
+        <span class="muted">Look up any Tweetobie in the Ledger</span>
+      </div>
+      <form class="seek-form" id="seekForm" autocomplete="off">
+        <label class="seek-field"><span class="at">@</span><input id="seekIn" list="seekList" placeholder="yourhandle" autocapitalize="off" spellcheck="false" aria-label="Twitter handle"></label>
+        <button class="btn" type="submit">Seek</button>
+        <datalist id="seekList"></datalist>
+      </form>
+      <div id="seekOut" aria-live="polite"></div>
+    </div>
   </section>
 
   <!-- ---------- Ledger ---------- -->
@@ -1058,8 +1104,10 @@ function readLedger(text) {
     const handle = String(r[iH] ?? "").trim().replace(/^@/, "");
     const house = houseKeyFrom(r[iHouse]);
     const weeks = weekCols.map(i => num(r[i]));
+    const days = {};
+    dayCols.forEach(i => { const d = Number((head[i].match(/(\d{1,2})(?!.*\d)/) || head[i].match(/\d+/) || [])[1] || (head[i].match(/\d+/) || [])[0]); const v = String(r[i] ?? "").trim(); if (d) days[d] = v === "" ? null : num(v); });
     const score = iG >= 0 ? num(r[iG]) : (dayCols.length ? dayCols.reduce((a, i) => a + num(r[i]), 0) : weeks.reduce((a, b) => a + b, 0));
-    return { handle, house, score: Math.max(0, score), weeks };
+    return { handle, house, score: Math.max(0, score), weeks, days };
   }).filter(p => p.handle && p.house && !/^how to use/i.test(p.handle));
 }
 
@@ -1071,7 +1119,7 @@ async function loadLedger() {
     const r = await fetch(CONFIG.sheetCsvUrl, { cache: "no-store" });
     if (!r.ok) throw new Error(r.status);
     const rows = readLedger(await r.text());
-    if (rows.length) { LEDGER = rows; renderHouses(); renderCup(); renderBoard(); checkMilestone(); }
+    if (rows.length) { LEDGER = rows; renderHouses(); renderCup(); renderBoard(); checkMilestone(); renderSeek(); }
   } catch (e) { console.warn("Ledger fetch failed", e); }
 }
 
@@ -1188,6 +1236,84 @@ function renderBoard() {
       <span class="bar ${p.house}"><span style="width:${Math.round(p.score / top * 100)}%"></span></span>
     </li>`).join("") : `<p class="empty">No tweets logged yet. The scroll fills in as the Ledger does.</p>`;
 }
+
+/* ---------- Find yourself: look up any Tweetobie in the Ledger ---------- */
+const seekStore = { get: () => { try { return localStorage.getItem("tweetober-me") || ""; } catch { return ""; } }, set: (v) => { try { localStorage.setItem("tweetober-me", v); } catch {} } };
+let SEEK = seekStore.get();
+function renderSeek() {
+  const out = $("#seekOut"), list = $("#seekList"); if (!out) return;
+  list.innerHTML = LEDGER.map(p => `<option value="${esc(p.handle)}">`).join("");
+  const want = SEEK.trim().replace(/^@/, "").toLowerCase();
+  if (!want) { out.innerHTML = ""; return; }
+  if (!LEDGER.length) { out.innerHTML = `<p class="seek-note">The Ledger is still loading…</p>`; return; }
+  const p = LEDGER.find(x => x.handle.toLowerCase() === want);
+  if (!p) { out.innerHTML = `<p class="seek-note">No <b>@${esc(want)}</b> in the Ledger. Check the spelling, or ask to be added to your house's rows.</p>`; return; }
+  const hk = p.house, house = houseOf(hk), houseTotal = LEDGER.filter(x => x.house === hk).reduce((a, x) => a + x.score, 0);
+  const ranked = [...LEDGER].sort((a, b) => b.score - a.score);
+  const rank = p.score > 0 ? ranked.findIndex(x => x.score === p.score) + 1 : 0;
+  const share = houseTotal ? Math.round(p.score / houseTotal * 1000) / 10 : 0;
+  const entries = Object.entries(p.days || {}).map(([d, v]) => [Number(d), v]).filter(([, v]) => v != null);
+  const best = entries.reduce((m, e) => (e[1] > (m ? m[1] : -1) ? e : m), null);
+  const logged = entries.filter(([, v]) => v > 0).length;
+  const tiles = [
+    ["Rank", rank ? `#${rank}` : "—", rank ? `of ${LEDGER.length} Tweetobies` : "no tweets logged yet"],
+    ["Total", fmt(p.score), "tweets this month"],
+    ["House share", `${share}%`, `of ${fmt(houseTotal)} for ${esc(house.name || "the house")}`],
+    ["Best day", best && best[1] > 0 ? fmt(best[1]) : "—", best && best[1] > 0 ? `Oct ${best[0]}` : "still to come"],
+  ];
+  out.innerHTML = `
+    <div class="seek-card ${hk}">
+      <div class="seek-who"><a href="${xUrl(p.handle)}" target="_blank" rel="noopener">@${esc(p.handle)}</a><span class="chip ${hk}">${hk.slice(1)}</span></div>
+      <div class="seek-tiles">${tiles.map(([k, v, s]) => `<div class="seek-tile"><div class="eyebrow">${k}</div><div class="v num">${v}</div><div class="s">${s}</div></div>`).join("")}</div>
+      ${seekChart(p, hk, logged)}
+    </div>`;
+  wireSeekChart(out);
+}
+function seekChart(p, hk, logged) {
+  const W = Math.max(280, Math.round(($("#seekOut").clientWidth || 620) - 18)), narrow = W < 480;
+  const H = narrow ? 150 : 140, top = 12, base = H - 24, n = 31, slot = W / n, bw = Math.max(4, slot - 4);
+  const vals = Array.from({ length: n }, (_, i) => (p.days || {})[i + 1]);
+  const max = Math.max(1, ...vals.map(v => v || 0));
+  const today = NOW(); const inOct = isoDay(today) >= CONFIG.startDate && isoDay(today) <= CONFIG.endDate;
+  const dayNow = inOct ? today.getDate() : (isoDay(today) > CONFIG.endDate ? 31 : 0);
+  const bar = (i, v) => {
+    const x = i * slot + (slot - bw) / 2, h = v ? Math.max(3, (v / max) * (base - top)) : 0, y = base - h, r = Math.min(3, bw / 2, h);
+    return h ? `<path class="bar" d="M${x} ${base}V${y + r}Q${x} ${y} ${x + r} ${y}H${x + bw - r}Q${x + bw} ${y} ${x + bw} ${y + r}V${base}Z"/>` : "";
+  };
+  const ticks = (narrow ? [1, 10, 20, 31] : [1, 5, 10, 15, 20, 25, 31]).map(d => `<text x="${(d - .5) * slot}" y="${H - 6}" text-anchor="middle">${d}</text>`).join("");
+  const tallies = [5, 10, 15, 20, 25].map(d => `<line class="tally" x1="${d * slot}" x2="${d * slot}" y1="${top}" y2="${base}"/>`).join("");
+  const future = Array.from({ length: n }, (_, i) => i + 1 > dayNow ? `<circle class="later" cx="${(i + .5) * slot}" cy="${base - 3}" r="1.6"/>` : "").join("");
+  const hits = vals.map((v, i) => `<rect class="hit" x="${i * slot}" y="0" width="${slot}" height="${base}" data-d="${i + 1}" data-v="${v == null ? "" : v}" data-y="${v ? base - Math.max(3, (v / max) * (base - top)) : base}"/>`).join("");
+  const summary = `Daily tweets for @${p.handle}: ${logged} days logged, most on the best day.`;
+  return `<div class="seek-chart">
+    <div class="eyebrow">Day by day <span class="muted">· dashed lines mark the five-day tallies</span></div>
+    <div class="seek-plot"><svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${esc(summary)}" class="${hk}">
+      ${tallies}<line class="axis" x1="0" x2="${W}" y1="${base}" y2="${base}"/>
+      ${vals.map((v, i) => bar(i, v)).join("")}${future}${ticks}${hits}
+    </svg><div class="seek-tip" hidden></div></div>
+  </div>`;
+}
+function wireSeekChart(root) {
+  const svg = root.querySelector(".seek-plot svg"), tip = root.querySelector(".seek-tip"); if (!svg) return;
+  const show = (r) => {
+    const d = r.dataset.d, v = r.dataset.v;
+    tip.innerHTML = `<b>Oct ${d}</b> ${v === "" ? "not logged" : `${fmt(Number(v))} tweet${Number(v) === 1 ? "" : "s"}`}`;
+    tip.hidden = false;
+    const box = svg.getBoundingClientRect(), rb = r.getBoundingClientRect(), wrap = svg.parentElement.getBoundingClientRect();
+    tip.style.left = Math.min(Math.max(0, rb.left - wrap.left + rb.width / 2 - tip.offsetWidth / 2), wrap.width - tip.offsetWidth) + "px";
+    svg.querySelectorAll(".hit.on").forEach(h => h.classList.remove("on")); r.classList.add("on");
+  };
+  svg.addEventListener("pointerover", (e) => { const r = e.target.closest(".hit"); if (r) show(r); });
+  svg.addEventListener("click", (e) => { const r = e.target.closest(".hit"); if (r) show(r); });
+  svg.addEventListener("pointerleave", () => { tip.hidden = true; svg.querySelectorAll(".hit.on").forEach(h => h.classList.remove("on")); });
+}
+(function seekForm() {
+  const f = $("#seekForm"), inp = $("#seekIn"); if (!f) return;
+  inp.value = SEEK;
+  f.addEventListener("submit", (e) => { e.preventDefault(); SEEK = inp.value = inp.value.trim().replace(/^@+/, ""); seekStore.set(SEEK); renderSeek(); });
+  let seekW = 0; addEventListener("resize", () => { const w = $("#seekOut").clientWidth; if (SEEK && Math.abs(w - seekW) > 24) { seekW = w; renderSeek(); } });
+  inp.addEventListener("change", () => { if (LEDGER.some(p => p.handle.toLowerCase() === inp.value.trim().replace(/^@/, "").toLowerCase())) f.requestSubmit(); });
+})();
 
 /* ---------- Extra sheet tabs (Trophy Room, Events) ---------- */
 /* Reads a tab whose columns are in a known order. Header names are used when Google keeps them;
