@@ -261,7 +261,7 @@
   @media (max-width: 760px) { .gate, .gate-form { justify-items: start; } .gate-row { justify-content: flex-start; } .gate-msg { text-align: left; } }
   .btn { display: inline-flex; align-items: center; gap: 10px; padding: 14px 22px; background: linear-gradient(180deg, var(--gold-bright), var(--gold-deep)); color: #1E160C; text-decoration: none; font-weight: 700; letter-spacing: .08em; font-size: .95rem; text-transform: uppercase; border: 1px solid var(--gold-bright); box-shadow: 0 0 0 4px var(--gold-glow), 0 6px 14px rgba(0,0,0,.5); white-space: nowrap; }
   .btn:hover { filter: brightness(1.08); }
-  .btn svg { width: 18px; height: 18px; }
+  .btn svg { width: 24px; height: 24px; }
 
   /* ---------- Events ---------- */
   .events { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
@@ -315,7 +315,7 @@
     padding: 10px 18px; color: var(--ink); background: var(--surface-2); border: 1px solid var(--line-strong); transition: border-color .15s ease, color .15s ease; }
   .pledge-btn:hover { color: var(--gold-bright); border-color: var(--gold-bright); }
   .pledge-btn[disabled] { cursor: default; }
-  .pledge-btn .ico-check, .pledge-btn.sworn .ico-quill { display: none; }
+  .pledge-btn .ico-check { display: none; }
   .pledge-btn.sworn .ico-check { display: block; }
   .pledge-btn.sworn { position: relative; overflow: hidden; color: #1E160C; border-color: var(--gold-bright);
     background: linear-gradient(180deg, #FFF0B8 0%, var(--gold-bright) 28%, var(--gold) 55%, var(--gold-deep) 100%);
@@ -363,23 +363,36 @@
   .tavern-form { display: grid; gap: 12px; }
   .tf-row { display: flex; gap: 14px; flex-wrap: wrap; align-items: end; }
   .tf-field { display: grid; gap: 4px; min-width: 0; border: 0; margin: 0; padding: 0; }
+  .tf-field legend { padding: 0; }
   .tf-field .eyebrow { font-size: .72rem; display: flex; justify-content: space-between; gap: 10px; }
-  .tf-field em { font-style: normal; color: var(--ink-3); letter-spacing: .04em; }
+  .tf-field em { font-style: normal; color: var(--ink-3); letter-spacing: .02em; text-transform: none; text-align: right; }
   .tf-name { flex: 1 1 200px; } .tf-colors { flex: 1 1 280px; } .tf-body { width: 100%; }
   .tavern-form input, .tavern-form textarea { font: inherit; font-size: 1rem; color: var(--ink); background: var(--surface-2); border: 1px solid var(--line-strong); padding: 8px 10px; width: 100%; outline: none; resize: vertical; }
   .tavern-form input:focus, .tavern-form textarea:focus { border-color: var(--gold-bright); box-shadow: 0 0 0 3px var(--gold-glow); }
-  /* color picker as a pennant banner: flags hang from a sagging rope */
-  .swatches { position: relative; display: flex; gap: 6px; flex-wrap: nowrap; padding: 6px 8px 4px; width: max-content; max-width: 100%; }
-  .swatches::before { content: ""; position: absolute; left: 0; right: 0; top: -4px; height: 12px; border-bottom: 2px solid #8A6A2A; border-radius: 0 0 50% 50% / 0 0 100% 100%; pointer-events: none; }
-  .swatch { position: relative; width: 30px; height: 40px; padding: 0; border: 0; background: none; cursor: pointer;
-            transform: translateY(var(--sag, 0px)); transform-origin: 50% 0; transition: transform .18s ease, filter .18s ease;
-            filter: drop-shadow(0 3px 3px rgba(0,0,0,.55)); }
-  .swatch .flag { position: absolute; inset: 0; background: var(--c); clip-path: polygon(0 0, 100% 0, 50% 100%); }
-  .swatch .flag::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent 50%, rgba(0,0,0,.16) 50%); }
-  .swatch::before { content: ""; position: absolute; top: -3px; left: 50%; width: 6px; height: 6px; margin-left: -3px; border-radius: 50%; background: #B8902E; z-index: 1; }
-  .swatch:hover { transform: translateY(var(--sag, 0px)) rotate(-6deg); }
-  .swatch[aria-checked="true"] { transform: translateY(calc(var(--sag, 0px) + 6px)) scale(1.12);
-            filter: drop-shadow(0 0 0 #F2D272) drop-shadow(0 0 1.5px #F2D272) drop-shadow(0 0 1.5px #F2D272) drop-shadow(0 4px 4px rgba(0,0,0,.6)); }
+  /* color picker as a row of gemstones, each in a gold claw setting */
+  .swatches { display: flex; gap: 10px; flex-wrap: wrap; padding: 8px 3px; }   /* same height as the Name field */
+  .swatch { position: relative; width: 34px; height: 34px; padding: 0; border: 0; background: none; border-radius: 50%;
+            transition: transform .18s ease, filter .18s ease; filter: drop-shadow(0 2px 3px rgba(0,0,0,.6)); }
+  /* bezel */
+  .swatch::before { content: ""; position: absolute; inset: 0; border-radius: 50%;
+            background: conic-gradient(from 20deg, #F6E3A0, #9C7A2A 25%, #F2D272 50%, #9C7A2A 75%, #F6E3A0); }
+  /* four claws */
+  .swatch::after { content: ""; position: absolute; width: 6px; height: 6px; border-radius: 50%; top: -1px; left: 14px; z-index: 2;
+            background: radial-gradient(circle at 35% 35%, #FFF3C4, #B8902E 70%);
+            box-shadow: 0 30px 0 0 #D9B24A, -15px 15px 0 0 #D9B24A, 15px 15px 0 0 #D9B24A; }
+  .swatch .gem { position: absolute; inset: 4px; border-radius: 50%; z-index: 1; background: var(--c);
+            background-image:
+              radial-gradient(circle at 32% 26%, rgba(255,255,255,.95) 0, rgba(255,255,255,.5) 12%, transparent 34%),
+              radial-gradient(circle at 50% 55%, rgba(255,255,255,.12) 0, transparent 45%),
+              radial-gradient(circle at 50% 50%, transparent 55%, rgba(0,0,0,.42) 100%);
+            box-shadow: inset 0 -3px 5px rgba(0,0,0,.35), inset 0 2px 2px rgba(255,255,255,.35); }
+  /* a glint on the chosen stone */
+  .swatch .spark { position: absolute; width: 11px; height: 11px; top: -3px; right: -2px; z-index: 3; background: #fff; opacity: 0; pointer-events: none;
+            clip-path: polygon(50% 0, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0 50%, 39% 39%); }
+  .swatch:hover { transform: translateY(-2px) scale(1.06); }
+  .swatch[aria-checked="true"] { transform: scale(1.14); filter: drop-shadow(0 0 3px #F2D272) drop-shadow(0 0 6px rgba(242,210,114,.55)) drop-shadow(0 3px 4px rgba(0,0,0,.6)); }
+  .swatch[aria-checked="true"] .spark { animation: glint 2.2s ease-in-out infinite; }
+  @keyframes glint { 0%, 55%, 100% { opacity: 0; transform: scale(.4) rotate(0); } 70% { opacity: 1; transform: scale(1) rotate(20deg); } 85% { opacity: .2; transform: scale(.6) rotate(45deg); } }
   .swatch:focus-visible { outline: none; filter: drop-shadow(0 0 2px #fff) drop-shadow(0 0 2px #fff); }
   .tf-code { flex: 0 1 180px; }
   .tf-send .btn { padding-block: 10px; }
@@ -456,7 +469,7 @@
   .finale .banner .sub { color: #FFB060; text-shadow: 0 0 14px rgba(255,140,42,.35); }
   .finale .rule { color: #C9A2FF; }
   .finale .rule::before { background: linear-gradient(90deg, transparent, #B48CFF); } .finale .rule::after { background: linear-gradient(90deg, #B48CFF, transparent); }
-  /* Tea Time: house flair beside a name, coin flips */
+  /* The Common House: house flair beside a name, coin flips */
   .tavern .flair { display: inline-block; width: 14px; height: 13px; margin-left: 6px; vertical-align: -1px; background: center / contain no-repeat; filter: drop-shadow(0 1px 0 rgba(0,0,0,.6)); }
   .tavern .flair.h333 { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 22'%3E%3Cpath d='M12 21 C4 15 1 11 1 6.5 A5.5 5.5 0 0 1 12 4.5 A5.5 5.5 0 0 1 23 6.5 C23 11 20 15 12 21Z' fill='%23C9C6C0' stroke='%23F4F3F0' stroke-width='1'/%3E%3C/svg%3E"); }
   .tavern .flair.h500 { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 22'%3E%3Cpath d='M12 21 C4 15 1 11 1 6.5 A5.5 5.5 0 0 1 12 4.5 A5.5 5.5 0 0 1 23 6.5 C23 11 20 15 12 21Z' fill='%23F26F96' stroke='%23FFB3C7' stroke-width='1'/%3E%3C/svg%3E"); }
@@ -474,6 +487,7 @@
 
   @media (max-width: 760px) {
     .hall, .ledger, .roster, .decree { grid-template-columns: 1fr; }
+    .swatches { justify-content: center; gap: 5px; width: 100%; }   /* stones centered; the "Gem" label stays left like the others */
     .decree { justify-items: center; text-align: center; gap: 20px; }
     .decree img { width: 150px; }
   }
@@ -606,15 +620,15 @@ try { if (sessionStorage.getItem("tweetober-gates") === "1") document.getElement
       </div>
       <div class="panel board-panel">
         <div class="board-head">
-          <h2 class="heading">Tea Time</h2>
+          <h2 class="heading">The Common House</h2>
           <span class="board-status" id="tavernStatus" aria-live="polite"></span>
         </div>
-        <p class="feed-note" style="margin-top:-6px">Spill it. Messages appear for everyone within a few seconds. Type <code>/flip</code> to toss a coin.</p>
+        <p class="feed-note" style="margin-top:-6px">Where both houses gather. Say your piece and everyone sees it within a few seconds. Type <code>/flip</code> to toss a coin.</p>
         <ol class="tavern" id="tavern" aria-label="Messages"></ol>
         <form class="tavern-form" id="tavernForm" autocomplete="off">
           <div class="tf-row">
             <label class="tf-field tf-name"><span class="eyebrow">Name</span>
-              <input id="tfName" maxlength="24" placeholder="Sir Tweetsalot" required>
+              <input id="tfName" maxlength="24" placeholder="Handle" required>
             </label>
             <fieldset class="tf-field tf-colors"><legend class="eyebrow">Color</legend>
               <div class="swatches" id="tfColors"></div>
@@ -627,7 +641,7 @@ try { if (sessionStorage.getItem("tweetober-gates") === "1") document.getElement
             <label class="tf-field tf-code" id="tfCodeWrap" hidden><span class="eyebrow">Password</span>
               <input id="tfCode" type="password" autocapitalize="off" spellcheck="false" placeholder="••••••">
             </label>
-            <button class="btn" type="submit" id="tfSend">Post</button>
+            <button class="btn" type="submit" id="tfSend"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M23.96 3.03 L21.32 2.58 L19.78 2.43 L18.88 2.43 L18.84 2.39 L16.99 2.47 L15.07 2.77 L13.90 3.07 L13.11 3.33 L12.89 3.60 L12.21 4.65 L11.49 6.20 L11.42 6.05 L11.34 5.63 L11.34 4.58 L11.42 4.09 L11.30 4.09 L10.17 4.65 L9.08 5.29 L7.76 6.16 L6.74 6.91 L5.65 7.86 L5.16 9.51 L5.01 10.42 L4.97 11.17 L4.94 11.21 L4.86 11.17 L4.60 10.64 L4.37 10.00 L4.26 9.36 L4.18 9.36 L3.58 10.12 L3.20 10.68 L2.60 11.81 L2.22 12.83 L1.96 14.22 L1.96 15.54 L2.11 16.33 L2.19 16.33 L2.86 15.50 L4.26 13.92 L5.88 12.26 L7.42 10.87 L9.16 9.51 L11.19 8.19 L12.92 7.29 L14.73 6.54 L15.97 6.12 L16.09 6.16 L13.53 7.67 L10.96 9.40 L9.00 10.91 L6.86 12.79 L4.71 14.98 L2.90 17.12 L1.92 18.44 L0.98 19.84 L0.15 21.19 L0.00 21.53 L0.30 21.57 L0.87 21.53 L1.58 21.31 L1.77 20.82 L2.64 19.20 L3.28 18.25 L3.81 17.61 L5.31 17.65 L6.07 17.58 L7.35 17.31 L8.29 17.01 L9.38 16.56 L10.74 15.84 L12.02 15.01 L13.45 13.92 L13.60 13.77 L13.60 13.70 L12.43 13.32 L11.72 12.87 L11.76 12.83 L13.22 12.79 L14.32 12.60 L15.18 12.38 L17.48 10.00 L21.55 5.52 L23.96 3.11Z" fill="currentColor" stroke="currentColor" stroke-width=".15" stroke-linejoin="round"/></svg>Post</button>
             <p class="tf-msg" id="tfMsg" aria-live="polite"></p>
           </div>
         </form>
@@ -727,7 +741,6 @@ try { if (sessionStorage.getItem("tweetober-gates") === "1") document.getElement
         <p class="oath heading">May the best tweeter win.</p>
         <div class="pledge-row">
           <button class="pledge-btn" id="pledgeBtn" type="button">
-            <svg class="ico-quill" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 3c-7 1-12 5-14 12l-2 6 6-2c7-2 11-7 12-14z"/><path d="M6 15c3-3 6-5 9-7"/><path d="M3 21l4-4"/></svg>
             <svg class="ico-check" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg>
             <span id="pledgeLabel">Swear the oath</span>
           </button>
@@ -780,7 +793,7 @@ const CONFIG = {
   // How often to re-read the sheet, in minutes
   refreshMinutes: 5,
 
-  // Tea Time's server address. On the Cloudflare site this is just "/api/messages".
+  // The Common House's server address. On the Cloudflare site this is just "/api/messages".
   hallApi: "/api/messages",
   hallPollSeconds: 5,
   // How many names to show on the Scroll of Honor
@@ -1173,11 +1186,11 @@ function mountFeed() {
   document.body.appendChild(s);
 }
 
-/* ---------- Tea Time (live messages) ---------- */
+/* ---------- The Common House (live messages) ---------- */
 (function tavern() {
   const list = $("#tavern"), form = $("#tavernForm"); if (!list || !form) return;
   const COLORS = ["#F26F96", "#E6E4E0", "#F2D272", "#B99CFF", "#8CC8FF", "#8FE3B6", "#FF9D5C", "#FFB3C7"];
-  const NAMES = ["Rose", "Silver", "Gold", "Amethyst", "Sky", "Mint", "Ember", "Blush"];
+  const NAMES = ["Pink Sapphire", "Moonstone", "Citrine", "Amethyst", "Blue Topaz", "Jade", "Amber", "Rose Quartz"];
   const status = $("#tavernStatus"), msg = $("#tfMsg"), nameIn = $("#tfName"), bodyIn = $("#tfBody"), codeIn = $("#tfCode"), codeWrap = $("#tfCodeWrap"), count = $("#tfCount"), sendBtn = $("#tfSend");
   const store = { get: (k) => { try { return localStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch {} } };
   let color = COLORS.includes(store.get("tweetober-color")) ? store.get("tweetober-color") : COLORS[0];
@@ -1187,8 +1200,7 @@ function mountFeed() {
   // color swatches (radio group)
   const sw = $("#tfColors");
   sw.setAttribute("role", "radiogroup");
-  const sagAt = (i) => (6 * Math.sin(Math.PI * (i + 0.5) / COLORS.length)).toFixed(1);   // follow the rope's curve
-  sw.innerHTML = COLORS.map((c, i) => `<button type="button" class="swatch" role="radio" aria-label="${NAMES[i]}" title="${NAMES[i]}" data-c="${c}" style="--c:${c};--sag:${sagAt(i)}px" aria-checked="${c === color}"><span class="flag"></span></button>`).join("");
+  sw.innerHTML = COLORS.map((c, i) => `<button type="button" class="swatch" role="radio" aria-label="${NAMES[i]}" title="${NAMES[i]}" data-c="${c}" style="--c:${c}" aria-checked="${c === color}"><span class="gem"></span><span class="spark"></span></button>`).join("");
   sw.addEventListener("click", (e) => {
     const b = e.target.closest(".swatch"); if (!b) return;
     color = b.dataset.c; store.set("tweetober-color", color);
@@ -1246,7 +1258,7 @@ function mountFeed() {
       { id: 2, name: "trinity333__", color: "#E6E4E0", body: "333 does not fear numbers. 333 IS numbers.", created: now - 300000 },
       { id: 3, name: "mickal500", color: "#F26F96", body: "see you on the scroll of honor ❤", created: now - 60000 },
     ], true);
-    list.insertAdjacentHTML("afterbegin", `<li class="sample">Sample messages · the live Tea Time board runs on the Tweetober site</li>`);
+    list.insertAdjacentHTML("afterbegin", `<li class="sample">Sample messages · the live Common House runs on the Tweetober site</li>`);
     setStatus(false, "Preview");
   }
   async function poll(full) {
