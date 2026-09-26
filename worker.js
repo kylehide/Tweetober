@@ -7,10 +7,16 @@
 //   DELETE /api/messages?id=ID      -> remove one (header  x-admin-key: ADMIN_KEY)
 //   GET    /api/trumpet              -> { count }   how many times the trumpet has been sounded
 //   POST   /api/trumpet              -> { count }   sound it once more
+//   GET    /api/feed                 -> { tweets, fetched }  the Tweetober list, via twitterapi.io, cached
 //
 // Settings (Cloudflare dashboard -> this Worker -> Settings -> Variables and Secrets):
 //   HALL_CODE  secret  optional. Leave unset and anyone can post. Set it (e.g. hinge) to require a password.
 //   ADMIN_KEY  secret  any long random string; lets you delete messages.
+//   TWITTERAPI_KEY  secret  your twitterapi.io API key. Without it the Scrying Glass shows a link to the list instead.
+//   LIST_ID         text    optional. The Twitter list to show. Defaults to the Tweetober 2026 list below.
+//   FEED_MINUTES    text    optional. How often to check for new tweets (default 1).
+//                           Each check asks only for tweets posted since the last one, so you mostly pay for new tweets.
+//                           Nothing is fetched while nobody has the site open.
 
 const COLORS = ["#F26F96", "#E6E4E0", "#F2D272", "#B99CFF", "#8CC8FF", "#8FE3B6", "#FF9D5C", "#FFB3C7"];
 const MAX_NAME = 24, MAX_BODY = 280, COOLDOWN_MS = 8000, PAGE = 60;
@@ -23,6 +29,7 @@ async function ensureTable(db) {
   ).run();
   await db.prepare("CREATE INDEX IF NOT EXISTS messages_who ON messages (who, created)").run();
   await db.prepare("CREATE TABLE IF NOT EXISTS counters (name TEXT PRIMARY KEY, value INTEGER NOT NULL)").run();
+  await db.prepare("CREATE TABLE IF NOT EXISTS feed_cache (id INTEGER PRIMARY KEY, body TEXT NOT NULL, fetched INTEGER NOT NULL)").run();
   ready = true;
 }
 
@@ -102,9 +109,83 @@ async function trumpet(request, env) {
   return json({ count: row ? row.value : 0 });
 }
 
+/* ---------- The Scrying Glass: the Tweetober list from twitterapi.io, fetched at most every FEED_MINUTES ---------- */
+const DEFAULT_LIST = "2103930993988235727";
+const MONTHS = { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 };
+function when(s) {
+  // "Tue Oct 06 21:04:11 +0000 2026" (Twitter style) or ISO
+  const m = String(s || "").match(/^\w{3} (\w{3}) (\d{1,2}) (\d{2}):(\d{2}):(\d{2}) \+0000 (\d{4})$/);
+  if (m) return Date.UTC(+m[6], MONTHS[m[1]] ?? 0, +m[2], +m[3], +m[4], +m[5]);
+  const t = Date.parse(s); return isNaN(t) ? 0 : t;
+}
+const slim = (t) => ({
+  id: String(t.id || ""), url: String(t.url || ""), text: String(t.text || "").slice(0, 1200),
+  created: when(t.createdAt), likes: t.likeCount | 0, retweets: t.retweetCount | 0, replies: t.replyCount | 0,
+  isReply: !!t.isReply, replyTo: t.inReplyToUsername ? String(t.inReplyToUsername) : "",
+  author: { userName: String(t.author?.userName || ""), name: String(t.author?.name || ""), avatar: String(t.author?.profilePicture || "") },
+});
+async function fetchPage(env, params) {
+  const u = new URL("https://api.twitterapi.io/twitter/list/tweets");
+  u.searchParams.set("listId", env.LIST_ID || DEFAULT_LIST);
+  u.searchParams.set("includeReplies", "false");
+  for (const [k, v] of Object.entries(params)) if (v !== undefined && v !== "") u.searchParams.set(k, String(v));
+  const r = await fetch(u, { headers: { "X-API-Key": env.TWITTERAPI_KEY } });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok || !Array.isArray(data.tweets)) throw new Error(data.message || data.msg || ("HTTP " + r.status));
+  return data;
+}
+const KEEP = 60;          // tweets kept in the cache and served to the page
+const MAX_PAGES = 6;      // at most 120 tweets per catch-up, so a busy minute can't run up the bill
+const CATCHUP_MS = 15 * 60000;   // if the cache is older than this, just take the latest page rather than back-filling
+async function feed(env) {
+  if (!env.TWITTERAPI_KEY) return json({ error: "not configured" }, 503);
+  if (!env.DB) return json({ error: "No database." }, 503);
+  await ensureTable(env.DB);
+  const ttl = Math.max(1, Number(env.FEED_MINUTES) || 1) * 60000, now = Date.now();
+  const row = await env.DB.prepare("SELECT body, fetched FROM feed_cache WHERE id = 1").first();
+  const cached = row ? JSON.parse(row.body) : [];
+  if (row && now - row.fetched < ttl) return json({ tweets: cached, fetched: row.fetched });
+  // claim the refresh so simultaneous visitors don't each pay for a fetch
+  const claim = await env.DB.prepare(
+    "INSERT INTO feed_cache (id, body, fetched) VALUES (1, '[]', ?) ON CONFLICT(id) DO UPDATE SET fetched = excluded.fetched WHERE feed_cache.fetched <= ?"
+  ).bind(now, now - ttl).run();
+  if (row && !claim.meta.changes) return json({ tweets: cached, fetched: row.fetched });
+  try {
+    const newest = cached.reduce((m, t) => Math.max(m, t.created || 0), 0);
+    const seen = new Set(cached.map(t => t.id));
+    let fresh = [];
+    if (newest && now - newest < CATCHUP_MS && row && now - row.fetched < CATCHUP_MS) {
+      // only what's been posted since the newest tweet we already have
+      let cursor = "", pages = 0;
+      do {
+        const data = await fetchPage(env, { sinceTime: Math.floor(newest / 1000), cursor });
+        const got = data.tweets.filter(t => t && t.id && !seen.has(String(t.id))).map(slim);
+        got.forEach(t => seen.add(t.id)); fresh.push(...got);
+        cursor = data.has_next_page && data.next_cursor && got.length ? data.next_cursor : "";
+      } while (cursor && ++pages < MAX_PAGES);
+    } else {
+      // first fetch, or the glass sat unwatched for a while: just the latest page
+      const data = await fetchPage(env, {});
+      fresh = data.tweets.filter(t => t && t.id).map(slim);
+      seen.clear(); cached.length = 0;
+    }
+    const tweets = [...fresh, ...cached].sort((a, b) => b.created - a.created).slice(0, KEEP);
+    await env.DB.prepare("UPDATE feed_cache SET body = ?, fetched = ? WHERE id = 1").bind(JSON.stringify(tweets), now).run();
+    return json({ tweets, fetched: now, added: fresh.length });
+  } catch (e) {
+    // keep serving the last good copy; try again after the next interval
+    if (row) return json({ tweets: cached, fetched: row.fetched, stale: true });
+    return json({ error: "The feed could not be fetched.", detail: String(e.message || e).slice(0, 200) }, 502);
+  }
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    if (url.pathname === "/api/feed") {
+      try { return await feed(env); }
+      catch (e) { return json({ error: "Something went wrong on the server." }, 500); }
+    }
     if (url.pathname === "/api/trumpet") {
       try { return await trumpet(request, env); }
       catch (e) { return json({ error: "Something went wrong on the server." }, 500); }
