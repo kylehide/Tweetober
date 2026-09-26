@@ -55,6 +55,7 @@
   }
   body {
     background: transparent;
+    overflow: clip;              /* nothing inside may stretch the page past the footer (fixed things like the gates and confetti are unaffected) */
     color: var(--ink);
     font-family: "VT323", "IBM Plex Mono", "Courier New", monospace;
     font-size: 1.05rem;
