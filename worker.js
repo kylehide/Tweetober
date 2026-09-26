@@ -3,6 +3,7 @@
 //   GET    /api/messages            -> latest 60 messages (oldest first)
 //   GET    /api/messages?after=ID   -> only messages newer than ID
 //   POST   /api/messages            -> { name, color, body, code }  (code must match HALL_CODE)
+//                                      a body of "/flip" (optionally followed by a question) is turned into a coin toss
 //   DELETE /api/messages?id=ID      -> remove one (header  x-admin-key: ADMIN_KEY)
 //   GET    /api/trumpet              -> { count }   how many times the trumpet has been sounded
 //   POST   /api/trumpet              -> { count }   sound it once more
@@ -55,10 +56,19 @@ async function handle(request, env, url) {
     try { input = await request.json(); } catch { return json({ error: "That message couldn't be read." }, 400); }
     if (env.HALL_CODE && clean(input.code, 64).toLowerCase() !== String(env.HALL_CODE).trim().toLowerCase())
       return json({ error: "The gate does not open. Check the password." }, 403);
-    const name = clean(input.name, MAX_NAME), body = clean(input.body, MAX_BODY);
+    const name = clean(input.name, MAX_NAME);
+    let body = clean(input.body, MAX_BODY);
     const color = COLORS.includes(input.color) ? input.color : COLORS[0];
     if (!name) return json({ error: "Give yourself a name first." }, 400);
     if (!body) return json({ error: "Write something to post." }, 400);
+    // "/flip" tosses a coin on the server, so nobody can rig it. Heads is House of 333, tails is House of 500.
+    const flip = body.match(/^\/flip\b\s*(.*)$/i);
+    if (flip) {
+      const heads = (crypto.getRandomValues(new Uint32Array(1))[0] & 1) === 0;
+      const rest = flip[1].trim().slice(0, 120);
+      body = "\u{1FA99} " + (heads ? "Heads! The silver side. House of 333 wins the toss." : "Tails! The pink side. House of 500 wins the toss.")
+        + (rest ? " \u2014 \u201c" + rest + "\u201d" : "");
+    }
     const id = await who(request), now = Date.now();
     const last = await env.DB.prepare("SELECT created FROM messages WHERE who = ? ORDER BY created DESC LIMIT 1").bind(id).first();
     if (last && now - last.created < COOLDOWN_MS)
