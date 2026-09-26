@@ -446,6 +446,18 @@
   .swatch:focus-visible { outline: none; filter: drop-shadow(0 0 2px #fff) drop-shadow(0 0 2px #fff); }
   .tf-code { flex: 0 1 180px; }
   .tf-send .btn { padding-block: 10px; }
+  /* emblems: original little drawings people can add to messages */
+  .tavern .emo { height: 1.35em; width: auto; vertical-align: -.3em; margin: 0 .05em; }
+  .tavern .body.big .emo { height: 2.6em; vertical-align: middle; margin: .1em .1em 0 0; }
+  .emo-wrap { position: relative; }
+  .emo-btn { width: 46px; height: 46px; padding: 8px; border: 1px solid var(--line-strong); background: var(--surface-2); cursor: pointer; display: grid; place-items: center; }
+  .emo-btn img { width: 100%; height: 100%; }
+  .emo-btn:hover, .emo-btn[aria-expanded="true"] { border-color: var(--gold-bright); box-shadow: 0 0 0 3px var(--gold-glow); }
+  .emo-pop { position: absolute; bottom: calc(100% + 8px); left: 0; z-index: 20; display: grid; grid-template-columns: repeat(6, 40px); gap: 4px; padding: 10px;
+    background: #EAD9AE; border: 1px solid #8A6A3A; box-shadow: 0 10px 24px rgba(0,0,0,.55), inset 0 0 18px rgba(120,80,30,.3); }
+  .emo-pop button { width: 40px; height: 40px; padding: 5px; border: 1px solid transparent; background: none; cursor: pointer; border-radius: 4px; }
+  .emo-pop button:hover, .emo-pop button:focus-visible { background: rgba(255,250,235,.7); border-color: #9C7A4A; outline: none; }
+  .emo-pop img { width: 100%; height: 100%; display: block; }
   /* the town crier's bell on the Post button swings when a message goes out */
   .btn .bell { fill: currentColor; transform-origin: 50% 10%; }
   .btn.ringing .bell { animation: ring .9s ease-in-out; }
@@ -767,6 +779,10 @@ try { if (sessionStorage.getItem("tweetober-gates") === "1") document.getElement
             <textarea id="tfBody" maxlength="280" rows="2" placeholder="Hear ye, hear ye…" required></textarea>
           </label>
           <div class="tf-row tf-send">
+            <div class="emo-wrap">
+              <button type="button" class="emo-btn" id="tfEmo" aria-haspopup="true" aria-expanded="false" title="Add an emblem" aria-label="Add an emblem"></button>
+              <div class="emo-pop" id="tfEmoPop" role="menu" hidden></div>
+            </div>
             <label class="tf-field tf-code" id="tfCodeWrap" hidden><span class="eyebrow">Password</span>
               <input id="tfCode" type="password" autocapitalize="off" spellcheck="false" placeholder="••••••">
             </label>
@@ -1393,6 +1409,24 @@ function mountFeed() {
   setInterval(() => slot.querySelectorAll(".gt-time[data-t]").forEach(el => { el.textContent = ago(Number(el.dataset.t)); }), 30000);
 }
 
+/* The Common House emblems: original little drawings, stored in messages as :code: */
+const EMBLEMS = {
+  "333": ["House of 333", '<path d="M12 21C6 16.5 2.5 13 2.5 8.6A4.6 4.6 0 0 1 12 6a4.6 4.6 0 0 1 9.5 2.6C21.5 13 18 16.5 12 21z" fill="#D8D5CE"/><path d="M5.8 7.8a2.6 2.6 0 0 1 2.6-1.6" fill="none" stroke="#fff" stroke-opacity=".8"/>'],
+  "500": ["House of 500", '<path d="M12 21C6 16.5 2.5 13 2.5 8.6A4.6 4.6 0 0 1 12 6a4.6 4.6 0 0 1 9.5 2.6C21.5 13 18 16.5 12 21z" fill="#F26F96"/><path d="M5.8 7.8a2.6 2.6 0 0 1 2.6-1.6" fill="none" stroke="#fff" stroke-opacity=".7"/>'],
+  crown: ["Crown", '<path d="M3 18V8l4.5 4L12 5l4.5 7L21 8v10z" fill="#EBC04A"/><path d="M3 18h18v2.8H3z" fill="#C9951E"/><circle cx="12" cy="13.8" r="1.5" fill="#F26F96"/><circle cx="7" cy="15.3" r="1" fill="#8CC8FF"/><circle cx="17" cy="15.3" r="1" fill="#8CC8FF"/>'],
+  trumpet: ["Trumpet", '<path d="M7 12.8h5v5.4l-2.5-1.6L7 18.2z" fill="#F26F96"/><rect x="2.4" y="10" width="12" height="2.8" rx="1.2" fill="#EBC04A"/><path d="M14 11.4c2.4 0 4.4-3 8-5.4v10.8c-3.6-2.4-5.6-5.4-8-5.4z" fill="#F2D272"/><circle cx="2.6" cy="11.4" r="1.4" fill="#C9951E"/>'],
+  swords: ["Crossed swords", '<g id="s"><path d="M3.5 3l2.8.4L17 14.2l-2.3 2.3L3.9 5.8z" fill="#E6E4E0"/><path d="M12.6 17.4l5-5 1.3 1.3-5 5z" fill="#C9951E"/><path d="M17 17.4l2.2 2.2" stroke-width="2.4"/><circle cx="20.3" cy="20.6" r="1.4" fill="#EBC04A"/></g><use href="#s" transform="translate(24 0) scale(-1 1)"/>'],
+  goblet: ["Goblet", '<path d="M5.5 3h13c0 5.3-2.7 8.8-6.5 8.8S5.5 8.3 5.5 3z" fill="#EBC04A"/><path d="M6.3 5.4h11.4c-.6 2.8-2.8 4.8-5.7 4.8s-5.1-2-5.7-4.8z" fill="#9E2248" stroke="none"/><path d="M11 11.8h2v4.8h-2z" fill="#C9951E"/><path d="M7.2 20.5c0-2.2 2.1-3.9 4.8-3.9s4.8 1.7 4.8 3.9z" fill="#EBC04A"/>'],
+  scroll: ["Scroll", '<path d="M6 8h11.5v10H6z" fill="#EFDFB4"/><path d="M6 3.8h12a2.1 2.1 0 0 1 0 4.2H6z" fill="#E4D09C"/><circle cx="6" cy="5.9" r="2.1" fill="#D9BE82"/><path d="M4 18h13.5a2.1 2.1 0 0 1 0 4.2H4a2.1 2.1 0 0 1 0-4.2z" fill="#E4D09C"/><path d="M8.5 11h6.5M8.5 14.2h5" stroke="#8A6A3A"/>'],
+  tea: ["Tea", '<path d="M8 2.8c-1.1 1.3 1.1 2.4 0 3.8M12 2.8c-1.1 1.3 1.1 2.4 0 3.8" fill="none" stroke="#8A6A3A"/><path d="M17 11.2h1.4a2.6 2.6 0 0 1 0 5.2H16.4" fill="none"/><path d="M3.8 9.5h13.4v3.7a6.7 6.7 0 0 1-13.4 0z" fill="#EFEBE0"/><path d="M4.1 12h12.8" stroke="#F26F96" stroke-width="1.5"/><path d="M2.8 21h15.4" stroke-width="1.6"/>'],
+  castle: ["Castle", '<path d="M12 8V2.6" /><path d="M12 2.6h4.6l-1.5 1.3 1.5 1.3H12z" fill="#F26F96"/><path d="M6 21V8h2.5v2h2V8H13v2h2V8h2.5v13z" fill="#BDB8AF"/><path d="M10.2 21v-3.6a1.8 1.8 0 0 1 3.6 0V21z" fill="#2B1A0E"/><path d="M8 13.5h1.6v2.2H8zM14.4 13.5H16v2.2h-1.6z" fill="#2B1A0E"/>'],
+  candle: ["Candle", '<path d="M12 2.4c2 2.3 2.2 3.7 0 5.6-2.2-1.9-2-3.3 0-5.6z" fill="#FF9D5C"/><path d="M12 8v2"/><path d="M9 10h6v10H9z" fill="#EFDFB4"/><path d="M15 10v3.2a.9.9 0 0 1-1.8 0V10" fill="#E4D09C"/><path d="M6 20.6h12" stroke-width="1.6"/>'],
+  skull: ["Skull", '<path d="M12 3a7.5 7.5 0 0 0-7.5 7.5c0 2.6 1.2 4.3 3 5.3V19h9v-3.2c1.8-1 3-2.7 3-5.3A7.5 7.5 0 0 0 12 3z" fill="#EFEBE0"/><circle cx="9" cy="11" r="1.9" fill="#2B1A0E"/><circle cx="15" cy="11" r="1.9" fill="#2B1A0E"/><path d="M12 13.4l-1.1 2h2.2z" fill="#2B1A0E"/><path d="M10 19v2M12 19v2M14 19v2"/>'],
+  shield: ["Two houses", '<path d="M12 2.5l8 3v6c0 5-3.6 8.5-8 10-4.4-1.5-8-5-8-10v-6z" fill="#D8D5CE"/><path d="M12 2.5l8 3v6c0 5-3.6 8.5-8 10z" fill="#F26F96"/><path d="M12 2.5v19"/>'],
+};
+const emblemSvg = (code) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g stroke="#2B1A0E" stroke-width="1.2" stroke-linejoin="round" stroke-linecap="round">${EMBLEMS[code][1]}</g></svg>`;
+const emblemSrc = (code) => "data:image/svg+xml," + encodeURIComponent(emblemSvg(code));
+
 /* ---------- The Common House (live messages) ---------- */
 (function tavern() {
   const list = $("#tavern"), form = $("#tavernForm"); if (!list || !form) return;
@@ -1416,6 +1450,24 @@ function mountFeed() {
   });
   nameIn.style.color = color;
   bodyIn.addEventListener("input", () => { count.textContent = `${bodyIn.value.length} / 280`; });
+  // emblem picker
+  const emoBtn = $("#tfEmo"), emoPop = $("#tfEmoPop");
+  emoPop.innerHTML = Object.keys(EMBLEMS).map(c => `<button type="button" role="menuitem" data-c="${c}" title="${EMBLEMS[c][0]}  :${c}:"><img src="${emblemSrc(c)}" alt="${EMBLEMS[c][0]}"></button>`).join("");
+  emoBtn.innerHTML = `<img src="${emblemSrc("crown")}" alt="">`;
+  const openEmo = (on) => { emoPop.hidden = !on; emoBtn.setAttribute("aria-expanded", String(on)); };
+  emoBtn.addEventListener("click", () => openEmo(emoPop.hidden));
+  emoPop.addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-c]"); if (!b) return;
+    const code = `:${b.dataset.c}:`, v = bodyIn.value, a = bodyIn.selectionStart ?? v.length, z = bodyIn.selectionEnd ?? v.length;
+    const ins = (a && !/\s$/.test(v.slice(0, a)) ? " " : "") + code + " ";
+    if (v.length - (z - a) + ins.length > 280) return;
+    bodyIn.value = v.slice(0, a) + ins + v.slice(z);
+    const at = a + ins.length; bodyIn.setSelectionRange(at, at); bodyIn.focus();
+    count.textContent = `${bodyIn.value.length} / 280`;
+    openEmo(false);
+  });
+  document.addEventListener("click", (e) => { if (!emoPop.hidden && !e.target.closest("#tfEmoPop, #tfEmo")) openEmo(false); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !emoPop.hidden) { openEmo(false); emoBtn.focus(); } });
   bodyIn.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); form.requestSubmit(); } });
 
   const ago = (t) => {
@@ -1431,9 +1483,12 @@ function mountFeed() {
   const houseOfName = houseOfHandle;
   const flair = (name) => { const k = houseOfName(name); return k ? `<i class="flair ${k}" title="House of ${k.slice(1)}"></i>` : ""; };
   // Coin flips come back from the server as a message starting with the coin; color it by the winning house
+  // :code: -> emblem picture; a message of only 1-3 emblems shows them large
+  const withEmblems = (html) => html.replace(/:([a-z0-9]+):/g, (m, c) => EMBLEMS[c] ? `<img class="emo" src="${emblemSrc(c)}" alt=":${c}:" title="${EMBLEMS[c][0]}">` : m);
+  const onlyEmblems = (b) => { const codes = String(b).match(/:([a-z0-9]+):/g) || []; return codes.length && codes.length <= 3 && codes.every(c => EMBLEMS[c.slice(1, -1)]) && !String(b).replace(/:([a-z0-9]+):/g, "").trim(); };
   const bodyHtml = (b) => {
     const m = String(b || "").match(/^\u{1FA99}\s*(.*House of (333|500).*)$/su);
-    return m ? `<span class="body flip h${m[2]}"><span class="coin">\u{1FA99}</span> ${esc(m[1])}</span>` : `<span class="body">${esc(b)}</span>`;
+    return m ? `<span class="body flip h${m[2]}"><span class="coin">\u{1FA99}</span> ${esc(m[1])}</span>` : `<span class="body${onlyEmblems(b) ? " big" : ""}">${withEmblems(esc(b))}</span>`;
   };
   const row = (m) => `<li data-id="${Number(m.id)}"><span class="who"><b style="color:${ink(m.color)}">${esc(m.name)}</b>${flair(m.name)}<time data-t="${Number(m.created)}">${ago(m.created)}</time><button type="button" class="zap" title="Remove this message" aria-label="Remove this message">×</button></span>${bodyHtml(m.body)}</li>`;
 
@@ -1486,7 +1541,8 @@ function mountFeed() {
     render([
       { id: 1, name: "Sir Tweetsalot", color: "#8CC8FF", body: "The gates are open. 500 has already begun its assault on the timeline.", created: now - 540000 },
       { id: 2, name: "trinity333__", color: "#E6E4E0", body: "333 does not fear numbers. 333 IS numbers.", created: now - 300000 },
-      { id: 3, name: "mickal500", color: "#F26F96", body: "see you on the scroll of honor ❤", created: now - 60000 },
+      { id: 3, name: "mickal500", color: "#F26F96", body: "see you on the scroll of honor :500: :crown:", created: now - 60000 },
+      { id: 4, name: "Sir Tweetsalot", color: "#8CC8FF", body: ":goblet: :swords: :goblet:", created: now - 20000 },
     ], true);
     list.insertAdjacentHTML("afterbegin", `<li class="sample">Sample messages · the live Common House runs on the Tweetober site</li>`);
     setStatus(false, "Preview");
