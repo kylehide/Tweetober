@@ -47,7 +47,6 @@
   html, body { margin: 0; }
   html {
     font-size: 22px;
-    overflow-y: auto; overflow-x: hidden;   /* the page scrolls here; without this, body's overflow would be applied to the viewport */
     /* The background lives on <html> so it covers the whole canvas, including any space a browser
        draws below the footer. Dark-brown veil at 70% over the stone tile; both layers tile. */
     background-color: var(--bg);
@@ -58,7 +57,6 @@
   }
   body {
     background: transparent;
-    overflow: clip;              /* nothing inside may stretch the page past the footer (fixed things like the gates and confetti are unaffected) */
     color: var(--ink);
     font-family: "VT323", "IBM Plex Mono", "Courier New", monospace;
     font-size: 1.05rem;
@@ -143,18 +141,18 @@
      because CSS transforms on elements inside an SVG behave differently in Safari and Firefox on phones. */
   .herald { position: relative; display: block; width: 96px; height: 48px; flex: none; opacity: 0; transform: scale(.6) translateY(6px); transform-origin: center; pointer-events: none; }
   .trumpet { display: block; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 3px 4px rgba(0,0,0,.6)); }
-  .note { position: absolute; width: 14px; height: 22px; opacity: 0; filter: drop-shadow(0 1px 1px rgba(0,0,0,.6)); }
-  .note.n2 { width: 22px; height: 23px; }
+  .tnote { position: absolute; width: 14px; height: 22px; opacity: 0; filter: drop-shadow(0 1px 1px rgba(0,0,0,.6)); }
+  .tnote.n2 { width: 22px; height: 23px; }
   .herald .n1 { left: 85%; top: -14px; } .herald .n2 { left: 96%; top: -24px; }
   .herald.left .n1 { left: auto; right: 85%; } .herald.left .n2 { left: auto; right: 96%; }
   .horn-row.playing .herald { animation: heraldIn .45s cubic-bezier(.2,1.4,.4,1) forwards, toot .5s ease-in-out .5s 4 alternate; }
   .horn-row.playing .herald.left { animation-name: heraldInL, tootL; }
-  .horn-row.playing .note { animation: noteRise 1.6s ease-out infinite; }
-  .horn-row.playing .herald.left .note { animation-name: noteRiseL; }
+  .horn-row.playing .tnote { animation: noteRise 1.6s ease-out infinite; }
+  .horn-row.playing .herald.left .tnote { animation-name: noteRiseL; }
   .horn-row.playing .n2 { animation-delay: .8s; }
   .horn-row.fading .herald { animation: heraldOut .4s ease-in forwards; }
   .horn-row.fading .herald.left { animation: heraldOutL .4s ease-in forwards; }
-  .horn-row.fading .note { animation: none; opacity: 0; }
+  .horn-row.fading .tnote { animation: none; opacity: 0; }
   @keyframes heraldIn { from { opacity: 0; transform: scale(.6) translateY(6px) rotate(8deg); } to { opacity: 1; transform: scale(1) translateY(0) rotate(-6deg); } }
   @keyframes heraldInL { from { opacity: 0; transform: scale(.6) translateY(6px) rotate(-8deg); } to { opacity: 1; transform: scale(1) translateY(0) rotate(6deg); } }
   @keyframes toot { from { transform: scale(1) rotate(-6deg); } to { transform: scale(1.04) rotate(-10deg); } }
@@ -310,9 +308,9 @@
   .rule-list li::before { content: ""; width: 8px; height: 8px; margin-top: .55em; transform: rotate(45deg); background: #8A5A1E; }
   /* unfurl: the bottom roller starts tucked under the top one and rolls down, uncovering the writing */
   .rules.furled .parchment { clip-path: inset(0 0 var(--h, 100%) 0); }
-  .rules.furled .roll.bottom { transform: translateY(calc(-1 * var(--h, 0px))); }
+  .rules.furled .roll.bottom { transform: translateY(calc(-1 * var(--h, 0px))); visibility: hidden; }   /* parked under the top roller, unseen until it rolls */
   .rules.furled.open .parchment { clip-path: inset(0 0 -20px 0); transition: clip-path 1.4s cubic-bezier(.35,.7,.25,1); }
-  .rules.furled.open .roll.bottom { transform: none; transition: transform 1.4s cubic-bezier(.35,.7,.25,1); }
+  .rules.furled.open .roll.bottom { transform: none; visibility: visible; transition: transform 1.4s cubic-bezier(.35,.7,.25,1); }
   .honor { text-align: center; justify-items: center; align-content: center; }
   .pledge { margin: 0; max-width: 40ch; font-style: italic; line-height: 1.5; color: var(--ink); }
   .oath { margin: 0; font-size: 1.5rem; line-height: 1.1; }
@@ -538,10 +536,10 @@ try { if (sessionStorage.getItem("tweetober-gates") === "1") document.getElement
       <a href="#cup"><span>House Cup</span><i aria-hidden="true"></i></a>
       <a href="#ledger"><span>The Ledger</span><i aria-hidden="true"></i></a>
       <a href="#hall"><span>The Hall</span><i aria-hidden="true"></i></a>
+      <a href="#events"><span>Events</span><i aria-hidden="true"></i></a>
       <a href="#decree"><span>The Decree</span><i aria-hidden="true"></i></a>
       <a href="#code"><span>The Code</span><i aria-hidden="true"></i></a>
       <a href="#houses"><span>The Houses</span><i aria-hidden="true"></i></a>
-      <a href="#events"><span>Events</span><i aria-hidden="true"></i></a>
     </nav>
     <div class="horn-row" id="hornRow">
       <span class="herald left">
@@ -562,8 +560,8 @@ try { if (sessionStorage.getItem("tweetober-gates") === "1") document.getElement
         <path d="M78 27 C90 27 98 18 116 8 L116 46 C98 36 90 27 78 27 Z" fill="#E4C463" stroke="#7A5C1C" stroke-width="1"/>
         <path d="M84 27 C94 25 102 18 114 11" stroke="#fff7d6" stroke-width="1.2" fill="none" opacity=".7"/>
       </g></svg>
-      <svg class="note n1" viewBox="-5 -18 14 22" aria-hidden="true"><g fill="#F2D272" stroke="#F2D272" stroke-linecap="round"><ellipse cx="0" cy="0" rx="3.6" ry="2.6" transform="rotate(-25)" stroke="none"/><path d="M3 -0.8 V-14" stroke-width="1.6" fill="none"/><path d="M3 -14 c4 2 5 5 3 9" stroke-width="1.6" fill="none"/></g></svg>
-      <svg class="note n2" viewBox="-5 -19 22 23" aria-hidden="true"><g fill="#F2D272" stroke="#F2D272" stroke-linecap="round"><ellipse cx="0" cy="0" rx="3.6" ry="2.6" transform="rotate(-25)" stroke="none"/><ellipse cx="11" cy="-2" rx="3.6" ry="2.6" transform="rotate(-25 11 -2)" stroke="none"/><path d="M3 -0.8 V-13 M14 -2.8 V-15" stroke-width="1.6" fill="none"/><path d="M3 -13 L14 -15" stroke-width="3" fill="none"/></g></svg>
+      <svg class="tnote n1" viewBox="-5 -18 14 22" aria-hidden="true"><g fill="#F2D272" stroke="#F2D272" stroke-linecap="round"><ellipse cx="0" cy="0" rx="3.6" ry="2.6" transform="rotate(-25)" stroke="none"/><path d="M3 -0.8 V-14" stroke-width="1.6" fill="none"/><path d="M3 -14 c4 2 5 5 3 9" stroke-width="1.6" fill="none"/></g></svg>
+      <svg class="tnote n2" viewBox="-5 -19 22 23" aria-hidden="true"><g fill="#F2D272" stroke="#F2D272" stroke-linecap="round"><ellipse cx="0" cy="0" rx="3.6" ry="2.6" transform="rotate(-25)" stroke="none"/><ellipse cx="11" cy="-2" rx="3.6" ry="2.6" transform="rotate(-25 11 -2)" stroke="none"/><path d="M3 -0.8 V-13 M14 -2.8 V-15" stroke-width="1.6" fill="none"/><path d="M3 -13 L14 -15" stroke-width="3" fill="none"/></g></svg>
       </span>
       <button class="horn" id="horn" type="button" title="Sound the trumpets" aria-label="Sound the trumpets">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10v4h3l5 4V6L6 10H3z"/><path d="M14 9a4 4 0 0 1 0 6"/><path d="M17 6.5a8 8 0 0 1 0 11"/></svg>
@@ -587,8 +585,8 @@ try { if (sessionStorage.getItem("tweetober-gates") === "1") document.getElement
         <path d="M78 27 C90 27 98 18 116 8 L116 46 C98 36 90 27 78 27 Z" fill="#E4C463" stroke="#7A5C1C" stroke-width="1"/>
         <path d="M84 27 C94 25 102 18 114 11" stroke="#fff7d6" stroke-width="1.2" fill="none" opacity=".7"/>
       </svg>
-      <svg class="note n1" viewBox="-5 -18 14 22" aria-hidden="true"><g fill="#F2D272" stroke="#F2D272" stroke-linecap="round"><ellipse cx="0" cy="0" rx="3.6" ry="2.6" transform="rotate(-25)" stroke="none"/><path d="M3 -0.8 V-14" stroke-width="1.6" fill="none"/><path d="M3 -14 c4 2 5 5 3 9" stroke-width="1.6" fill="none"/></g></svg>
-      <svg class="note n2" viewBox="-5 -19 22 23" aria-hidden="true"><g fill="#F2D272" stroke="#F2D272" stroke-linecap="round"><ellipse cx="0" cy="0" rx="3.6" ry="2.6" transform="rotate(-25)" stroke="none"/><ellipse cx="11" cy="-2" rx="3.6" ry="2.6" transform="rotate(-25 11 -2)" stroke="none"/><path d="M3 -0.8 V-13 M14 -2.8 V-15" stroke-width="1.6" fill="none"/><path d="M3 -13 L14 -15" stroke-width="3" fill="none"/></g></svg>
+      <svg class="tnote n1" viewBox="-5 -18 14 22" aria-hidden="true"><g fill="#F2D272" stroke="#F2D272" stroke-linecap="round"><ellipse cx="0" cy="0" rx="3.6" ry="2.6" transform="rotate(-25)" stroke="none"/><path d="M3 -0.8 V-14" stroke-width="1.6" fill="none"/><path d="M3 -14 c4 2 5 5 3 9" stroke-width="1.6" fill="none"/></g></svg>
+      <svg class="tnote n2" viewBox="-5 -19 22 23" aria-hidden="true"><g fill="#F2D272" stroke="#F2D272" stroke-linecap="round"><ellipse cx="0" cy="0" rx="3.6" ry="2.6" transform="rotate(-25)" stroke="none"/><ellipse cx="11" cy="-2" rx="3.6" ry="2.6" transform="rotate(-25 11 -2)" stroke="none"/><path d="M3 -0.8 V-13 M14 -2.8 V-15" stroke-width="1.6" fill="none"/><path d="M3 -13 L14 -15" stroke-width="3" fill="none"/></g></svg>
       </span>
     </div>
     <p class="horn-count" id="hornCount" aria-live="polite"></p>
@@ -695,6 +693,16 @@ try { if (sessionStorage.getItem("tweetober-gates") === "1") document.getElement
     </div>
   </section>
 
+  <!-- ---------- Events ---------- -->
+  <section id="events">
+    <div class="sec-head">
+      <div class="eyebrow">Gatherings</div>
+      <h2 class="heading">Events</h2>
+      <p>Tweetober-affiliated gatherings.</p>
+    </div>
+    <div class="events" id="eventsGrid"></div>
+  </section>
+
   <!-- ---------- Decree ---------- -->
   <section id="decree">
     <div class="sec-head">
@@ -768,16 +776,6 @@ try { if (sessionStorage.getItem("tweetober-gates") === "1") document.getElement
       <p>Each house is led by a past Tweetober champion. Click a name to find them on Twitter.</p>
     </div>
     <div class="houses" id="housesGrid"></div>
-  </section>
-
-  <!-- ---------- Events ---------- -->
-  <section id="events">
-    <div class="sec-head">
-      <div class="eyebrow">Gatherings</div>
-      <h2 class="heading">Events</h2>
-      <p>Tweetober-affiliated gatherings.</p>
-    </div>
-    <div class="events" id="eventsGrid"></div>
   </section>
 
   <footer>
@@ -1506,6 +1504,8 @@ function applyFinale() {
   const el = document.getElementById("rules"), sheet = el && el.querySelector(".parchment"); if (!sheet || !("IntersectionObserver" in window)) return;
   const setH = () => el.style.setProperty("--h", (sheet.offsetHeight - 20) + "px");
   setH(); el.classList.add("furled");
+  if (document.fonts) document.fonts.ready.then(setH);   // the sheet is a different height once the web fonts arrive
+  addEventListener("resize", setH);
   const io = new IntersectionObserver((entries) => {
     if (!entries.some(e => e.isIntersecting)) return;
     setH(); requestAnimationFrame(() => el.classList.add("open")); io.disconnect();
