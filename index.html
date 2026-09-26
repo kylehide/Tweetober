@@ -1551,34 +1551,36 @@ function openGates(ready) {
 /* ---------- ?debug — finds what makes the document taller than the body (for chasing layout bugs) ---------- */
 if (new URLSearchParams(location.search).has("debug")) setTimeout(() => {
   const tag = (e) => e.tagName.toLowerCase() + (e.id ? "#" + e.id : "") + (typeof e.className === "string" && e.className ? "." + e.className.trim().split(/\s+/).slice(0, 3).join(".") : "");
-  const excess = () => document.documentElement.scrollHeight - Math.round(document.body.getBoundingClientRect().bottom + scrollY);
+  // the document can never be shorter than the window, so compare against whichever is taller
+  const excess = () => document.documentElement.scrollHeight - Math.max(innerHeight, Math.round(document.body.getBoundingClientRect().bottom + scrollY));
   const lines = [];
   const base = excess();
   lines.push(`viewport ${innerWidth}x${innerHeight}  document ${document.documentElement.scrollHeight}  body bottom ${Math.round(document.body.getBoundingClientRect().bottom + scrollY)}  excess ${base}px`);
-  lines.push(`html overflow: ${getComputedStyle(document.documentElement).overflowY}  body overflow: ${getComputedStyle(document.body).overflowY}`);
   lines.push("body children: " + [...document.body.children].map(tag).join(", "));
-  // bisection: hide children one at a time and see which one removes the excess
   let node = document.body, depth = 0;
-  while (base > 0 && depth < 8) {
-    let found = null;
+  while (base > 0 && depth < 10) {
+    let found = null; const report = [];
     for (const c of node.children) {
       if (c.tagName === "SCRIPT" || c.tagName === "PRE") continue;
       const prev = c.style.display; c.style.display = "none";
       const ex = excess(); c.style.display = prev;
-      if (ex < base - 2) { found = c; lines.push(`${"  ".repeat(depth)}hiding ${tag(c)} → excess ${ex}px`); break; }
+      report.push(`${tag(c)}:${ex}`);
+      if (ex < base - 2 && !found) found = c;
     }
-    if (!found) { lines.push(`${"  ".repeat(depth)}no single child of ${tag(node)} accounts for it (pseudo-element or the element itself)`); break; }
+    lines.push(`${"  ".repeat(depth)}in ${tag(node)} — excess with each child hidden: ${report.join("  ")}`);
+    if (!found) { lines.push(`${"  ".repeat(depth)}→ no single child of ${tag(node)} accounts for it`); break; }
+    lines.push(`${"  ".repeat(depth)}→ ${tag(found)}`);
     node = found; depth++;
   }
   if (base > 0 && node !== document.body) {
     const cs = getComputedStyle(node), r = node.getBoundingClientRect();
-    lines.push(`culprit: ${tag(node)}  position ${cs.position}  transform ${cs.transform}  overflow ${cs.overflow}  rect bottom ${Math.round(r.bottom + scrollY)}  height ${Math.round(r.height)}`);
-    for (const p of ["::before", "::after"]) { const ps = getComputedStyle(node, p); if (ps.content && ps.content !== "none") lines.push(`  ${p}: content ${ps.content} position ${ps.position} top ${ps.top} bottom ${ps.bottom} height ${ps.height} transform ${ps.transform}`); }
+    lines.push(`culprit: ${tag(node)}  position ${cs.position}  transform ${cs.transform}  overflow ${cs.overflow}  rect top ${Math.round(r.top + scrollY)} bottom ${Math.round(r.bottom + scrollY)}  height ${Math.round(r.height)}`);
+    for (const p of ["::before", "::after"]) { const ps = getComputedStyle(node, p); if (ps.content && ps.content !== "none") lines.push(`  ${p}: position ${ps.position} top ${ps.top} bottom ${ps.bottom} height ${ps.height} transform ${ps.transform}`); }
   }
   const pre = document.createElement("pre");
   pre.style.cssText = "position:relative;z-index:99;margin:20px 0;padding:12px;background:#000;color:#8FE3B6;font:14px/1.4 monospace;white-space:pre-wrap;word-break:break-all";
   pre.textContent = lines.join("\n"); document.body.appendChild(pre); console.log(pre.textContent);
-}, 4000);
+}, 5000);
 
 /* ---------- boot ---------- */
 applyFinale();
