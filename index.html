@@ -45,6 +45,7 @@
   html, body { margin: 0; }
   html {
     font-size: 22px;
+    overflow-y: auto; overflow-x: hidden;   /* the page scrolls here; without this, body's overflow would be applied to the viewport */
     /* The background lives on <html> so it covers the whole canvas, including any space a browser
        draws below the footer. Dark-brown veil at 70% over the stone tile; both layers tile. */
     background-color: var(--bg);
