@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Tweetober 5</title>
+<meta name="theme-color" content="#211c14">
 <link rel="icon" href="assets/favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
 <link rel="icon" type="image/png" sizes="512x512" href="assets/favicon-512.png">
 <link rel="apple-touch-icon" href="assets/favicon-180.png">
-<meta name="theme-color" content="#211c14">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pirata+One&family=VT323&family=IBM+Plex+Mono:wght@400;600&display=swap">
 <style>
@@ -34,6 +34,7 @@
     --h500-soft: rgba(242,111,150,.16);
     --shadow: 0 14px 40px rgba(0,0,0,.55);
     color-scheme: dark;
+    --stone: url("assets/stone.jpg");
   }
   * { box-sizing: border-box; }
   [hidden] { display: none !important; }
@@ -42,7 +43,7 @@
   body {
     /* dark-brown veil at 70% over the stone tile: same pattern, dimmed */
     background-color: var(--bg);
-    background-image: linear-gradient(rgba(20, 14, 8, .7), rgba(20, 14, 8, .7)), url("assets/stone.jpg");
+    background-image: linear-gradient(rgba(20, 14, 8, .7), rgba(20, 14, 8, .7)), var(--stone);
     background-repeat: no-repeat, repeat;
     background-size: 100% 100%, 900px 900px;
     background-position: 0 0, center top;
@@ -311,6 +312,7 @@
   .feed-slot { min-height: 400px; border: 1px dashed var(--line-strong); padding: 6px; background: var(--surface-2); }
   .feed-wait { margin: 16px; color: var(--ink-2); }
   .feed-note { font-size: .9rem; color: var(--ink-3); margin: 0; }
+  .feed-note code { font: inherit; color: var(--gold); }
   .fame { display: grid; gap: 10px; }
   .post { border: 1px solid var(--line); background: var(--surface-2); padding: 14px 16px; display: grid; gap: 8px; min-width: 0; text-decoration: none; color: inherit; position: relative; }
   .post:hover { border-color: var(--gold-bright); }
@@ -329,6 +331,66 @@
   .stamp { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: .85rem; color: var(--ink-3); }
   .pill { display: inline-block; padding: 2px 8px; border: 1px solid var(--line-strong); font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); }
 
+  /* ---------- Easter eggs ---------- */
+  /* Loading gates: two stone doors part to reveal the keep */
+  .gates { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; pointer-events: none; }
+  .gates .door { position: absolute; top: 0; bottom: 0; width: 50.5%; background-color: var(--bg);
+    background-image: linear-gradient(rgba(20,14,8,.6), rgba(20,14,8,.6)), var(--stone); background-size: 100% 100%, 900px 900px; }
+  .gates .door.l { left: 0; border-right: 3px solid var(--gold-deep); box-shadow: 6px 0 24px rgba(0,0,0,.7); animation: doorL .6s cubic-bezier(.7,0,.3,1) .55s forwards; }
+  .gates .door.r { right: 0; border-left: 3px solid var(--gold-deep); box-shadow: -6px 0 24px rgba(0,0,0,.7); animation: doorR .6s cubic-bezier(.7,0,.3,1) .55s forwards; }
+  .gates-inner { position: relative; display: grid; justify-items: center; gap: 10px; animation: gateFade .25s ease .45s forwards; }
+  .gates-inner img { width: 96px; height: auto; filter: drop-shadow(0 6px 12px rgba(0,0,0,.7)); animation: crestIn .5s ease both; }
+  .gates-inner p { margin: 0; font-size: 1.3rem; }
+  @keyframes doorL { to { transform: translateX(-102%); } }
+  @keyframes doorR { to { transform: translateX(102%); } }
+  @keyframes gateFade { to { opacity: 0; } }
+  @keyframes crestIn { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) {
+    .gates .door.l, .gates .door.r { animation: gateFade .3s ease .5s forwards; }
+    .gates-inner img { animation: none; }
+  }
+  /* Milestone ribbon under the tug of war */
+  .milestone { justify-self: center; text-align: center; font-family: "Pirata One", serif; font-size: 1.05rem; letter-spacing: .06em; color: var(--gold-bright);
+    padding: 4px 18px; border: 1px solid var(--line-strong); background: var(--surface-2); text-shadow: 0 2px 0 rgba(0,0,0,.6); }
+  .milestone.new { animation: ribbonGlow 1.4s ease-in-out 4 alternate; }
+  @keyframes ribbonGlow { to { box-shadow: 0 0 22px var(--gold-glow), 0 0 6px var(--gold); border-color: var(--gold-bright); } }
+  /* Photo finish: shimmer across the bar and a pulse on the scores */
+  .cup.photo .tug { position: relative; }
+  .cup.photo .tug::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(100deg, transparent 35%, rgba(255,255,255,.55) 50%, transparent 65%); background-size: 250% 100%; animation: shimmer 1.8s linear infinite; }
+  .cup.photo .score { animation: neck 1.1s ease-in-out infinite alternate; }
+  @keyframes shimmer { from { background-position: 150% 0; } to { background-position: -150% 0; } }
+  @keyframes neck { to { text-shadow: 0 2px 0 rgba(0,0,0,.6), 0 0 24px currentColor; } }
+  .neck { color: var(--gold-bright); font-weight: 700; letter-spacing: .16em; }
+  @media (prefers-reduced-motion: reduce) { .cup.photo .tug::after, .cup.photo .score { animation: none; } }
+  /* Tally-day countdown */
+  .tallyday { color: var(--gold-bright); font-weight: 700; letter-spacing: .1em; text-transform: uppercase; animation: tallyPulse 1.2s ease-in-out infinite alternate; }
+  @keyframes tallyPulse { to { text-shadow: 0 0 14px var(--gold); } }
+  @media (prefers-reduced-motion: reduce) { .tallyday { animation: none; } }
+  /* Crown on #1, tear on #10 */
+  .board .crown-ico, .board .tear-ico { flex: none; width: 20px; height: 17px; filter: drop-shadow(0 1px 0 rgba(0,0,0,.7)); }
+  .board .tear-ico { width: 11px; height: 16px; opacity: .9; }
+  .board li.first .who a { color: var(--gold-bright); }
+  /* Tonight! glow on today's events */
+  .event.today { border-color: var(--gold-bright); animation: tonight 1.6s ease-in-out infinite alternate; }
+  .event.today .rsvp { color: var(--gold-bright); font-weight: 700; }
+  .event.today .cal { border-color: var(--gold-bright); }
+  @keyframes tonight { from { box-shadow: var(--shadow); } to { box-shadow: 0 0 0 1px var(--gold-bright), 0 0 26px var(--gold-glow), var(--shadow); } }
+  @media (prefers-reduced-motion: reduce) { .event.today { animation: none; box-shadow: 0 0 0 1px var(--gold-bright), 0 0 26px var(--gold-glow), var(--shadow); } }
+  /* Final day */
+  .finale .banner .sub { color: #FFB060; text-shadow: 0 0 14px rgba(255,140,42,.35); }
+  .finale .rule { color: #C9A2FF; }
+  .finale .rule::before { background: linear-gradient(90deg, transparent, #B48CFF); } .finale .rule::after { background: linear-gradient(90deg, #B48CFF, transparent); }
+  /* Tea Room: house flair beside a name, coin flips */
+  .tavern .flair { display: inline-block; width: 14px; height: 13px; margin-left: 6px; vertical-align: -1px; background: center / contain no-repeat; filter: drop-shadow(0 1px 0 rgba(0,0,0,.6)); }
+  .tavern .flair.h333 { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 22'%3E%3Cpath d='M12 21 C4 15 1 11 1 6.5 A5.5 5.5 0 0 1 12 4.5 A5.5 5.5 0 0 1 23 6.5 C23 11 20 15 12 21Z' fill='%23C9C6C0' stroke='%23F4F3F0' stroke-width='1'/%3E%3C/svg%3E"); }
+  .tavern .flair.h500 { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 22'%3E%3Cpath d='M12 21 C4 15 1 11 1 6.5 A5.5 5.5 0 0 1 12 4.5 A5.5 5.5 0 0 1 23 6.5 C23 11 20 15 12 21Z' fill='%23F26F96' stroke='%23FFB3C7' stroke-width='1'/%3E%3C/svg%3E"); }
+  .tavern .body.flip { font-weight: 700; }
+  .tavern .body.flip.h333 { color: var(--h333); } .tavern .body.flip.h500 { color: var(--h500); }
+  .tavern .coin { display: inline-block; animation: coinSpin 1.1s ease-out both; }
+  @keyframes coinSpin { from { transform: rotateY(0) scale(1.4); } to { transform: rotateY(1080deg) scale(1); } }
+  @media (prefers-reduced-motion: reduce) { .tavern .coin { animation: none; } }
+
   footer { text-align: center; color: var(--ink-3); font-size: .9rem; display: grid; gap: 6px; justify-items: center; }
   footer img { width: 64px; height: auto; opacity: .9; }
 
@@ -344,6 +406,10 @@
 </style>
 </head>
 <body>
+<div class="gates" id="gates" aria-hidden="true">
+  <div class="door l"></div><div class="door r"></div>
+  <div class="gates-inner"><img src="assets/crest.png" alt="" width="96" height="120"><p class="heading">The gates are opening…</p></div>
+</div>
 <canvas id="confetti" aria-hidden="true"></canvas>
 <div class="wrap">
 
@@ -351,7 +417,7 @@
   <header class="banner">
     <h1>Tweetober 5</h1>
     <img class="banner-img" src="assets/banner.png" alt="Tweetober 5" width="1100" height="211">
-    <p class="sub">Thirty-one days. Two houses. A winning house, and a single winner who joins the Tweetober Royal Family.</p>
+    <p class="sub" id="tagline">Thirty-one days. Two houses. A winning house, and a single winner who joins the Tweetober Royal Family.</p>
     <div class="rule">MMXXVI</div>
     <nav class="nav" aria-label="Sections">
       <a href="#cup"><span>House Cup</span><i aria-hidden="true"></i></a>
@@ -418,8 +484,8 @@
   <!-- ---------- House Cup tally ---------- -->
   <section id="cup">
     <div class="sec-head">
-      <div class="eyebrow">Standings</div>
-      <h2 class="heading">The House Cup</h2>
+      <div class="eyebrow" id="cupEyebrow">Standings</div>
+      <h2 class="heading" id="cupTitle">The House Cup</h2>
       <p>Combined tweets from every member since the first of the month, as recorded in the Ledger.</p>
     </div>
     <div class="cup">
@@ -429,7 +495,8 @@
         <div class="cup-side right h500"><span class="name" id="cupNameB">House of 500</span><span class="score num" id="cupScoreB">0</span></div>
       </div>
       <div class="tug" role="img" aria-label="Share of total tweets by house"><span class="a" id="tugA"></span><span class="gap"></span><span class="b" id="tugB"></span></div>
-      <div class="cup-foot"><span id="cupDay">Day 0 of 31</span><span id="cupUpdated">Tally from the Ledger</span></div>
+      <div class="milestone" id="milestone" hidden></div>
+      <div class="cup-foot"><span id="cupDay">Day 0 of 31</span><span id="cupTally"></span><span id="cupUpdated">Tally from the Ledger</span></div>
       <div class="weeks" id="weeks"></div>
     </div>
     <div class="scroll">
@@ -464,7 +531,7 @@
           <h2 class="heading">The Tea Room</h2>
           <span class="board-status" id="tavernStatus" aria-live="polite"></span>
         </div>
-        <p class="feed-note" style="margin-top:-6px">Spill it. Messages appear for everyone within a few seconds.</p>
+        <p class="feed-note" style="margin-top:-6px">Spill it. Messages appear for everyone within a few seconds. Type <code>/flip</code> to toss a coin.</p>
         <ol class="tavern" id="tavern" aria-label="Messages"></ol>
         <form class="tavern-form" id="tavernForm" autocomplete="off">
           <div class="tf-row">
@@ -668,6 +735,16 @@ const isDark = () => document.documentElement.dataset.theme === "dark" ||
   (document.documentElement.dataset.theme !== "light" && matchMedia("(prefers-color-scheme: dark)").matches);
 
 const EMBLEM = { h333: CONFIG.houses[0].emblem, h500: CONFIG.houses[1].emblem };
+
+/* "Now", with a preview override: add ?now=2026-10-31 (or ?now=2026-10-31T21:00) to the address
+   to see the page as it will look on that day (countdowns, final-day mode, "Tonight!" glows). */
+const NOW = (() => {
+  const q = new URLSearchParams(location.search).get("now");
+  const d = q ? new Date(/^\d{4}-\d{2}-\d{2}$/.test(q) ? q + "T12:00:00" : q) : null;
+  const off = d && !isNaN(d) ? d - Date.now() : 0;
+  return () => new Date(Date.now() + off);
+})();
+const isoDay = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 const SHIELD_UNUSED = (key) => `
 <svg class="shield" viewBox="0 0 64 72" aria-hidden="true">
   <path d="M32 3 58 12v22c0 17-12 28-26 35C18 62 6 51 6 34V12z" fill="var(--${key}-soft)" stroke="var(--${key})" stroke-width="2.5" stroke-linejoin="round"/>
@@ -764,7 +841,7 @@ async function loadLedger() {
     const r = await fetch(CONFIG.sheetCsvUrl, { cache: "no-store" });
     if (!r.ok) throw new Error(r.status);
     const rows = readLedger(await r.text());
-    if (rows.length) { LEDGER = rows; renderHouses(); renderCup(); renderBoard(); }
+    if (rows.length) { LEDGER = rows; renderHouses(); renderCup(); renderBoard(); checkMilestone(); }
   } catch (e) { console.warn("Ledger fetch failed", e); }
 }
 
@@ -805,12 +882,48 @@ function renderCup(totals) {
   $("#tugA").style.width = (sum ? ta / sum * 100 : 50) + "%";
   $("#tugB").style.width = (sum ? tb / sum * 100 : 50) + "%";
   const start = new Date(CONFIG.startDate + "T00:00:00"), end = new Date(CONFIG.endDate + "T23:59:59");
-  const now = new Date();
+  const now = NOW();
   const dayN = Math.min(31, Math.max(0, Math.floor((now - start) / 864e5) + 1));
-  $("#cupDay").textContent = now < start ? "The gates open October 1" : now > end ? "The month is done" : `Day ${dayN} of 31`;
-  $("#cupUpdated").textContent = sum === 0 ? "No tweets logged yet"
-    : ta === tb ? "Dead even" : `${ta > tb ? a.name : b.name} leads by ${fmt(Math.abs(ta - tb))}`;
+  const finalDay = isoDay(now) === CONFIG.endDate;
+  $("#cupDay").textContent = now < start ? "The gates open October 1" : now > end ? "The month is done" : finalDay ? "Day 31 of 31 · the last day" : `Day ${dayN} of 31`;
+  // Photo finish: within 1% of each other
+  const photo = sum > 0 && Math.abs(ta - tb) / Math.max(ta, tb) <= 0.01;
+  $(".cup").classList.toggle("photo", photo);
+  const lead = ta === tb ? "Dead even" : `${ta > tb ? a.name : b.name} leads by ${fmt(Math.abs(ta - tb))}`;
+  $("#cupUpdated").innerHTML = sum === 0 ? "No tweets logged yet" : photo ? `<b class="neck">Neck and neck</b> · ${lead}` : lead;
+  renderTallyCountdown(now);
   renderWeeks();
+}
+
+/* ---------- Tally-day countdown ---------- */
+const TALLY_DAYS = ["2026-10-05", "2026-10-10", "2026-10-15", "2026-10-20", "2026-10-25", "2026-10-31"];
+function renderTallyCountdown(now) {
+  const el = $("#cupTally"); if (!el) return;
+  const today = isoDay(now);
+  if (today < CONFIG.startDate || today > CONFIG.endDate) { el.textContent = ""; return; }
+  const next = TALLY_DAYS.find(d => d >= today);
+  if (!next) { el.textContent = ""; return; }
+  const days = Math.round((new Date(next + "T00:00:00") - new Date(today + "T00:00:00")) / 864e5);
+  const isFinal = next === CONFIG.endDate;
+  el.innerHTML = days === 0 ? `<span class="tallyday">${isFinal ? "Final tally day" : "Tally day"}</span>`
+    : days === 1 ? `${isFinal ? "Final tally" : "Next tally"} tomorrow` : `${isFinal ? "Final tally" : "Next tally"} in ${days} days`;
+}
+
+/* ---------- Milestones: a ribbon, confetti and a herald when the realm crosses a round number ---------- */
+const MILESTONES = [1000, 2500, 5000, 7500, 10000, 15000, 20000, 25000, 30000, 40000, 50000, 60000, 75000, 100000, 125000, 150000, 200000, 250000, 300000, 400000, 500000, 750000, 1000000];
+function checkMilestone() {
+  const el = $("#milestone"); if (!el) return;
+  const t = houseTotals(), total = Object.values(t).reduce((a, b) => a + b, 0);
+  const reached = MILESTONES.filter(m => total >= m).pop();
+  if (!reached) { el.hidden = true; return; }
+  el.hidden = false;
+  el.textContent = `✦ The realm has passed ${fmt(reached)} tweets ✦`;
+  let seen = null; try { seen = localStorage.getItem("tweetober-milestone"); } catch {}
+  try { localStorage.setItem("tweetober-milestone", String(reached)); } catch {}
+  if (seen === null || Number(seen) >= reached) return;      // first visit, or nothing new since last time
+  el.classList.remove("new"); void el.offsetWidth; el.classList.add("new");
+  confetti.launch();
+  if (window.herald) window.herald(false);
 }
 
 /* ---------- Tallies (every five days) ---------- */
@@ -834,10 +947,13 @@ function renderBoard() {
   const ranked = LEDGER.filter(p => p.score > 0).sort((x, y) => y.score - x.score).slice(0, CONFIG.boardSize);
   const top = ranked[0]?.score || 1;
   $("#boardNote").textContent = `The current top ${CONFIG.boardSize} as recorded in the Ledger`;
+  const CROWN = `<svg class="crown-ico" viewBox="0 0 24 20" aria-hidden="true"><title>Wears the crown</title><path d="M2 15 L2 5 L7.5 9.5 L12 2 L16.5 9.5 L22 5 L22 15 Z" fill="#F2D272" stroke="#9C7A2A" stroke-width="1" stroke-linejoin="round"/><rect x="2" y="15" width="20" height="3.5" fill="#D9B24A" stroke="#9C7A2A" stroke-width="1"/><circle cx="12" cy="10" r="1.6" fill="#F26F96"/><circle cx="6" cy="11.5" r="1.2" fill="#8CC8FF"/><circle cx="18" cy="11.5" r="1.2" fill="#8CC8FF"/></svg>`;
+  const TEAR = `<svg class="tear-ico" viewBox="0 0 12 17" aria-hidden="true"><title>Clinging to the scroll</title><path d="M6 .5 C6 4.5 1 7.5 1 11.5 a5 5 0 0 0 10 0 C11 7.5 6 4.5 6 .5 Z" fill="#8CC8FF" stroke="#4E7FB0" stroke-width=".8"/><path d="M3.6 11.5 a2.4 2.4 0 0 0 1.6 2.3" stroke="#fff" stroke-width=".9" fill="none" opacity=".8"/></svg>`;
+  const full = ranked.length >= CONFIG.boardSize;
   $("#board").innerHTML = ranked.length ? ranked.map((p, i) => `
-    <li>
+    <li class="${i === 0 ? "first" : full && i === ranked.length - 1 ? "last" : ""}">
       <span class="rank">${i + 1}</span>
-      <span class="who"><a href="${xUrl(p.handle)}" target="_blank" rel="noopener">@${esc(p.handle)}</a><span class="chip ${p.house}">${p.house.slice(1)}</span></span>
+      <span class="who"><a href="${xUrl(p.handle)}" target="_blank" rel="noopener">@${esc(p.handle)}</a>${i === 0 ? CROWN : full && i === ranked.length - 1 ? TEAR : ""}<span class="chip ${p.house}">${p.house.slice(1)}</span></span>
       <span class="pts">${fmt(p.score)}</span>
       <span class="bar ${p.house}"><span style="width:${Math.round(p.score / top * 100)}%"></span></span>
     </li>`).join("") : `<p class="empty">No tweets logged yet. The scroll fills in as the Ledger does.</p>`;
@@ -861,6 +977,14 @@ const toIso = (v) => {
   if (!v) return "";
   if (/^\d{4}-\d{2}-\d{2}/.test(v)) return v.slice(0, 10);
   const d = new Date(v); return isNaN(d) ? "" : `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+/* "7:30 PM" -> 19.5; "19:00" -> 19; unreadable -> 19 (assume an evening) */
+const hour24 = (v) => {
+  const m = String(v || "").match(/(\d{1,2})(?::(\d{2}))?\s*([ap])\.?m?/i) || String(v || "").match(/(\d{1,2}):(\d{2})/);
+  if (!m) return 19;
+  let h = Number(m[1]) % 12, mm = Number(m[2] || 0);
+  if (m[3]) { if (/p/i.test(m[3])) h += 12; } else h = Number(m[1]);
+  return h + mm / 60;
 };
 const tidyTime = (v) => v.replace(/(\d{1,2}:\d{2}):00(\s*[AP]M)/i, "$1$2");
 const prettyDate = (v) => { if (!v) return ""; const iso = toIso(v); if (!iso) return v; const d = new Date(iso + "T00:00:00"); return d.toLocaleString("en-US", { month: "short", day: "numeric" }); };
@@ -916,20 +1040,21 @@ function renderFame() {
 /* ---------- Events ---------- */
 function renderEvents() {
   const list = [...(EVENTS ?? CONFIG.events ?? [])].sort((a, b) => a.date.localeCompare(b.date));
-  const today = new Date(); today.setHours(0,0,0,0);
+  const today = NOW(); today.setHours(0,0,0,0);
   $("#eventsGrid").innerHTML = list.length ? list.map(e => {
     const d = new Date(e.date + "T00:00:00");
-    const past = d < today;
+    const past = d < today, isToday = d.getTime() === today.getTime();
+    const soon = isToday ? (hour24(e.time) >= 17 ? "Tonight!" : "Today!") : "";
     const mo = d.toLocaleString("en-US", { month: "short" }), day = d.getDate();
     const when = [d.toLocaleString("en-US", { weekday: "long", month: "long", day: "numeric" }), e.time].filter(Boolean).join(" · ");
     const link = safeUrl(e.url), tag = link ? "a" : "div";
-    return `<${tag} class="event ${past ? "past" : ""}" ${link ? `href="${link}" target="_blank" rel="noopener"` : ""}>
+    return `<${tag} class="event ${past ? "past" : ""} ${isToday ? "today" : ""}" ${link ? `href="${link}" target="_blank" rel="noopener"` : ""}>
       <div class="cal"><span class="mo">${mo}</span><span class="d">${day}</span></div>
       <div>
         <h3 class="heading">${esc(e.name)}</h3>
         <p class="when">${esc(when)}${e.place ? ` · ${esc(e.place)}` : ""}</p>
         ${e.note ? `<p class="note">${esc(e.note)}</p>` : ""}
-        ${past ? `<div class="rsvp">Past event</div>` : link ? `<div class="rsvp">RSVP ↗</div>` : ""}
+        ${past ? `<div class="rsvp">Past event</div>` : soon ? `<div class="rsvp">${soon}${link ? " · RSVP ↗" : ""}</div>` : link ? `<div class="rsvp">RSVP ↗</div>` : ""}
       </div>
     </${tag}>`;
   }).join("") : `<p class="empty">No gatherings announced yet.</p>`;
@@ -980,7 +1105,24 @@ function mountFeed() {
     return new Date(t).toLocaleString("en-US", { month: "short", day: "numeric" });
   };
   const safeColor = (c) => COLORS.includes(c) ? c : COLORS[0];
-  const row = (m) => `<li data-id="${Number(m.id)}"><span class="who"><b style="color:${safeColor(m.color)}">${esc(m.name)}</b><time data-t="${Number(m.created)}">${ago(m.created)}</time></span><span class="body">${esc(m.body)}</span></li>`;
+  // House flair: a name that matches a roster handle gets a small heart beside it (grey for 333, pink for 500)
+  const houseOfName = (name) => {
+    const n = String(name || "").trim().replace(/^@/, "").toLowerCase(); if (!n) return "";
+    const hit = LEDGER.find(p => p.handle.toLowerCase() === n); if (hit) return hit.house;
+    const h = CONFIG.houses.find(h => h.leader.handle.toLowerCase() === n || h.members.some(m => m.toLowerCase() === n));
+    return h ? h.key : "";
+  };
+  const flair = (name) => { const k = houseOfName(name); return k ? `<i class="flair ${k}" title="House of ${k.slice(1)}"></i>` : ""; };
+  // Coin flips come back from the server as a message starting with the coin; color it by the winning house
+  const bodyHtml = (b) => {
+    const m = String(b || "").match(/^\u{1FA99}\s*(.*House of (333|500).*)$/su);
+    return m ? `<span class="body flip h${m[2]}"><span class="coin">\u{1FA99}</span> ${esc(m[1])}</span>` : `<span class="body">${esc(b)}</span>`;
+  };
+  const row = (m) => `<li data-id="${Number(m.id)}"><span class="who"><b style="color:${safeColor(m.color)}">${esc(m.name)}</b>${flair(m.name)}<time data-t="${Number(m.created)}">${ago(m.created)}</time></span>${bodyHtml(m.body)}</li>`;
+  const flipText = (rest) => {
+    const heads = (crypto.getRandomValues(new Uint32Array(1))[0] & 1) === 0;
+    return `\u{1FA99} ${heads ? "Heads! The silver side. House of 333 wins the toss." : "Tails! The pink side. House of 500 wins the toss."}${rest ? ` \u2014 \u201c${rest}\u201d` : ""}`;
+  };
 
   let lastId = 0, online = false, sample = false, everOnline = false;
   const atBottom = () => list.scrollHeight - list.scrollTop - list.clientHeight < 40;
@@ -1021,7 +1163,14 @@ function mountFeed() {
   }
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    if (sample) { msg.textContent = "Posting works on the live Tweetober site."; msg.classList.remove("err"); return; }
+    if (sample) {
+      const fm = bodyIn.value.trim().match(/^\/flip\b\s*(.*)$/i);
+      if (fm) {   // the preview can still flip a coin, just for this viewer
+        render([{ id: lastId + 1, name: nameIn.value.trim() || "Someone", color, body: flipText(fm[1].trim()), created: Date.now() }], false);
+        bodyIn.value = ""; count.textContent = "0 / 280"; msg.textContent = "Flipped here only; on the live site everyone sees it."; msg.classList.remove("err"); return;
+      }
+      msg.textContent = "Posting works on the live Tweetober site."; msg.classList.remove("err"); return;
+    }
     const code = codeWrap.hidden ? savedCode() : codeIn.value.trim().toLowerCase();
     const payload = { name: nameIn.value, color, body: bodyIn.value, code };
     sendBtn.disabled = true; msg.textContent = "Posting…"; msg.classList.remove("err");
@@ -1077,6 +1226,7 @@ const fanfare = (() => {
     seq.forEach(([f, at, d]) => voice(f, t + at, d, 0.16));
     return true;
   }
+  play.ready = () => !!ac && ac.state === "running";
   return play;
 })();
 (function armFanfare() {
@@ -1092,26 +1242,34 @@ const fanfare = (() => {
     let n = 0; try { n = (Number(localStorage.getItem("tweetober-trumpet")) || 0) + 1; localStorage.setItem("tweetober-trumpet", String(n)); } catch { n = 1; }
     say(n);
   }
-  btn.addEventListener("click", () => {
+  // counted: a real press of the button (plays sound, adds to the shared count).
+  // Uncounted heralds (milestones) only make sound if the browser has already let the page play audio.
+  window.herald = function (counted) {
     if (btn.classList.contains("playing")) return;
-    if (!fanfare()) return;
+    if (counted) { if (!fanfare()) return; } else if (fanfare.ready()) fanfare();
     clearTimeout(tm1); clearTimeout(tm2);
     btn.classList.add("playing"); row.classList.remove("fading"); row.classList.remove("playing"); void row.offsetWidth; row.classList.add("playing");
-    tally();
+    if (counted) tally();
     tm1 = setTimeout(() => { row.classList.add("fading"); btn.classList.remove("playing"); }, 3000);
     tm2 = setTimeout(() => { row.classList.remove("playing", "fading"); }, 3450);
-  });
+  };
+  btn.addEventListener("click", () => window.herald(true));
 })();
 
-/* ---------- Confetti: two bursts from the sides on arrival ---------- */
-(function confetti() {
-  const c = document.getElementById("confetti"); if (!c) return;
-  const ctx = c.getContext("2d"), dpr = Math.min(2, devicePixelRatio || 1);
-  const size = () => { c.width = innerWidth * dpr; c.height = innerHeight * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); };
-  size();
-  const colors = ["#F26F96", "#F26F96", "#E6E4E0", "#C9C6C0", "#D9B24A"];
-  const P = [];
-  const burst = (x, y, dir, n) => {
+/* ---------- Confetti: two bursts from the sides (on arrival, and again for milestones) ---------- */
+const confetti = (() => {
+  const HOUSE = ["#F26F96", "#F26F96", "#E6E4E0", "#C9C6C0", "#D9B24A"];
+  const FINALE = ["#FF8C2A", "#FFB347", "#7B3FE4", "#B48CFF", "#D9B24A"];
+  let c = null, ctx, P = [], running = false, last = 0, W = 0, H = 0;
+  function ensure() {
+    if (c && c.isConnected) return;
+    c = document.getElementById("confetti") || document.body.appendChild(Object.assign(document.createElement("canvas"), { id: "confetti" }));
+    c.setAttribute("aria-hidden", "true");
+    ctx = c.getContext("2d");
+    const dpr = Math.min(2, devicePixelRatio || 1);
+    W = innerWidth; H = innerHeight; c.width = W * dpr; c.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  const burst = (x, y, dir, n, colors) => {
     for (let i = 0; i < n; i++) {
       const ang = (dir > 0 ? 0 : Math.PI) + (Math.random() - 0.5) * 1.3 - 0.35;   // fan, angled slightly upward
       const sp = 9 + Math.random() * 13;
@@ -1120,11 +1278,6 @@ const fanfare = (() => {
         life: 1, decay: 0.006 + Math.random() * 0.006, wob: Math.random() * Math.PI * 2 });
     }
   };
-  const H = innerHeight, W = innerWidth;
-  burst(-10, H * 0.55, 1, W < 600 ? 70 : 110);
-  burst(W + 10, H * 0.55, -1, W < 600 ? 70 : 110);
-  setTimeout(() => { burst(-10, H * 0.35, 1, 50); burst(W + 10, H * 0.35, -1, 50); }, 220);
-  let last = performance.now();
   function frame(now) {
     const dt = Math.min(2, (now - last) / 16.7); last = now;
     ctx.clearRect(0, 0, W, H);
@@ -1139,13 +1292,42 @@ const fanfare = (() => {
       ctx.fillStyle = p.c; ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h * (0.4 + 0.6 * Math.abs(Math.cos(p.wob))));
       ctx.restore();
     }
-    if (alive) requestAnimationFrame(frame); else c.remove();
+    if (alive) requestAnimationFrame(frame); else { running = false; P = []; c.remove(); }
   }
-  requestAnimationFrame(frame);
-  addEventListener("resize", size, { once: true });
+  function launch(colors) {
+    ensure();
+    const cols = colors || (document.body.classList.contains("finale") ? FINALE : HOUSE);
+    burst(-10, H * 0.55, 1, W < 600 ? 70 : 110, cols);
+    burst(W + 10, H * 0.55, -1, W < 600 ? 70 : 110, cols);
+    setTimeout(() => { ensure(); burst(-10, H * 0.35, 1, 50, cols); burst(W + 10, H * 0.35, -1, 50, cols); if (!running) { running = true; last = performance.now(); requestAnimationFrame(frame); } }, 220);
+    if (!running) { running = true; last = performance.now(); requestAnimationFrame(frame); }
+  }
+  return { launch, HOUSE, FINALE };
+})();
+
+/* ---------- Final day (October 31): orange and purple, and the hours count down ---------- */
+function applyFinale() {
+  const now = NOW(), on = isoDay(now) === CONFIG.endDate;
+  document.body.classList.toggle("finale", on);
+  const title = $("#cupTitle"), eyebrow = $("#cupEyebrow"), tag = $("#tagline");
+  if (!on) return;
+  title.textContent = "The Final Tally"; eyebrow.textContent = "The last day";
+  const end = new Date(CONFIG.endDate + "T23:59:59");
+  const hrs = Math.max(0, Math.ceil((end - now) / 36e5)), mins = Math.max(0, Math.ceil((end - now) / 6e4));
+  tag.textContent = hrs > 1 ? `The final day. ${hrs} hours until the final tally. Two houses, one crown.`
+    : mins > 1 ? `The final day. ${mins} minutes until the final tally. Two houses, one crown.` : "The final tally is upon us. Two houses, one crown.";
+}
+
+/* ---------- The gates: a half-second curtain, then the keep ---------- */
+(function gates() {
+  const g = document.getElementById("gates"); if (!g) return;
+  setTimeout(() => g.remove(), 1400);            // animations run from CSS; this just tidies up afterwards
 })();
 
 /* ---------- boot ---------- */
+applyFinale();
+setInterval(applyFinale, 60 * 1000);
+setTimeout(() => confetti.launch(), 800);        // once the gates have parted
 renderHouses();
 renderCup();
 renderBoard();
