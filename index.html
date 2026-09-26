@@ -451,6 +451,34 @@
   .panel h2 { margin: 0; font-size: 1.24rem; }
   .feed-slot { min-height: 400px; border: 1px dashed var(--line-strong); padding: 6px; background: var(--surface-2); }
   .feed-wait { margin: 16px; color: var(--ink-2); }
+  /* our own list feed: names wear their house colors */
+  .feed-slot.glass { padding: 0; display: grid; }
+  .gt-note { margin: 0; padding: 8px 12px; font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); text-align: center; border-bottom: 1px dashed var(--line); }
+  .gt-list { list-style: none; margin: 0; padding: 0; max-height: 600px; overflow-y: auto; overscroll-behavior: contain; }
+  .gt { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 12px; padding: 12px 14px; border-bottom: 1px solid var(--line); border-left: 3px solid transparent; }
+  .gt.h333 { border-left-color: var(--h333); } .gt.h500 { border-left-color: var(--h500); }
+  .gt-av { width: 40px; height: 40px; border-radius: 50%; overflow: hidden; background: var(--surface); border: 2px solid var(--line-strong); display: block; }
+  .gt.h333 .gt-av { border-color: var(--h333); } .gt.h500 .gt-av { border-color: var(--h500); }
+  .gt-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .gt-main { min-width: 0; display: grid; gap: 4px; }
+  .gt-head { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; font-size: .9rem; line-height: 1.2; }
+  .gt-name { font-weight: 700; color: var(--ink); text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+  .gt.h333 .gt-name { color: var(--h333); } .gt.h500 .gt-name { color: var(--h500); }
+  .gt .flair { margin-left: 0; }
+  .gt-handle { color: var(--ink-3); font-size: .8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  .gt-time { margin-left: auto; color: var(--ink-3); font-size: .8rem; text-decoration: none; white-space: nowrap; }
+  .gt-time:hover { color: var(--gold); }
+  .gt-text { margin: 0; line-height: 1.4; overflow-wrap: anywhere; white-space: pre-line; }
+  .gt-text a { color: var(--gold); text-decoration: none; }
+  .gt-text a.mention.h333 { color: var(--h333); } .gt-text a.mention.h500 { color: var(--h500); }
+  .gt-foot { display: flex; gap: 16px; font-size: .78rem; color: var(--ink-3); }
+  .gt-foot a { margin-left: auto; color: var(--gold); text-decoration: none; }
+  .gt-more { display: block; padding: 10px 14px; text-align: center; font-size: .82rem; letter-spacing: .08em; text-transform: uppercase; color: var(--gold); text-decoration: none; border-top: 1px dashed var(--line); }
+  .gt-more:hover { color: var(--gold-bright); }
+  .feed-slot.feed-fallback { min-height: 0; display: grid; place-items: center; padding: 34px 20px; }
+  .feed-card { display: grid; gap: 12px; justify-items: center; text-align: center; max-width: 42ch; }
+  .feed-card p { margin: 0; color: var(--ink); line-height: 1.5; }
+  .feed-card .heading { font-size: 1.3rem; color: var(--gold); }
   .feed-note { font-size: .9rem; color: var(--ink-3); margin: 0; }
   .feed-note code { font: inherit; color: var(--gold); }
   .fame { display: grid; gap: 10px; }
@@ -520,9 +548,9 @@
   .finale .rule { color: #C9A2FF; }
   .finale .rule::before { background: linear-gradient(90deg, transparent, #B48CFF); } .finale .rule::after { background: linear-gradient(90deg, #B48CFF, transparent); }
   /* The Common House: house flair beside a name, coin flips */
-  .tavern .flair { display: inline-block; width: 14px; height: 13px; margin-left: 6px; vertical-align: -1px; background: center / contain no-repeat; filter: drop-shadow(0 1px 0 rgba(0,0,0,.6)); }
-  .tavern .flair.h333 { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 22'%3E%3Cpath d='M12 21 C4 15 1 11 1 6.5 A5.5 5.5 0 0 1 12 4.5 A5.5 5.5 0 0 1 23 6.5 C23 11 20 15 12 21Z' fill='%23C9C6C0' stroke='%23F4F3F0' stroke-width='1'/%3E%3C/svg%3E"); }
-  .tavern .flair.h500 { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 22'%3E%3Cpath d='M12 21 C4 15 1 11 1 6.5 A5.5 5.5 0 0 1 12 4.5 A5.5 5.5 0 0 1 23 6.5 C23 11 20 15 12 21Z' fill='%23F26F96' stroke='%23FFB3C7' stroke-width='1'/%3E%3C/svg%3E"); }
+  .tavern .flair, .gt .flair { display: inline-block; width: 14px; height: 13px; margin-left: 6px; vertical-align: -1px; background: center / contain no-repeat; filter: drop-shadow(0 1px 0 rgba(0,0,0,.6)); }
+  .tavern .flair.h333, .gt .flair.h333 { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 22'%3E%3Cpath d='M12 21 C4 15 1 11 1 6.5 A5.5 5.5 0 0 1 12 4.5 A5.5 5.5 0 0 1 23 6.5 C23 11 20 15 12 21Z' fill='%23C9C6C0' stroke='%23F4F3F0' stroke-width='1'/%3E%3C/svg%3E"); }
+  .tavern .flair.h500, .gt .flair.h500 { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 22'%3E%3Cpath d='M12 21 C4 15 1 11 1 6.5 A5.5 5.5 0 0 1 12 4.5 A5.5 5.5 0 0 1 23 6.5 C23 11 20 15 12 21Z' fill='%23F26F96' stroke='%23FFB3C7' stroke-width='1'/%3E%3C/svg%3E"); }
   .tavern .body.flip { font-weight: 700; }
   .tavern .body.flip.h333 { color: var(--h333); } .tavern .body.flip.h500 { color: var(--h500); }
   .tavern .coin { display: inline-block; animation: coinSpin 1.1s ease-out both; }
@@ -689,7 +717,7 @@ try { if (sessionStorage.getItem("tweetober-gates") === "1") document.getElement
       <div class="panel">
         <h2 class="heading">The Scrying Glass</h2>
         <div class="feed-slot" id="feedSlot"></div>
-        <p class="feed-note">Feed of the Tweetober list on Twitter. If it looks empty here, <a href="https://x.com/i/lists/2103930993988235727" target="_blank" rel="noopener">open the list on Twitter</a>.</p>
+        <p class="feed-note">Feed of the Tweetober list on Twitter.</p>
       </div>
       <div class="panel">
         <h2 class="heading">The Trophy Room</h2>
@@ -1223,16 +1251,101 @@ function renderEvents() {
 }
 
 /* ---------- Feed embed (Twitter List timeline) ---------- */
+/* Which house a Twitter handle belongs to: the Ledger first, then the rosters in CONFIG. "" if unknown. */
+function houseOfHandle(name) {
+  const n = String(name || "").trim().replace(/^@/, "").toLowerCase(); if (!n) return "";
+  const hit = LEDGER.find(p => p.handle.toLowerCase() === n); if (hit) return hit.house;
+  const h = CONFIG.houses.find(h => h.leader.handle.toLowerCase() === n || h.members.some(m => m.toLowerCase() === n));
+  return h ? h.key : "";
+}
+
+/* ---------- The Scrying Glass ----------
+   On the live site the Worker serves the Tweetober list at /api/feed (fetched from twitterapi.io, cached).
+   We draw it ourselves so names can wear their house colors. If that isn't set up, fall back to Twitter's
+   own embed, and if that doesn't render either, to a card with a link to the list. */
 function mountFeed() {
   const slot = $("#feedSlot");
   const hasList = /^\d+$/.test(String(CONFIG.listId));
   const url = `https://x.com/i/lists/${CONFIG.listId}`;
-  slot.innerHTML = !hasList ? `<p class="feed-wait">The live feed opens once the Tweetober list is linked.</p>` : `<a class="twitter-timeline" data-height="600" data-dnt="true" data-theme="dark" href="https://twitter.com/i/lists/${CONFIG.listId}?ref_src=twsrc%5Etfw">Loading the ${CONFIG.listName} list…</a>`;
+  const ago = (t) => {
+    const s = Math.max(0, (Date.now() - t) / 1000);
+    if (s < 60) return "now"; if (s < 3600) return `${Math.floor(s / 60)}m`; if (s < 86400) return `${Math.floor(s / 3600)}h`;
+    return new Date(t).toLocaleString("en-US", { month: "short", day: "numeric" });
+  };
+  // text -> safe HTML with links for URLs, @mentions and #hashtags
+  const unent = (t) => String(t || "").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&");   // Twitter sends text HTML-escaped
+  const linkify = (txt) => esc(unent(txt))
+    .replace(/https?:\/\/[^\s<]+/g, (u) => `<a href="${u}" target="_blank" rel="noopener">${u.replace(/^https?:\/\/(www\.)?/, "").slice(0, 32)}${u.length > 40 ? "…" : ""}</a>`)
+    .replace(/(^|[^\w&])@(\w{1,15})/g, (m, pre, h) => `${pre}<a class="mention ${houseOfHandle(h)}" href="https://x.com/${h}" target="_blank" rel="noopener">@${h}</a>`)
+    .replace(/(^|[^\w&])#(\w+)/g, (m, pre, t) => `${pre}<a href="https://x.com/hashtag/${t}" target="_blank" rel="noopener">#${t}</a>`);
+  const tweetHtml = (t) => {
+    const a = t.author || {}, hk = houseOfHandle(a.userName);
+    const link = safeUrl(t.url) || `https://x.com/${encodeURIComponent(a.userName)}/status/${encodeURIComponent(t.id)}`;
+    const av = safeUrl(a.avatar);
+    return `<li class="gt ${hk}">
+      <a class="gt-av" href="${xUrl(a.userName)}" target="_blank" rel="noopener">${av ? `<img src="${av}" alt="" width="40" height="40" loading="lazy" referrerpolicy="no-referrer">` : ""}</a>
+      <div class="gt-main">
+        <div class="gt-head"><a class="gt-name" href="${xUrl(a.userName)}" target="_blank" rel="noopener">${esc(a.name || a.userName)}</a>${hk ? `<i class="flair ${hk}" title="House of ${hk.slice(1)}"></i>` : ""}<span class="gt-handle">@${esc(a.userName)}</span><a class="gt-time" href="${link}" target="_blank" rel="noopener" title="${esc(new Date(t.created).toLocaleString())}" data-t="${Number(t.created)}">${ago(t.created)}</a></div>
+        <p class="gt-text">${linkify(t.text)}</p>
+        <div class="gt-foot"><span>♥ ${fmt(t.likes || 0)}</span><span>⟲ ${fmt(t.retweets || 0)}</span><span>✎ ${fmt(t.replies || 0)}</span><a href="${link}" target="_blank" rel="noopener">View ↗</a></div>
+      </div></li>`;
+  };
+  const drawGlass = (tweets, note) => {
+    slot.classList.add("glass"); slot.classList.remove("feed-fallback");
+    slot.innerHTML = (note ? `<p class="gt-note">${note}</p>` : "") + (tweets.length
+      ? `<ol class="gt-list">${tweets.map(tweetHtml).join("")}</ol>`
+      : `<p class="feed-wait">The glass is quiet. No tweets from the list yet.</p>`) +
+      `<a class="gt-more" href="${url}" target="_blank" rel="noopener">See the whole list on Twitter ↗</a>`;
+  };
+  const card = () => {
+    if (!hasList || slot.querySelector("iframe") || slot.classList.contains("glass")) return;
+    slot.classList.add("feed-fallback");
+    slot.innerHTML = `<div class="feed-card">
+      <p class="heading">The glass is clouded</p>
+      <p>Twitter won't show list feeds on other sites anymore, but the whole Tweetober list is one tap away.</p>
+      <a class="btn" href="${url}" target="_blank" rel="noopener">Open the ${esc(CONFIG.listName)} list ↗</a>
+    </div>`;
+  };
+  const embed = () => {
+    if (!hasList) { slot.innerHTML = `<p class="feed-wait">The live feed opens once the Tweetober list is linked.</p>`; return; }
+    slot.innerHTML = `<a class="twitter-timeline" data-height="600" data-dnt="true" data-theme="dark" href="https://twitter.com/i/lists/${CONFIG.listId}?ref_src=twsrc%5Etfw">Loading the ${esc(CONFIG.listName)} list…</a>`;
+    window.twttr?.widgets?.load(slot);
+    setTimeout(card, 8000);
+  };
+  const sample = () => {
+    // preview copies of the page have no server; show what the glass looks like
+    const now = Date.now(), a = (u, n) => ({ userName: u, name: n, avatar: "" });
+    drawGlass([
+      { id: "1", text: "day one and i've already hit 80. house of 500 does not sleep", created: now - 120000, likes: 14, retweets: 2, replies: 5, author: a("mickal500", "mickal") },
+      { id: "2", text: "@mickal500 333 is a lifestyle, not a number #Tweetober2026", created: now - 900000, likes: 22, retweets: 3, replies: 2, author: a("trinity333__", "trinity") },
+      { id: "3", text: "who else is doing karaoke tonight", created: now - 3600000, likes: 6, retweets: 0, replies: 9, author: a("paleomagnetizm", "paleo") },
+    ], "Sample tweets · the live glass runs on the Tweetober site");
+  };
+
+  // Twitter's widgets script is still needed for the Trophy Room's single-tweet embeds
   const s = document.createElement("script");
   s.async = true; s.src = "https://platform.twitter.com/widgets.js"; s.charset = "utf-8";
   s.onload = () => { window.twttr?.widgets?.load($("#fame")); };
-  s.onerror = () => { if (hasList) slot.innerHTML = `<p style="margin:16px;color:var(--ink-2)">The feed could not load here. <a href="${url}" target="_blank" rel="noopener">Open the ${CONFIG.listName} list on Twitter</a>.</p>`; };
   document.body.appendChild(s);
+
+  let live = false;
+  async function refresh() {
+    try {
+      const r = await fetch("/api/feed", { cache: "no-store" });
+      const isJson = (r.headers.get("content-type") || "").includes("json");
+      if (!isJson) { if (!live) sample(); return; }                  // no server here (preview)
+      const d = await r.json();
+      if (!r.ok || !Array.isArray(d.tweets)) { if (!live) { embed(); setTimeout(card, 12000); } return; }   // not configured yet
+      live = true;
+      const keep = slot.querySelector(".gt-list")?.scrollTop || 0;
+      drawGlass(d.tweets.slice(0, 40));
+      const l = slot.querySelector(".gt-list"); if (l) l.scrollTop = keep;
+    } catch { if (!live) sample(); }
+  }
+  refresh();
+  setInterval(() => { if (!document.hidden) refresh(); }, 60 * 1000);   // the server checks for new tweets at most once a minute, shared by everyone
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) refresh(); });
+  setInterval(() => slot.querySelectorAll(".gt-time[data-t]").forEach(el => { el.textContent = ago(Number(el.dataset.t)); }), 30000);
 }
 
 /* ---------- The Common House (live messages) ---------- */
@@ -1267,12 +1380,7 @@ function mountFeed() {
   };
   const safeColor = (c) => COLORS.includes(c) ? c : COLORS[0];
   // House flair: a name that matches a roster handle gets a small heart beside it (grey for 333, pink for 500)
-  const houseOfName = (name) => {
-    const n = String(name || "").trim().replace(/^@/, "").toLowerCase(); if (!n) return "";
-    const hit = LEDGER.find(p => p.handle.toLowerCase() === n); if (hit) return hit.house;
-    const h = CONFIG.houses.find(h => h.leader.handle.toLowerCase() === n || h.members.some(m => m.toLowerCase() === n));
-    return h ? h.key : "";
-  };
+  const houseOfName = houseOfHandle;
   const flair = (name) => { const k = houseOfName(name); return k ? `<i class="flair ${k}" title="House of ${k.slice(1)}"></i>` : ""; };
   // Coin flips come back from the server as a message starting with the coin; color it by the winning house
   const bodyHtml = (b) => {
