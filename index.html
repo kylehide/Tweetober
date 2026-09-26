@@ -454,6 +454,10 @@
   /* our own list feed: names wear their house colors */
   .feed-slot.glass { padding: 0; display: grid; }
   .gt-note { margin: 0; padding: 8px 12px; font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); text-align: center; border-bottom: 1px dashed var(--line); }
+  /* X's own typeface (Chirp) isn't public; this system stack is what it falls back to and looks the same on each device */
+  .gt-list, .gt-note, .gt-more, .feed-slot.glass .feed-wait { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; letter-spacing: normal; }
+  .gt-list { font-size: .72rem; }
+  .gt-more, .gt-note { font-size: .62rem; }
   .gt-list { list-style: none; margin: 0; padding: 0; max-height: 600px; overflow-y: auto; overscroll-behavior: contain; }
   .gt { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 12px; padding: 12px 14px; border-bottom: 1px solid var(--line); border-left: 3px solid transparent; }
   .gt.h333 { border-left-color: var(--h333); } .gt.h500 { border-left-color: var(--h500); }
@@ -461,17 +465,17 @@
   .gt.h333 .gt-av { border-color: var(--h333); } .gt.h500 .gt-av { border-color: var(--h500); }
   .gt-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .gt-main { min-width: 0; display: grid; gap: 4px; }
-  .gt-head { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; font-size: .9rem; line-height: 1.2; }
+  .gt-head { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; font-size: 1em; line-height: 1.25; }
   .gt-name { font-weight: 700; color: var(--ink); text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
   .gt.h333 .gt-name { color: var(--h333); } .gt.h500 .gt-name { color: var(--h500); }
   .gt .flair { margin-left: 0; }
-  .gt-handle { color: var(--ink-3); font-size: .8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-  .gt-time { margin-left: auto; color: var(--ink-3); font-size: .8rem; text-decoration: none; white-space: nowrap; }
+  .gt-handle { color: var(--ink-3); font-size: .95em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  .gt-time { margin-left: auto; color: var(--ink-3); font-size: .95em; text-decoration: none; white-space: nowrap; }
   .gt-time:hover { color: var(--gold); }
-  .gt-text { margin: 0; line-height: 1.4; overflow-wrap: anywhere; white-space: pre-line; }
+  .gt-text { margin: 0; line-height: 1.4; font-size: 1em; color: #EFE9DC; overflow-wrap: anywhere; white-space: pre-line; }
   .gt-text a { color: var(--gold); text-decoration: none; }
   .gt-text a.mention.h333 { color: var(--h333); } .gt-text a.mention.h500 { color: var(--h500); }
-  .gt-foot { display: flex; gap: 16px; font-size: .78rem; color: var(--ink-3); }
+  .gt-foot { display: flex; gap: 16px; font-size: .9em; color: var(--ink-3); }
   .gt-foot a { margin-left: auto; color: var(--gold); text-decoration: none; }
   .gt-more { display: block; padding: 10px 14px; text-align: center; font-size: .82rem; letter-spacing: .08em; text-transform: uppercase; color: var(--gold); text-decoration: none; border-top: 1px dashed var(--line); }
   .gt-more:hover { color: var(--gold-bright); }
@@ -1285,7 +1289,7 @@ function mountFeed() {
     return `<li class="gt ${hk}">
       <a class="gt-av" href="${xUrl(a.userName)}" target="_blank" rel="noopener">${av ? `<img src="${av}" alt="" width="40" height="40" loading="lazy" referrerpolicy="no-referrer">` : ""}</a>
       <div class="gt-main">
-        <div class="gt-head"><a class="gt-name" href="${xUrl(a.userName)}" target="_blank" rel="noopener">${esc(a.name || a.userName)}</a>${hk ? `<i class="flair ${hk}" title="House of ${hk.slice(1)}"></i>` : ""}<span class="gt-handle">@${esc(a.userName)}</span><a class="gt-time" href="${link}" target="_blank" rel="noopener" title="${esc(new Date(t.created).toLocaleString())}" data-t="${Number(t.created)}">${ago(t.created)}</a></div>
+        <div class="gt-head"><a class="gt-name" href="${xUrl(a.userName)}" target="_blank" rel="noopener">${esc(a.name || a.userName)}</a><span class="gt-handle">@${esc(a.userName)}</span><a class="gt-time" href="${link}" target="_blank" rel="noopener" title="${esc(new Date(t.created).toLocaleString())}" data-t="${Number(t.created)}">${ago(t.created)}</a></div>
         <p class="gt-text">${linkify(t.text)}</p>
         <div class="gt-foot"><span>♥ ${fmt(t.likes || 0)}</span><span>⟲ ${fmt(t.retweets || 0)}</span><span>✎ ${fmt(t.replies || 0)}</span><a href="${link}" target="_blank" rel="noopener">View ↗</a></div>
       </div></li>`;
