@@ -43,15 +43,18 @@
   input, textarea { cursor: text; }
   [hidden] { display: none !important; }
   html, body { margin: 0; }
-  html { font-size: 22px; background-color: var(--bg); }   /* overscroll areas stay dark */
-  body {
-    /* dark-brown veil at 70% over the stone tile: same pattern, dimmed */
+  html {
+    font-size: 22px;
+    /* The background lives on <html> so it covers the whole canvas, including any space a browser
+       draws below the footer. Dark-brown veil at 70% over the stone tile; both layers tile. */
     background-color: var(--bg);
     background-image: linear-gradient(rgba(20, 14, 8, .7), rgba(20, 14, 8, .7)), var(--stone);
-    background-repeat: repeat, repeat;               /* both layers tile, so the veil covers the extra canvas phones draw below the footer */
-    background-size: 900px 900px, 900px 900px;
-    background-position: center top, center top;
-    background-attachment: scroll;
+    background-repeat: repeat;
+    background-size: 900px 900px;
+    background-position: center top;
+  }
+  body {
+    background: transparent;
     color: var(--ink);
     font-family: "VT323", "IBM Plex Mono", "Courier New", monospace;
     font-size: 1.05rem;
