@@ -118,10 +118,31 @@ function when(s) {
   if (m) return Date.UTC(+m[6], MONTHS[m[1]] ?? 0, +m[2], +m[3], +m[4], +m[5]);
   const t = Date.parse(s); return isNaN(t) ? 0 : t;
 }
+// Attached photos, GIFs and videos. twitterapi.io has used a few shapes for these, so accept any of them,
+// and keep only Twitter's own media hosts.
+const TW_MEDIA = /^https:\/\/(pbs|video)\.twimg\.com\//;
+function mediaOf(t) {
+  const lists = [t.media, t.extendedEntities?.media, t.extended_entities?.media, t.entities?.media].filter(Array.isArray);
+  const seen = new Set(), out = [];
+  for (const list of lists) for (const m of list) {
+    if (!m) continue;
+    const type = String(m.type || "photo");
+    const img = [m.media_url_https, m.media_url, m.preview_image_url, m.url].find(u => TW_MEDIA.test(String(u || ""))) || "";
+    const variants = m.video_info?.variants || m.variants || [];
+    const mp4 = variants.filter(v => /mp4/.test(v.content_type || v.contentType || "") && TW_MEDIA.test(String(v.url || "")))
+      .sort((x, y) => (y.bitrate || y.bit_rate || 0) - (x.bitrate || x.bit_rate || 0));
+    const pick = type === "animated_gif" ? mp4[0] : (mp4.find(v => (v.bitrate || v.bit_rate || 0) <= 2200000) || mp4[mp4.length - 1]);
+    const key = img || pick?.url; if (!key || seen.has(key)) continue; seen.add(key);
+    out.push({ type: type === "animated_gif" ? "gif" : type === "video" ? "video" : "photo", img, video: pick ? String(pick.url) : "",
+      w: m.original_info?.width || m.sizes?.large?.w || m.width || 0, h: m.original_info?.height || m.sizes?.large?.h || m.height || 0 });
+    if (out.length >= 4) break;
+  }
+  return out;
+}
 const slim = (t) => ({
   id: String(t.id || ""), url: String(t.url || ""), text: String(t.text || "").slice(0, 1200),
   created: when(t.createdAt), likes: t.likeCount | 0, retweets: t.retweetCount | 0, replies: t.replyCount | 0,
-  isReply: !!t.isReply, replyTo: t.inReplyToUsername ? String(t.inReplyToUsername) : "",
+  isReply: !!t.isReply, replyTo: t.inReplyToUsername ? String(t.inReplyToUsername) : "", media: mediaOf(t),
   author: { userName: String(t.author?.userName || ""), name: String(t.author?.name || ""), avatar: String(t.author?.profilePicture || "") },
 });
 async function fetchPage(env, params) {
