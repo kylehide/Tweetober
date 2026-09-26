@@ -25,7 +25,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="assets/favicon-512.png">
 <link rel="apple-touch-icon" href="assets/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pirata+One&family=VT323&family=IBM+Plex+Mono:wght@400;600&family=Metamorphous&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pirata+One&family=VT323&family=IBM+Plex+Mono:wght@400;600&family=Almendra&display=swap">
 <style>
   /* Single look, by design: the stone keep at night. Colors come from the crest and the invitation. */
   :root {
@@ -392,23 +392,23 @@
   .board-status { font-size: .75rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
   .board-status.live::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #8FE3B6; margin-right: 7px; box-shadow: 0 0 6px #8FE3B6; vertical-align: 1px; }
   /* the board is an old sheet of paper with torn, singed edges (a 9-slice keeps the edges crisp at any size) */
-  .tavern { list-style: none; margin: 0; padding: 6px 10px; display: grid; gap: 12px; align-content: start; max-height: 440px; min-height: 160px; overflow-y: auto; overscroll-behavior: contain;
+  .tavern { list-style: none; margin: 0; padding: 6px 10px; display: grid; gap: 9px; align-content: start; max-height: 440px; min-height: 160px; overflow-y: auto; overscroll-behavior: contain;
     border: 34px solid transparent; border-image: url("assets/paper.webp") 48 fill / 34px / 0 stretch;
     background: none; filter: drop-shadow(0 8px 14px rgba(0,0,0,.5));
     color: #2B1A0E; scrollbar-color: #A08050 transparent; }
   @media (max-width: 760px) { .tavern { border-width: 26px; border-image-width: 26px; padding: 4px 4px; } }
   .tavern li { display: grid; gap: 0; line-height: 1.2; overflow-wrap: anywhere; }
   .tavern .who { display: flex; flex-wrap: wrap; column-gap: 10px; align-items: baseline; }
-  .tavern .who b { font-weight: 400; font-size: 1.05rem; letter-spacing: .02em; }   /* names in the site's pixel font; messages below in handwriting */
+  .tavern .who b { font-weight: 400; font-size: .92rem; letter-spacing: .02em; }   /* names in the site's pixel font; messages below in handwriting */
   .tavern .who time { font-size: .68rem; color: #7A5E3A; letter-spacing: .06em; }
-  .tavern .body { font-family: "Metamorphous", "Pirata One", Georgia, serif; font-weight: 400; font-size: 1rem; line-height: 1.45; color: #2B1A0E; text-shadow: 0 0 .5px rgba(43,26,14,.45); }   /* storybook medieval, in ink */
+  .tavern .body { font-family: "Almendra", "Pirata One", Georgia, serif; font-weight: 400; font-size: .74rem; line-height: 1.35; color: #2B1A0E; text-shadow: 0 0 .5px rgba(43,26,14,.45); }   /* a medieval book hand, in ink */
   /* moderator's × (only shown once the page has been opened with ?key=…) */
   .tavern .zap { display: none; margin-left: auto; width: 22px; height: 22px; padding: 0; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink-3); font: inherit; font-size: .8rem; line-height: 1; border-radius: 3px; }
   body.admin .tavern .zap { display: inline-flex; align-items: center; justify-content: center; }
   .tavern .zap:hover { color: var(--h500); border-color: var(--h500); }
   .tavern li.gone { opacity: .35; }
   .tavern li.gone .body { text-decoration: line-through; }
-  .tavern .empty { color: #6E5230; font-family: "Metamorphous", serif; font-size: .95rem; }
+  .tavern .empty { color: #6E5230; font-family: "Almendra", serif; font-size: .85rem; }
   .tavern .sample { font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: #7A5E3A; text-align: center; }
   .tavern-form { display: grid; gap: 12px; }
   .tf-row { display: flex; gap: 14px; flex-wrap: wrap; align-items: end; }
