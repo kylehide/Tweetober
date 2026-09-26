@@ -43,14 +43,14 @@
   input, textarea { cursor: text; }
   [hidden] { display: none !important; }
   html, body { margin: 0; }
-  html { font-size: 22px; }
+  html { font-size: 22px; background-color: var(--bg); }   /* overscroll areas stay dark */
   body {
     /* dark-brown veil at 70% over the stone tile: same pattern, dimmed */
     background-color: var(--bg);
     background-image: linear-gradient(rgba(20, 14, 8, .7), rgba(20, 14, 8, .7)), var(--stone);
-    background-repeat: no-repeat, repeat;
-    background-size: 100% 100%, 900px 900px;
-    background-position: 0 0, center top;
+    background-repeat: repeat, repeat;               /* both layers tile, so the veil covers the extra canvas phones draw below the footer */
+    background-size: 900px 900px, 900px 900px;
+    background-position: center top, center top;
     background-attachment: scroll;
     color: var(--ink);
     font-family: "VT323", "IBM Plex Mono", "Courier New", monospace;
@@ -747,8 +747,8 @@ try { if (sessionStorage.getItem("tweetober-gates") === "1") document.getElement
           <circle cx="50" cy="50" r="34" fill="none" stroke="#7A0F22" stroke-width="1.6"/>
           <circle cx="50" cy="50" r="31.5" fill="none" stroke="#D8546B" stroke-width=".8" opacity=".55"/>
           <ellipse cx="38" cy="30" rx="11" ry="5" fill="#fff" opacity=".13" transform="rotate(-35 38 30)"/>
-          <text x="50" y="57" text-anchor="middle" font-family="Pirata One, serif" font-size="30" fill="#F2D272" stroke="#6E0C1E" stroke-width=".5">T5</text>
-          <text x="50" y="72" text-anchor="middle" font-family="VT323, monospace" font-size="8.5" letter-spacing="1.6" fill="#F2D272" opacity=".9">SWORN</text>
+          <!-- the crowned bird from the crest, pressed into the wax -->
+          <image href="assets/seal-bird.png" x="24" y="24" width="52" height="52" preserveAspectRatio="xMidYMid meet"/>
         </svg>
       </div>
     </div>
