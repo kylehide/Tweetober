@@ -4,6 +4,8 @@
 //   GET    /api/messages?after=ID   -> only messages newer than ID
 //   POST   /api/messages            -> { name, color, body, code }  (code must match HALL_CODE)
 //   DELETE /api/messages?id=ID      -> remove one (header  x-admin-key: ADMIN_KEY)
+//   GET    /api/trumpet              -> { count }   how many times the trumpet has been sounded
+//   POST   /api/trumpet              -> { count }   sound it once more
 //
 // Settings (Cloudflare dashboard -> this Worker -> Settings -> Variables and Secrets):
 //   HALL_CODE  secret  optional. Leave unset and anyone can post. Set it (e.g. hinge) to require a password.
@@ -19,6 +21,7 @@ async function ensureTable(db) {
     "CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, color TEXT NOT NULL, body TEXT NOT NULL, created INTEGER NOT NULL, who TEXT)"
   ).run();
   await db.prepare("CREATE INDEX IF NOT EXISTS messages_who ON messages (who, created)").run();
+  await db.prepare("CREATE TABLE IF NOT EXISTS counters (name TEXT PRIMARY KEY, value INTEGER NOT NULL)").run();
   ready = true;
 }
 
@@ -76,9 +79,26 @@ async function handle(request, env, url) {
   return json({ error: "Method not allowed." }, 405);
 }
 
+async function trumpet(request, env) {
+  if (!env.DB) return json({ error: "No database." }, 503);
+  await ensureTable(env.DB);
+  if (request.method === "POST") {
+    const row = await env.DB.prepare(
+      "INSERT INTO counters (name, value) VALUES ('trumpet', 1) ON CONFLICT(name) DO UPDATE SET value = value + 1 RETURNING value"
+    ).first();
+    return json({ count: row.value });
+  }
+  const row = await env.DB.prepare("SELECT value FROM counters WHERE name = 'trumpet'").first();
+  return json({ count: row ? row.value : 0 });
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    if (url.pathname === "/api/trumpet") {
+      try { return await trumpet(request, env); }
+      catch (e) { return json({ error: "Something went wrong on the server." }, 500); }
+    }
     if (url.pathname === "/api/messages") {
       try { return await handle(request, env, url); }
       catch (e) { return json({ error: "Something went wrong on the server." }, 500); }
