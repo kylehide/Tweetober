@@ -122,19 +122,19 @@
   /* ---------- House Cup tally ---------- */
   .cup { padding: 26px 24px; display: grid; gap: 18px; position: relative; }
   .horn-row { margin-top: 6px; display: flex; align-items: center; justify-content: center; gap: 14px; }
-  .trumpet { width: 96px; height: 48px; flex: none; opacity: 0; transform: scale(.6) translateY(6px); transform-origin: center; filter: drop-shadow(0 3px 4px rgba(0,0,0,.6)); pointer-events: none; }
+  .trumpet { width: 96px; height: 48px; flex: none; overflow: visible; opacity: 0; transform: scale(.6) translateY(6px); transform-origin: center; filter: drop-shadow(0 3px 4px rgba(0,0,0,.6)); pointer-events: none; }
   .horn-row.playing .trumpet { animation: heraldIn .45s cubic-bezier(.2,1.4,.4,1) forwards, toot .5s ease-in-out .5s 4 alternate; }
   .horn-row.playing .trumpet.left { animation-name: heraldInL, tootL; }
-  .horn-row.playing .notes path { animation: noteRise 1.6s ease-out infinite; opacity: 0; }
+  .horn-row.playing .notes .n1, .horn-row.playing .notes .n2 { animation: noteRise 1.6s ease-out infinite; opacity: 0; }
   .horn-row.playing .notes .n2 { animation-delay: .8s; }
   .horn-row.fading .trumpet { animation: heraldOut .4s ease-in forwards; }
   @keyframes heraldIn { from { opacity: 0; transform: scale(.6) translateY(6px) rotate(8deg); } to { opacity: 1; transform: scale(1) translateY(0) rotate(-6deg); } }
   @keyframes heraldInL { from { opacity: 0; transform: scale(.6) translateY(6px) rotate(-8deg); } to { opacity: 1; transform: scale(1) translateY(0) rotate(6deg); } }
   @keyframes toot { from { transform: scale(1) rotate(-6deg); } to { transform: scale(1.04) rotate(-10deg); } }
   @keyframes tootL { from { transform: scale(1) rotate(6deg); } to { transform: scale(1.04) rotate(10deg); } }
-  @keyframes noteRise { 0% { opacity: 0; transform: translate(0, 4px); } 20% { opacity: 1; } 100% { opacity: 0; transform: translate(6px, -16px); } }
+  @keyframes noteRise { 0% { opacity: 0; translate: 0 6px; } 20% { opacity: 1; } 100% { opacity: 0; translate: 8px -16px; } }
   @keyframes heraldOut { to { opacity: 0; transform: scale(.7) translateY(6px); } }
-  @media (prefers-reduced-motion: reduce) { .horn-row.playing .trumpet { animation: none; opacity: 1; transform: none; } .horn-row.playing .notes path { animation: none; opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .horn-row.playing .trumpet { animation: none; opacity: 1; transform: none; } .horn-row.playing .notes .n1, .horn-row.playing .notes .n2 { animation: none; opacity: 1; } }
   @media (max-width: 480px) { .trumpet { width: 64px; height: 32px; } }
   .horn { margin-top: 0; display: inline-flex; align-items: center; gap: 8px; background: none; border: 1px solid var(--line); color: var(--ink-3); font: inherit; font-size: .75rem; letter-spacing: .12em; text-transform: uppercase; padding: 6px 12px; cursor: pointer; }
   .horn svg { width: 16px; height: 16px; }
@@ -497,9 +497,20 @@
         <path d="M78 27 C90 27 98 18 116 8 L116 46 C98 36 90 27 78 27 Z" fill="#E4C463" stroke="#7A5C1C" stroke-width="1"/>
         <path d="M84 27 C94 25 102 18 114 11" stroke="#fff7d6" stroke-width="1.2" fill="none" opacity=".7"/>
         <!-- notes -->
-        <g class="notes" fill="#F2D272">
-          <path class="n1" d="M112 4 v-9 l6 -2 v9 a3 2.2 0 1 1 -1 -2.2 v-4 l-4 1.3 v6 a3 2.2 0 1 1 -1 -2.2 z"/>
-          <path class="n2" d="M118 18 v-8 h1.5 v8 a2.5 1.8 0 1 1 -1.5 -1.7 z"/>
+        <g class="notes" fill="#F2D272" stroke="#F2D272" stroke-linecap="round">
+          <!-- single eighth note -->
+          <g class="n1" transform="translate(108 -2) scale(-1 1)">
+            <ellipse cx="0" cy="0" rx="3.6" ry="2.6" transform="rotate(-25)" stroke="none"/>
+            <path d="M3 -0.8 V-14" stroke-width="1.6" fill="none"/>
+            <path d="M3 -14 c4 2 5 5 3 9" stroke-width="1.6" fill="none"/>
+          </g>
+          <!-- beamed pair -->
+          <g class="n2" transform="translate(122 -11) scale(-.85 .85)">
+            <ellipse cx="0" cy="0" rx="3.6" ry="2.6" transform="rotate(-25)" stroke="none"/>
+            <ellipse cx="11" cy="-2" rx="3.6" ry="2.6" transform="rotate(-25 11 -2)" stroke="none"/>
+            <path d="M3 -0.8 V-13 M14 -2.8 V-15" stroke-width="1.6" fill="none"/>
+            <path d="M3 -13 L14 -15" stroke-width="3" fill="none"/>
+          </g>
         </g>
       </g></svg>
       <button class="horn" id="horn" type="button" title="Sound the trumpets" aria-label="Sound the trumpets">
@@ -523,9 +534,20 @@
         <path d="M78 27 C90 27 98 18 116 8 L116 46 C98 36 90 27 78 27 Z" fill="#E4C463" stroke="#7A5C1C" stroke-width="1"/>
         <path d="M84 27 C94 25 102 18 114 11" stroke="#fff7d6" stroke-width="1.2" fill="none" opacity=".7"/>
         <!-- notes -->
-        <g class="notes" fill="#F2D272">
-          <path class="n1" d="M112 4 v-9 l6 -2 v9 a3 2.2 0 1 1 -1 -2.2 v-4 l-4 1.3 v6 a3 2.2 0 1 1 -1 -2.2 z"/>
-          <path class="n2" d="M118 18 v-8 h1.5 v8 a2.5 1.8 0 1 1 -1.5 -1.7 z"/>
+        <g class="notes" fill="#F2D272" stroke="#F2D272" stroke-linecap="round">
+          <!-- single eighth note -->
+          <g class="n1" transform="translate(108 -2)">
+            <ellipse cx="0" cy="0" rx="3.6" ry="2.6" transform="rotate(-25)" stroke="none"/>
+            <path d="M3 -0.8 V-14" stroke-width="1.6" fill="none"/>
+            <path d="M3 -14 c4 2 5 5 3 9" stroke-width="1.6" fill="none"/>
+          </g>
+          <!-- beamed pair -->
+          <g class="n2" transform="translate(122 -11) scale(.85)">
+            <ellipse cx="0" cy="0" rx="3.6" ry="2.6" transform="rotate(-25)" stroke="none"/>
+            <ellipse cx="11" cy="-2" rx="3.6" ry="2.6" transform="rotate(-25 11 -2)" stroke="none"/>
+            <path d="M3 -0.8 V-13 M14 -2.8 V-15" stroke-width="1.6" fill="none"/>
+            <path d="M3 -13 L14 -15" stroke-width="3" fill="none"/>
+          </g>
         </g>
       </svg>
     </div>
