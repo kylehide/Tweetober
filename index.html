@@ -498,7 +498,10 @@
 
 
   @media (max-width: 760px) {
-    .hall, .ledger, .roster, .decree { grid-template-columns: 1fr; }
+    .hall, .ledger, .decree { grid-template-columns: 1fr; }
+    .roster { gap: 6px 10px; padding-inline: 16px; }          /* rosters stay two columns on phones */
+    .roster li { font-size: .88rem; min-width: 0; gap: 6px; }
+    .roster a { overflow-wrap: anywhere; }
     .swatches { justify-content: center; gap: 5px; width: 100%; }   /* stones centered; the "Gem" label stays left like the others */
     .decree { justify-items: center; text-align: center; gap: 20px; }
     .decree img { width: 150px; }
