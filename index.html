@@ -358,6 +358,12 @@
   .tavern .who b { font-weight: 400; font-size: 1.05rem; letter-spacing: .02em; }
   .tavern .who time { font-size: .7rem; color: var(--ink-3); letter-spacing: .06em; }
   .tavern .body { color: var(--ink); }
+  /* moderator's × (only shown once the page has been opened with ?key=…) */
+  .tavern .zap { display: none; margin-left: auto; width: 22px; height: 22px; padding: 0; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink-3); font: inherit; font-size: .8rem; line-height: 1; border-radius: 3px; }
+  body.admin .tavern .zap { display: inline-flex; align-items: center; justify-content: center; }
+  .tavern .zap:hover { color: var(--h500); border-color: var(--h500); }
+  .tavern li.gone { opacity: .35; }
+  .tavern li.gone .body { text-decoration: line-through; }
   .tavern .empty { color: var(--ink-3); }
   .tavern .sample { font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); text-align: center; }
   .tavern-form { display: grid; gap: 12px; }
@@ -521,12 +527,12 @@ try { if (sessionStorage.getItem("tweetober-gates") === "1") document.getElement
     <div class="rule">MMXXVI</div>
     <nav class="nav" aria-label="Sections">
       <a href="#cup"><span>House Cup</span><i aria-hidden="true"></i></a>
-      <a href="#hall"><span>The Hall</span><i aria-hidden="true"></i></a>
-      <a href="#events"><span>Events</span><i aria-hidden="true"></i></a>
       <a href="#ledger"><span>The Ledger</span><i aria-hidden="true"></i></a>
-      <a href="#houses"><span>The Houses</span><i aria-hidden="true"></i></a>
+      <a href="#hall"><span>The Hall</span><i aria-hidden="true"></i></a>
       <a href="#decree"><span>The Decree</span><i aria-hidden="true"></i></a>
       <a href="#code"><span>The Code</span><i aria-hidden="true"></i></a>
+      <a href="#houses"><span>The Houses</span><i aria-hidden="true"></i></a>
+      <a href="#events"><span>Events</span><i aria-hidden="true"></i></a>
     </nav>
     <div class="horn-row" id="hornRow">
       <span class="herald left">
@@ -606,6 +612,31 @@ try { if (sessionStorage.getItem("tweetober-gates") === "1") document.getElement
     </div>
   </section>
 
+  <!-- ---------- Ledger ---------- -->
+  <section id="ledger">
+    <div class="ledger">
+      <div>
+        <div class="eyebrow">Record your count</div>
+        <h2 class="heading" style="margin:4px 0 0;font-size:2rem;line-height:1">The Ledger</h2>
+        <p>Enter how many tweets you made each day in the shared sheet. It tallies every five days and adds up the month after the 31st.</p>
+      </div>
+      <div class="gate" id="gate">
+        <form class="gate-form" id="gateForm" autocomplete="off">
+          <label class="eyebrow" for="gateCode">Speak the password</label>
+          <div class="gate-row">
+            <input id="gateCode" name="code" type="password" inputmode="text" autocapitalize="off" spellcheck="false" placeholder="••••••" aria-describedby="gateMsg">
+            <button class="btn" type="submit">Enter</button>
+          </div>
+          <p class="gate-msg" id="gateMsg" aria-live="polite"></p>
+        </form>
+        <a class="btn" id="ledgerLink" href="#" target="_blank" rel="noopener" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11l5 5v11H4z"/><path d="M15 4v5h5M8 13h8M8 17h8"/></svg>
+          Open the Ledger
+        </a>
+      </div>
+    </div>
+  </section>
+
   <!-- ---------- Hall: feed + notices ---------- -->
   <section id="hall">
     <div class="sec-head">
@@ -653,51 +684,6 @@ try { if (sessionStorage.getItem("tweetober-gates") === "1") document.getElement
         </form>
       </div>
     </div>
-  </section>
-
-  <!-- ---------- Events ---------- -->
-  <section id="events">
-    <div class="sec-head">
-      <div class="eyebrow">Gatherings</div>
-      <h2 class="heading">Events</h2>
-      <p>Tweetober-affiliated gatherings.</p>
-    </div>
-    <div class="events" id="eventsGrid"></div>
-  </section>
-
-  <!-- ---------- Ledger ---------- -->
-  <section id="ledger">
-    <div class="ledger">
-      <div>
-        <div class="eyebrow">Record your count</div>
-        <h2 class="heading" style="margin:4px 0 0;font-size:2rem;line-height:1">The Ledger</h2>
-        <p>Enter how many tweets you made each day in the shared sheet. It tallies every five days and adds up the month after the 31st.</p>
-      </div>
-      <div class="gate" id="gate">
-        <form class="gate-form" id="gateForm" autocomplete="off">
-          <label class="eyebrow" for="gateCode">Speak the password</label>
-          <div class="gate-row">
-            <input id="gateCode" name="code" type="password" inputmode="text" autocapitalize="off" spellcheck="false" placeholder="••••••" aria-describedby="gateMsg">
-            <button class="btn" type="submit">Enter</button>
-          </div>
-          <p class="gate-msg" id="gateMsg" aria-live="polite"></p>
-        </form>
-        <a class="btn" id="ledgerLink" href="#" target="_blank" rel="noopener" hidden>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11l5 5v11H4z"/><path d="M15 4v5h5M8 13h8M8 17h8"/></svg>
-          Open the Ledger
-        </a>
-      </div>
-    </div>
-  </section>
-
-  <!-- ---------- Houses ---------- -->
-  <section id="houses">
-    <div class="sec-head">
-      <div class="eyebrow">Roster</div>
-      <h2 class="heading">The Two Houses</h2>
-      <p>Each house is led by a past Tweetober champion. Click a name to find them on Twitter.</p>
-    </div>
-    <div class="houses" id="housesGrid"></div>
   </section>
 
   <!-- ---------- Decree ---------- -->
@@ -763,6 +749,26 @@ try { if (sessionStorage.getItem("tweetober-gates") === "1") document.getElement
         </svg>
       </div>
     </div>
+  </section>
+
+  <!-- ---------- Houses ---------- -->
+  <section id="houses">
+    <div class="sec-head">
+      <div class="eyebrow">Roster</div>
+      <h2 class="heading">The Two Houses</h2>
+      <p>Each house is led by a past Tweetober champion. Click a name to find them on Twitter.</p>
+    </div>
+    <div class="houses" id="housesGrid"></div>
+  </section>
+
+  <!-- ---------- Events ---------- -->
+  <section id="events">
+    <div class="sec-head">
+      <div class="eyebrow">Gatherings</div>
+      <h2 class="heading">Events</h2>
+      <p>Tweetober-affiliated gatherings.</p>
+    </div>
+    <div class="events" id="eventsGrid"></div>
   </section>
 
   <footer>
@@ -1236,7 +1242,32 @@ function mountFeed() {
     const m = String(b || "").match(/^\u{1FA99}\s*(.*House of (333|500).*)$/su);
     return m ? `<span class="body flip h${m[2]}"><span class="coin">\u{1FA99}</span> ${esc(m[1])}</span>` : `<span class="body">${esc(b)}</span>`;
   };
-  const row = (m) => `<li data-id="${Number(m.id)}"><span class="who"><b style="color:${safeColor(m.color)}">${esc(m.name)}</b>${flair(m.name)}<time data-t="${Number(m.created)}">${ago(m.created)}</time></span>${bodyHtml(m.body)}</li>`;
+  const row = (m) => `<li data-id="${Number(m.id)}"><span class="who"><b style="color:${safeColor(m.color)}">${esc(m.name)}</b>${flair(m.name)}<time data-t="${Number(m.created)}">${ago(m.created)}</time><button type="button" class="zap" title="Remove this message" aria-label="Remove this message">×</button></span>${bodyHtml(m.body)}</li>`;
+
+  // Moderation. Open the site once as tweetober.com/?key=YOUR_ADMIN_KEY and this browser remembers it (the key is
+  // taken out of the address bar right away). Every message then gets a small ×. ?key=off forgets it.
+  (function admin() {
+    const q = new URLSearchParams(location.search), k = q.get("key");
+    if (k !== null) {
+      if (k === "off" || k === "") store.set("tweetober-admin", ""); else store.set("tweetober-admin", k.trim());
+      q.delete("key"); history.replaceState(null, "", location.pathname + (q.toString() ? "?" + q : "") + location.hash);
+    }
+    document.body.classList.toggle("admin", !!store.get("tweetober-admin"));
+  })();
+  list.addEventListener("click", async (e) => {
+    const btn = e.target.closest(".zap"); if (!btn) return;
+    const li = btn.closest("li"), id = Number(li?.dataset.id), key = store.get("tweetober-admin");
+    if (!id || !key) return;
+    if (!confirm("Remove this message for everyone?")) return;
+    li.classList.add("gone");
+    try {
+      const r = await fetch(`${CONFIG.hallApi}?id=${id}`, { method: "DELETE", headers: { "x-admin-key": key } });
+      if (r.ok) { li.remove(); return; }
+      li.classList.remove("gone");
+      if (r.status === 403) { store.set("tweetober-admin", ""); document.body.classList.remove("admin"); alert("That moderator key isn't accepted. Open the site again with ?key=… to sign back in."); }
+      else alert("Couldn't remove it. Try again.");
+    } catch { li.classList.remove("gone"); alert("Couldn't reach the server."); }
+  });
   const flipText = (rest) => {
     const heads = (crypto.getRandomValues(new Uint32Array(1))[0] & 1) === 0;
     return `\u{1FA99} ${heads ? "Heads! The silver side. House of 333 wins the toss." : "Tails! The pink side. House of 500 wins the toss."}${rest ? ` \u2014 \u201c${rest}\u201d` : ""}`;
