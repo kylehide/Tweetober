@@ -387,18 +387,23 @@
   .gates { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; pointer-events: none; }
   .gates .door { position: absolute; top: 0; bottom: 0; width: 50.5%; background-color: var(--bg);
     background-image: linear-gradient(rgba(20,14,8,.6), rgba(20,14,8,.6)), var(--stone); background-size: 100% 100%, 900px 900px; }
-  .gates .door.l { left: 0; border-right: 3px solid var(--gold-deep); box-shadow: 6px 0 24px rgba(0,0,0,.7); animation: doorL .6s cubic-bezier(.7,0,.3,1) .55s forwards; }
-  .gates .door.r { right: 0; border-left: 3px solid var(--gold-deep); box-shadow: -6px 0 24px rgba(0,0,0,.7); animation: doorR .6s cubic-bezier(.7,0,.3,1) .55s forwards; }
-  .gates-inner { position: relative; display: grid; justify-items: center; gap: 10px; animation: gateFade .25s ease .45s forwards; }
-  .gates-inner img { width: 96px; height: auto; filter: drop-shadow(0 6px 12px rgba(0,0,0,.7)); animation: crestIn .5s ease both; }
+  /* The gates stay shut until the page has loaded behind them (and at least two seconds have passed); JS then adds .open */
+  .gates .door.l { left: 0; border-right: 3px solid var(--gold-deep); box-shadow: 6px 0 24px rgba(0,0,0,.7); }
+  .gates .door.r { right: 0; border-left: 3px solid var(--gold-deep); box-shadow: -6px 0 24px rgba(0,0,0,.7); }
+  .gates.open .door.l { animation: doorL .75s cubic-bezier(.7,0,.3,1) forwards; }
+  .gates.open .door.r { animation: doorR .75s cubic-bezier(.7,0,.3,1) forwards; }
+  .gates-inner { position: relative; display: grid; justify-items: center; gap: 10px; }
+  .gates.open .gates-inner { animation: gateFade .3s ease forwards; }
+  .gates-inner img { width: 96px; height: auto; filter: drop-shadow(0 6px 12px rgba(0,0,0,.7)); animation: crestIn .6s ease both; }
+  .gates-inner p { animation: crestIn .6s ease .15s both; }
   .gates-inner p { margin: 0; font-size: 1.3rem; }
   @keyframes doorL { to { transform: translateX(-102%); } }
   @keyframes doorR { to { transform: translateX(102%); } }
   @keyframes gateFade { to { opacity: 0; } }
   @keyframes crestIn { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: none; } }
   @media (prefers-reduced-motion: reduce) {
-    .gates .door.l, .gates .door.r { animation: gateFade .3s ease .5s forwards; }
-    .gates-inner img { animation: none; }
+    .gates.open .door.l, .gates.open .door.r { animation: gateFade .4s ease forwards; }
+    .gates-inner img, .gates-inner p { animation: none; }
   }
   /* Milestone ribbon under the tug of war */
   .milestone { justify-self: center; text-align: center; font-family: "Pirata One", serif; font-size: 1.05rem; letter-spacing: .06em; color: var(--gold-bright);
@@ -461,6 +466,8 @@
   <div class="door l"></div><div class="door r"></div>
   <div class="gates-inner"><img src="assets/crest.png" alt="" width="96" height="120"><p class="heading">The gates are opening…</p></div>
 </div>
+<script>/* Reloads in the same tab skip the gates entirely: everything is cached by then. */
+try { if (sessionStorage.getItem("tweetober-gates") === "1") document.getElementById("gates").remove(); } catch (e) {}</script>
 <canvas id="confetti" aria-hidden="true"></canvas>
 <div class="wrap">
 
@@ -1332,7 +1339,7 @@ const fanfare = (() => {
 (function armFanfare() {
   const btn = document.getElementById("horn"), row = document.getElementById("hornRow"), out = document.getElementById("hornCount"); if (!btn) return;
   let tm1, tm2;
-  const say = (n) => { out.textContent = `The trumpet has been sounded ${Number(n).toLocaleString("en-US")} ${n === 1 ? "time" : "times"}.`; out.classList.add("show"); };
+  const say = (n) => { out.textContent = `The trumpets have been sounded ${Number(n).toLocaleString("en-US")} ${n === 1 ? "time" : "times"}.`; out.classList.add("show"); };
   async function tally() {
     // Shared count kept on the server; falls back to a per-device count where the server isn't available (previews).
     try {
@@ -1452,22 +1459,34 @@ function applyFinale() {
 })();
 
 /* ---------- The gates: a half-second curtain, then the keep ---------- */
-(function gates() {
-  const g = document.getElementById("gates"); if (!g) return;
-  setTimeout(() => g.remove(), 1400);            // animations run from CSS; this just tidies up afterwards
-})();
+/* openGates(ready): parts the doors once `ready` settles and at least two seconds have passed (six at most).
+   Reloads in the same tab never see the gates (a small script by the markup removes them before first paint). */
+function openGates(ready) {
+  const g = document.getElementById("gates");
+  try { sessionStorage.setItem("tweetober-gates", "1"); } catch {}
+  if (!g) { confetti.launch(); return; }
+  const wait = (ms) => new Promise(r => setTimeout(r, ms));
+  Promise.all([wait(2000), Promise.race([ready, wait(6000)])]).then(() => {
+    g.classList.add("open");
+    setTimeout(() => confetti.launch(), 450);      // as the doors part
+    setTimeout(() => g.remove(), 1100);
+  });
+}
 
 /* ---------- boot ---------- */
 applyFinale();
 setInterval(applyFinale, 60 * 1000);
-setTimeout(() => confetti.launch(), 800);        // once the gates have parted
 renderHouses();
 renderCup();
 renderBoard();
 renderFame();
 renderEvents();
 mountFeed();
-loadLedger(); loadTrophy(); loadEvents();
+openGates(Promise.allSettled([
+  loadLedger(), loadTrophy(), loadEvents(),
+  document.fonts ? document.fonts.ready : null,
+  new Promise(r => document.readyState === "complete" ? r() : addEventListener("load", r, { once: true })),
+]));
 setInterval(() => { loadLedger(); loadTrophy(); loadEvents(); }, Math.max(1, CONFIG.refreshMinutes) * 60 * 1000);
 </script>
 </body>
