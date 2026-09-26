@@ -1545,6 +1545,18 @@ function openGates(ready) {
   });
 }
 
+/* ---------- ?debug — lists anything that extends below the footer (for chasing layout bugs) ---------- */
+if (new URLSearchParams(location.search).has("debug")) setTimeout(() => {
+  const foot = document.querySelector("footer").getBoundingClientRect().bottom + scrollY;
+  const tag = (e) => e.tagName.toLowerCase() + (e.id ? "#" + e.id : "") + (typeof e.className === "string" && e.className ? "." + e.className.trim().split(/\s+/).join(".") : "");
+  const beyond = [...document.querySelectorAll("body, body *")].map(e => { const r = e.getBoundingClientRect(); return [tag(e), Math.round(r.bottom + scrollY - foot), Math.round(r.height), getComputedStyle(e).position]; }).filter(x => x[1] > 4);
+  const pre = document.createElement("pre");
+  pre.style.cssText = "position:relative;z-index:99;margin:20px 0;padding:12px;background:#000;color:#8FE3B6;font:14px/1.4 monospace;white-space:pre-wrap;word-break:break-all";
+  pre.textContent = `footer bottom ${Math.round(foot)}  body bottom ${Math.round(document.body.getBoundingClientRect().bottom + scrollY)}  document height ${document.documentElement.scrollHeight}\n` +
+    `viewport ${innerWidth}x${innerHeight}\n\nbelow the footer (element, px past footer, height, position):\n` + (beyond.map(x => x.join("  ")).join("\n") || "nothing");
+  document.body.appendChild(pre); console.log(pre.textContent);
+}, 4000);
+
 /* ---------- boot ---------- */
 applyFinale();
 setInterval(applyFinale, 60 * 1000);
