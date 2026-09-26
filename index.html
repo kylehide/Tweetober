@@ -285,7 +285,16 @@
   .pledge-btn { display: inline-flex; align-items: center; gap: 10px; font: inherit; font-size: .9rem; letter-spacing: .12em; text-transform: uppercase; cursor: pointer;
     padding: 10px 18px; color: var(--ink); background: var(--surface-2); border: 1px solid var(--line-strong); transition: border-color .15s ease, color .15s ease; }
   .pledge-btn:hover { color: var(--gold-bright); border-color: var(--gold-bright); }
-  .pledge-btn[disabled] { cursor: default; color: var(--gold); border-color: var(--line); }
+  .pledge-btn[disabled] { cursor: default; }
+  .pledge-btn.sworn { position: relative; overflow: hidden; color: #1E160C; border-color: var(--gold-bright);
+    background: linear-gradient(180deg, #FFF0B8 0%, var(--gold-bright) 28%, var(--gold) 55%, var(--gold-deep) 100%);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.7), inset 0 -1px 0 rgba(0,0,0,.35), 0 0 0 4px var(--gold-glow), 0 6px 14px rgba(0,0,0,.5);
+    text-shadow: 0 1px 0 rgba(255,255,255,.35); }
+  .pledge-btn.sworn::after { content: ""; position: absolute; top: -50%; bottom: -50%; width: 40%; left: -60%; pointer-events: none;
+    background: linear-gradient(105deg, transparent 20%, rgba(255,255,255,.75) 50%, transparent 80%); transform: skewX(-20deg);
+    animation: sheen 2.6s ease-in-out .3s infinite; }
+  @keyframes sheen { 0% { left: -60%; } 45%, 100% { left: 130%; } }
+  @media (prefers-reduced-motion: reduce) { .pledge-btn.sworn::after { animation: none; } }
   .pledge-note { margin: 0; font-size: .82rem; color: var(--ink-3); letter-spacing: .04em; min-height: 1.2em; }
   .seal { position: absolute; right: 18px; bottom: 16px; width: 92px; height: 92px; pointer-events: none; opacity: 0; transform: scale(2.2) rotate(-25deg);
     filter: drop-shadow(0 4px 6px rgba(0,0,0,.6)); z-index: 2; }
@@ -1274,15 +1283,21 @@ const fanfare = (() => {
     });
     lp.connect(out); out.connect(ac.destination);
   }
-  function play() {
+  const N = { C4: 261.63, F4: 349.23, G4: 392, A4: 440, C5: 523.25, E5: 659.25, F5: 698.46, G5: 783.99, C6: 1046.5 };
+  const TUNES = {
+    // ta-ta-ta-TAAA, ta-ta-ta-TAAA (higher), then the chord
+    herald: [[N.G4, 0, .14], [N.G4, .16, .14], [N.G4, .32, .14], [N.C5, .5, .42],
+             [N.C5, 1.0, .14], [N.C5, 1.16, .14], [N.C5, 1.32, .14], [N.E5, 1.5, .42],
+             [N.G5, 2.05, .8], [N.E5, 2.05, .8], [N.C5, 2.05, .8], [N.C6, 2.35, .55]],
+    // the oath: three slow rising calls, then a long solemn chord
+    oath: [[N.C4, 0, .5], [N.F4, .55, .5], [N.A4, 1.1, .65],
+           [N.F4, 1.85, 1.3], [N.A4, 1.85, 1.3], [N.C5, 1.85, 1.3], [N.F5, 2.05, 1.1]],
+  };
+  function play(kind) {
     try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); } catch { return false; }
     if (ac.state === "suspended") ac.resume();
-    const t = ac.currentTime + 0.02, N = { G4: 392, C5: 523.25, E5: 659.25, G5: 783.99, C6: 1046.5 };
-    // ta-ta-ta-TAAA, ta-ta-ta-TAAA (higher), then the chord
-    const seq = [[N.G4, 0, .14], [N.G4, .16, .14], [N.G4, .32, .14], [N.C5, .5, .42],
-                 [N.C5, 1.0, .14], [N.C5, 1.16, .14], [N.C5, 1.32, .14], [N.E5, 1.5, .42],
-                 [N.G5, 2.05, .8], [N.E5, 2.05, .8], [N.C5, 2.05, .8], [N.C6, 2.35, .55]];
-    seq.forEach(([f, at, d]) => voice(f, t + at, d, 0.16));
+    const t = ac.currentTime + 0.02;
+    (TUNES[kind] || TUNES.herald).forEach(([f, at, d]) => voice(f, t + at, d, kind === "oath" ? 0.14 : 0.16));
     return true;
   }
   play.ready = () => !!ac && ac.state === "running";
@@ -1304,9 +1319,9 @@ const fanfare = (() => {
   // counted: a real press of the button (plays sound, adds to the shared count).
   // Uncounted heralds (milestones) only make sound if the browser has already let the page play audio.
   // counted: a press of the button (sound + shared count). "loud": sound without the count (the oath).
-  window.herald = function (counted, loud) {
+  window.herald = function (counted, loud, tune) {
     if (btn.classList.contains("playing")) return;
-    if (counted || loud) { if (!fanfare()) return; } else if (fanfare.ready()) fanfare();
+    if (counted || loud) { if (!fanfare(tune)) return; } else if (fanfare.ready()) fanfare(tune);
     clearTimeout(tm1); clearTimeout(tm2);
     btn.classList.add("playing"); row.classList.remove("fading"); row.classList.remove("playing"); void row.offsetWidth; row.classList.add("playing");
     if (counted) tally();
@@ -1395,7 +1410,7 @@ function applyFinale() {
   const btn = $("#pledgeBtn"), label = $("#pledgeLabel"), note = $("#pledgeNote"), seal = $("#seal"), panel = document.querySelector(".honor"); if (!btn || !seal) return;
   const when = (t) => new Date(t).toLocaleString("en-US", { month: "long", day: "numeric" });
   const sworn = (t, fresh) => {
-    btn.disabled = true; label.textContent = "Oath sworn";
+    btn.disabled = true; label.textContent = "Oath sworn"; btn.classList.add("sworn");
     note.textContent = `You swore the Honor Code on ${when(t)}.`;
     seal.classList.add(fresh ? "stamp" : "set");
     if (fresh) { panel.classList.remove("thud"); void panel.offsetWidth; panel.classList.add("thud"); }
@@ -1406,7 +1421,7 @@ function applyFinale() {
     const t = Date.now();
     try { localStorage.setItem("tweetober-oath", String(t)); } catch {}
     sworn(t, true);
-    if (window.herald) window.herald(false, true);   // the trumpets sound for a sworn oath
+    if (window.herald) window.herald(false, true, "oath");   // the trumpets sound a solemn call for a sworn oath
   });
 })();
 
