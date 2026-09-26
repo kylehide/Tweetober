@@ -42,6 +42,8 @@
   a, button, [role="radio"], label, summary { cursor: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAA00lEQVR42uXWIQ7CMBTG8f8IB5hATO0EU0g805wBwaEQOwN6eCQKgSQYEAhu0KkHC0lZy1heC09VvC19v7RfSp6lJs9Sg1KNUK7HBrQk1AXGsjjUSwCKsjIA5+s9+S8BLQl1gaR9C9oCUkVZMaREOAI2icvpCMB8tRtEIjyBb0vIf2z94Qr0lZDvtuvZ2/7wBXwlXCePT8BVwnXyeAVsp1zKNyfCew/0nXwxnQCw2WN+6wy43m/pe0rcIs8B32TzlYhHQMr3RdQlGG8Sfpofr5LqAg05zpzV4kF+AQAAAABJRU5ErkJggg==") 1 1, pointer; }
   input, textarea { cursor: text; }
   [hidden] { display: none !important; }
+  /* Twitter's embed script appends utility iframes to the end of <body>; Firefox and Safari count them toward the page height */
+  body > iframe { display: none !important; position: fixed !important; top: 0 !important; left: 0 !important; width: 0 !important; height: 0 !important; }
   html, body { margin: 0; }
   html {
     font-size: 22px;
