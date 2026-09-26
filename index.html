@@ -694,13 +694,13 @@
           <p class="pledge-note" id="pledgeNote" aria-live="polite"></p>
         </div>
         <svg class="seal" id="seal" viewBox="0 0 100 100" aria-hidden="true">
-          <path d="M50 4 l7 6 9-2 4 8 9 3-1 9 7 6-5 8 3 9-8 4-2 9-9-1-6 7-8-5-8 5-6-7-9 1-2-9-8-4 3-9-5-8 7-6-1-9 9-3 4-8 9 2z" fill="#A6182E"/>
-          <path d="M50 4 l7 6 9-2 4 8 9 3-1 9 7 6-5 8 3 9-8 4-2 9-9-1-6 7-8-5-8 5-6-7-9 1-2-9-8-4 3-9-5-8 7-6-1-9 9-3 4-8 9 2z" fill="none" stroke="#7A0F22" stroke-width="1.5"/>
-          <circle cx="50" cy="50" r="33" fill="none" stroke="#D8546B" stroke-width="1.2" opacity=".7"/>
-          <circle cx="50" cy="50" r="30" fill="none" stroke="#7A0F22" stroke-width="1"/>
-          <ellipse cx="40" cy="36" rx="14" ry="8" fill="#fff" opacity=".12" transform="rotate(-30 40 36)"/>
-          <text x="50" y="62" text-anchor="middle" font-family="Pirata One, serif" font-size="36" fill="#F2D272" stroke="#7A0F22" stroke-width=".6">T5</text>
-          <text x="50" y="80" text-anchor="middle" font-family="VT323, monospace" font-size="9" letter-spacing="1.5" fill="#F2D272" opacity=".9">SWORN</text>
+          <defs><radialGradient id="wax" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#C42A42"/><stop offset=".6" stop-color="#A6182E"/><stop offset="1" stop-color="#7A0F22"/></radialGradient></defs>
+          <path d="M50.0 4.0 C53.1 4.0 56.0 8.3 59.3 9.1 C62.7 9.8 67.2 7.2 70.0 8.6 C72.8 9.9 73.5 15.0 76.2 17.2 C78.9 19.3 84.0 18.9 86.0 21.3 C87.9 23.8 86.4 28.7 87.8 31.8 C89.3 34.9 94.2 36.7 94.8 39.8 C95.5 42.8 92.0 46.6 92.0 50.0 C92.0 53.4 95.5 57.2 94.8 60.2 C94.2 63.3 89.3 65.1 87.8 68.2 C86.4 71.3 87.9 76.2 86.0 78.7 C84.0 81.1 78.9 80.7 76.2 82.8 C73.5 85.0 72.8 90.1 70.0 91.4 C67.2 92.8 62.7 90.2 59.3 90.9 C56.0 91.7 53.1 96.0 50.0 96.0 C46.9 96.0 44.0 91.7 40.7 90.9 C37.3 90.2 32.8 92.8 30.0 91.4 C27.2 90.1 26.5 85.0 23.8 82.8 C21.1 80.7 16.0 81.1 14.0 78.7 C12.1 76.2 13.6 71.3 12.2 68.2 C10.7 65.1 5.8 63.3 5.2 60.2 C4.5 57.2 8.0 53.4 8.0 50.0 C8.0 46.6 4.5 42.8 5.2 39.8 C5.8 36.7 10.7 34.9 12.2 31.8 C13.6 28.7 12.1 23.8 14.0 21.3 C16.0 18.9 21.1 19.3 23.8 17.2 C26.5 15.0 27.2 9.9 30.0 8.6 C32.8 7.2 37.3 9.8 40.7 9.1 C44.0 8.3 46.9 4.0 50.0 4.0Z" fill="url(#wax)" stroke="#6E0C1E" stroke-width="1.2" stroke-linejoin="round"/>
+          <circle cx="50" cy="50" r="34" fill="none" stroke="#7A0F22" stroke-width="1.6"/>
+          <circle cx="50" cy="50" r="31.5" fill="none" stroke="#D8546B" stroke-width=".8" opacity=".55"/>
+          <ellipse cx="38" cy="30" rx="11" ry="5" fill="#fff" opacity=".13" transform="rotate(-35 38 30)"/>
+          <text x="50" y="57" text-anchor="middle" font-family="Pirata One, serif" font-size="30" fill="#F2D272" stroke="#6E0C1E" stroke-width=".5">T5</text>
+          <text x="50" y="72" text-anchor="middle" font-family="VT323, monospace" font-size="8.5" letter-spacing="1.6" fill="#F2D272" opacity=".9">SWORN</text>
         </svg>
       </div>
     </div>
@@ -1303,9 +1303,10 @@ const fanfare = (() => {
   }
   // counted: a real press of the button (plays sound, adds to the shared count).
   // Uncounted heralds (milestones) only make sound if the browser has already let the page play audio.
-  window.herald = function (counted) {
+  // counted: a press of the button (sound + shared count). "loud": sound without the count (the oath).
+  window.herald = function (counted, loud) {
     if (btn.classList.contains("playing")) return;
-    if (counted) { if (!fanfare()) return; } else if (fanfare.ready()) fanfare();
+    if (counted || loud) { if (!fanfare()) return; } else if (fanfare.ready()) fanfare();
     clearTimeout(tm1); clearTimeout(tm2);
     btn.classList.add("playing"); row.classList.remove("fading"); row.classList.remove("playing"); void row.offsetWidth; row.classList.add("playing");
     if (counted) tally();
@@ -1405,8 +1406,7 @@ function applyFinale() {
     const t = Date.now();
     try { localStorage.setItem("tweetober-oath", String(t)); } catch {}
     sworn(t, true);
-    setTimeout(() => confetti.launch(), 250);
-    if (window.herald && fanfare.ready()) window.herald(false);
+    if (window.herald) window.herald(false, true);   // the trumpets sound for a sworn oath
   });
 })();
 
