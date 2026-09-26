@@ -396,7 +396,13 @@
   .swatch:focus-visible { outline: none; filter: drop-shadow(0 0 2px #fff) drop-shadow(0 0 2px #fff); }
   .tf-code { flex: 0 1 180px; }
   .tf-send .btn { padding-block: 10px; }
-  .tf-msg { margin: 0; flex: 1 1 200px; font-size: .85rem; color: var(--ink-3); min-height: 1.2em; }
+  /* the town crier's bell on the Post button swings when a message goes out */
+  .btn .bell { fill: currentColor; transform-origin: 50% 10%; }
+  .btn.ringing .bell { animation: ring .9s ease-in-out; }
+  @keyframes ring { 0% { transform: rotate(0); } 15% { transform: rotate(22deg); } 35% { transform: rotate(-18deg); } 55% { transform: rotate(12deg); } 75% { transform: rotate(-6deg); } 100% { transform: rotate(0); } }
+  .tf-msg { margin: 0; flex: 1 1 0; min-width: 0; font-size: .85rem; color: var(--ink-3); }
+  .tf-msg:empty { display: none; }   /* nothing to say, nothing to take up space */
+  @media (max-width: 560px) { .tf-msg { flex-basis: 100%; } }   /* on phones a status line sits under the button */
   .tf-msg.err { color: var(--h500); }
   .panel h2 { margin: 0; font-size: 1.24rem; }
   .feed-slot { min-height: 400px; border: 1px dashed var(--line-strong); padding: 6px; background: var(--surface-2); }
@@ -641,7 +647,7 @@ try { if (sessionStorage.getItem("tweetober-gates") === "1") document.getElement
             <label class="tf-field tf-code" id="tfCodeWrap" hidden><span class="eyebrow">Password</span>
               <input id="tfCode" type="password" autocapitalize="off" spellcheck="false" placeholder="••••••">
             </label>
-            <button class="btn" type="submit" id="tfSend"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M23.96 3.03 L21.32 2.58 L19.78 2.43 L18.88 2.43 L18.84 2.39 L16.99 2.47 L15.07 2.77 L13.90 3.07 L13.11 3.33 L12.89 3.60 L12.21 4.65 L11.49 6.20 L11.42 6.05 L11.34 5.63 L11.34 4.58 L11.42 4.09 L11.30 4.09 L10.17 4.65 L9.08 5.29 L7.76 6.16 L6.74 6.91 L5.65 7.86 L5.16 9.51 L5.01 10.42 L4.97 11.17 L4.94 11.21 L4.86 11.17 L4.60 10.64 L4.37 10.00 L4.26 9.36 L4.18 9.36 L3.58 10.12 L3.20 10.68 L2.60 11.81 L2.22 12.83 L1.96 14.22 L1.96 15.54 L2.11 16.33 L2.19 16.33 L2.86 15.50 L4.26 13.92 L5.88 12.26 L7.42 10.87 L9.16 9.51 L11.19 8.19 L12.92 7.29 L14.73 6.54 L15.97 6.12 L16.09 6.16 L13.53 7.67 L10.96 9.40 L9.00 10.91 L6.86 12.79 L4.71 14.98 L2.90 17.12 L1.92 18.44 L0.98 19.84 L0.15 21.19 L0.00 21.53 L0.30 21.57 L0.87 21.53 L1.58 21.31 L1.77 20.82 L2.64 19.20 L3.28 18.25 L3.81 17.61 L5.31 17.65 L6.07 17.58 L7.35 17.31 L8.29 17.01 L9.38 16.56 L10.74 15.84 L12.02 15.01 L13.45 13.92 L13.60 13.77 L13.60 13.70 L12.43 13.32 L11.72 12.87 L11.76 12.83 L13.22 12.79 L14.32 12.60 L15.18 12.38 L17.48 10.00 L21.55 5.52 L23.96 3.11Z" fill="currentColor" stroke="currentColor" stroke-width=".15" stroke-linejoin="round"/></svg>Post</button>
+            <button class="btn" type="submit" id="tfSend"><svg class="bell" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M10.4 1h3.2v3h-3.2z"/><path d="M12 3.8C7.6 3.8 5 7.4 5 11.2V16h14v-4.8C19 7.4 16.4 3.8 12 3.8z"/><path d="M3.2 16.2h17.6v2.4H3.2z"/><circle cx="12" cy="21" r="2.1"/></svg>Post</button>
             <p class="tf-msg" id="tfMsg" aria-live="polite"></p>
           </div>
         </form>
@@ -1273,8 +1279,26 @@ function mountFeed() {
       everOnline = true; setStatus(true, "Live");
     } catch (e) { if (!everOnline) { showSample(); return; } setStatus(false, "Reconnecting…"); }
   }
+  // a hand-bell: three bright partials that die away, like a small brass bell
+  const ding = (() => {
+    let ac = null;
+    return () => {
+      try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); } catch { return; }
+      if (ac.state === "suspended") ac.resume();
+      const t = ac.currentTime + 0.01;
+      [[1318, .28, 1.1], [3300, .12, .7], [5300, .06, .35]].forEach(([f, g, d]) => {
+        const o = ac.createOscillator(), v = ac.createGain(); o.type = "sine"; o.frequency.value = f;
+        v.gain.setValueAtTime(0, t); v.gain.linearRampToValueAtTime(g, t + 0.006); v.gain.exponentialRampToValueAtTime(0.0008, t + d);
+        o.connect(v); v.connect(ac.destination); o.start(t); o.stop(t + d + 0.05);
+      });
+    };
+  })();
+  const ringBell = () => { ding(); sendBtn.classList.remove("ringing"); void sendBtn.offsetWidth; sendBtn.classList.add("ringing"); };
+
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
+    if (!nameIn.value.trim() || !bodyIn.value.trim()) return;
+    ringBell();
     if (sample) {
       const fm = bodyIn.value.trim().match(/^\/flip\b\s*(.*)$/i);
       if (fm) {   // the preview can still flip a coin, just for this viewer
