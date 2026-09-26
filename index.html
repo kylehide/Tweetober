@@ -306,7 +306,8 @@
   .honor.thud { animation: thud .35s ease-out; }
   @keyframes thud { 0% { transform: none; } 30% { transform: translateY(3px) scale(.995); } 100% { transform: none; } }
   @media (prefers-reduced-motion: reduce) { .seal.stamp { animation: none; opacity: 1; transform: scale(1) rotate(-12deg); } .honor.thud { animation: none; } }
-  @media (max-width: 860px) { .seal { width: 76px; height: 76px; right: 12px; bottom: 12px; } }
+  /* On narrow screens the seal sits in the flow beneath the date instead of over it */
+  @media (max-width: 860px) { .seal { position: static; width: 80px; height: 80px; margin-top: 4px; } .seal:not(.set):not(.stamp) { display: none; } }
   @media (max-width: 860px) { .code-grid { grid-template-columns: 1fr; } }
 
   /* ---------- Decree ---------- */
@@ -431,7 +432,7 @@
   .finale .banner .sub { color: #FFB060; text-shadow: 0 0 14px rgba(255,140,42,.35); }
   .finale .rule { color: #C9A2FF; }
   .finale .rule::before { background: linear-gradient(90deg, transparent, #B48CFF); } .finale .rule::after { background: linear-gradient(90deg, #B48CFF, transparent); }
-  /* Tea Room: house flair beside a name, coin flips */
+  /* Tea Time: house flair beside a name, coin flips */
   .tavern .flair { display: inline-block; width: 14px; height: 13px; margin-left: 6px; vertical-align: -1px; background: center / contain no-repeat; filter: drop-shadow(0 1px 0 rgba(0,0,0,.6)); }
   .tavern .flair.h333 { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 22'%3E%3Cpath d='M12 21 C4 15 1 11 1 6.5 A5.5 5.5 0 0 1 12 4.5 A5.5 5.5 0 0 1 23 6.5 C23 11 20 15 12 21Z' fill='%23C9C6C0' stroke='%23F4F3F0' stroke-width='1'/%3E%3C/svg%3E"); }
   .tavern .flair.h500 { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 22'%3E%3Cpath d='M12 21 C4 15 1 11 1 6.5 A5.5 5.5 0 0 1 12 4.5 A5.5 5.5 0 0 1 23 6.5 C23 11 20 15 12 21Z' fill='%23F26F96' stroke='%23FFB3C7' stroke-width='1'/%3E%3C/svg%3E"); }
@@ -578,7 +579,7 @@
       </div>
       <div class="panel board-panel">
         <div class="board-head">
-          <h2 class="heading">The Tea Room</h2>
+          <h2 class="heading">Tea Time</h2>
           <span class="board-status" id="tavernStatus" aria-live="polite"></span>
         </div>
         <p class="feed-note" style="margin-top:-6px">Spill it. Messages appear for everyone within a few seconds. Type <code>/flip</code> to toss a coin.</p>
@@ -751,7 +752,7 @@ const CONFIG = {
   // How often to re-read the sheet, in minutes
   refreshMinutes: 5,
 
-  // The Tea Room's server address. On the Cloudflare site this is just "/api/messages".
+  // Tea Time's server address. On the Cloudflare site this is just "/api/messages".
   hallApi: "/api/messages",
   hallPollSeconds: 5,
   // How many names to show on the Scroll of Honor
@@ -1144,7 +1145,7 @@ function mountFeed() {
   document.body.appendChild(s);
 }
 
-/* ---------- The Tea Room (live messages) ---------- */
+/* ---------- Tea Time (live messages) ---------- */
 (function tavern() {
   const list = $("#tavern"), form = $("#tavernForm"); if (!list || !form) return;
   const COLORS = ["#F26F96", "#E6E4E0", "#F2D272", "#B99CFF", "#8CC8FF", "#8FE3B6", "#FF9D5C", "#FFB3C7"];
@@ -1217,7 +1218,7 @@ function mountFeed() {
       { id: 2, name: "trinity333__", color: "#E6E4E0", body: "333 does not fear numbers. 333 IS numbers.", created: now - 300000 },
       { id: 3, name: "mickal500", color: "#F26F96", body: "see you on the scroll of honor ❤", created: now - 60000 },
     ], true);
-    list.insertAdjacentHTML("afterbegin", `<li class="sample">Sample messages · the live Tea Room runs on the Tweetober site</li>`);
+    list.insertAdjacentHTML("afterbegin", `<li class="sample">Sample messages · the live Tea Time board runs on the Tweetober site</li>`);
     setStatus(false, "Preview");
   }
   async function poll(full) {
