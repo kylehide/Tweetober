@@ -456,6 +456,13 @@
   }
   .board-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
   .board-head h2 { margin: 0; font-size: 1.24rem; }
+  .board-side { display: inline-flex; align-items: center; gap: 14px; }
+  .chime-btn { display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px; font: inherit; font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); background: none; border: 1px solid var(--line-strong); cursor: pointer; }
+  .chime-btn:hover { color: var(--gold-bright); border-color: var(--gold-bright); }
+  .chime-btn .mute { display: none; }
+  .chime-btn[aria-pressed="false"] { color: var(--ink-3); } .chime-btn[aria-pressed="false"] .mute { display: inline; }
+  .chime-btn.ringing svg { animation: bellSwing .7s ease-out; transform-origin: 50% 10%; }
+  @keyframes bellSwing { 0% { transform: rotate(0); } 15% { transform: rotate(22deg); } 35% { transform: rotate(-18deg); } 55% { transform: rotate(12deg); } 75% { transform: rotate(-6deg); } 100% { transform: rotate(0); } }
   .board-status { font-size: .75rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
   .board-status.live::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #8FE3B6; margin-right: 7px; box-shadow: 0 0 6px #8FE3B6; vertical-align: 1px; }
   /* the board is an old sheet of paper with torn, singed edges (a 9-slice keeps the edges crisp at any size) */
@@ -895,7 +902,7 @@ try { if (sessionStorage.getItem("tweetober-gates") === "1") document.getElement
       <div class="panel board-panel">
         <div class="board-head">
           <h2 class="heading">The Common House</h2>
-          <span class="board-status" id="tavernStatus" aria-live="polite"></span>
+          <span class="board-side"><button type="button" class="chime-btn" id="chimeBtn" aria-pressed="true" title="Ring a bell when a new message arrives"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/><path class="mute" d="M3 3l18 18"/></svg><span id="chimeLabel">Bell on</span></button><span class="board-status" id="tavernStatus" aria-live="polite"></span></span>
         </div>
         <p class="feed-note" style="margin-top:-6px">Where both houses gather. Say your piece and everyone sees it within a few seconds. Type <code>/flip</code> to toss a coin.</p>
         <ol class="tavern" id="tavern" aria-label="Messages"></ol>
@@ -1816,6 +1823,8 @@ const emblemSrc = (code) => "data:image/svg+xml," + encodeURIComponent(emblemSvg
   };
 
   let lastId = 0, online = false, sample = false, everOnline = false;
+  let lastPost = 0;
+  const mine = new Set();   // ids of messages posted from this page, which shouldn't ring the bell
   const atBottom = () => list.scrollHeight - list.scrollTop - list.clientHeight < 40;
   function render(msgs, replace) {
     const stick = replace || atBottom();
@@ -1849,16 +1858,22 @@ const emblemSrc = (code) => "data:image/svg+xml," + encodeURIComponent(emblemSvg
       const data = await r.json();
       if (!r.ok) throw new Error(data.error || r.status);
       codeWrap.hidden = !data.needsCode || !!savedCode();
-      render(data.messages || [], full || !lastId);
+      const before = lastId, got = data.messages || [];
+      render(got, full || !lastId);
+      if (before && got.some(m => Number(m.id) > before && !mine.has(Number(m.id)) && !(Date.now() - lastPost < 6000 && m.name === nameIn.value.trim()))) chime();
       everOnline = true; setStatus(true, "Live");
     } catch (e) { if (!everOnline) { showSample(); return; } setStatus(false, "Reconnecting…"); }
   }
+  // one sound engine for the board. Browsers only allow sound after the visitor has tapped or typed on the page,
+  // so it wakes up on their first touch; until then new-message bells stay silent.
+  let ac = null;
+  const audio = () => { try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); } catch { return null; } if (ac.state === "suspended") ac.resume(); return ac; };
+  const wake = () => { audio(); removeEventListener("pointerdown", wake, true); removeEventListener("keydown", wake, true); };
+  addEventListener("pointerdown", wake, true); addEventListener("keydown", wake, true);
   // a hand-bell: three bright partials that die away, like a small brass bell
   const ding = (() => {
-    let ac = null;
     return () => {
-      try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); } catch { return; }
-      if (ac.state === "suspended") ac.resume();
+      if (!audio()) return;
       const t = ac.currentTime + 0.01;
       [[1318, .28, 1.1], [3300, .12, .7], [5300, .06, .35]].forEach(([f, g, d]) => {
         const o = ac.createOscillator(), v = ac.createGain(); o.type = "sine"; o.frequency.value = f;
@@ -1867,12 +1882,32 @@ const emblemSrc = (code) => "data:image/svg+xml," + encodeURIComponent(emblemSvg
       });
     };
   })();
+  // someone else's message arrived: a softer two-note chapel chime (different from the bell you hear when you post)
+  const chimeBtn = $("#chimeBtn"), chimeLabel = $("#chimeLabel");
+  let chimeOn = store.get("tweetober-chime") !== "off", lastChime = 0;
+  const showChime = () => { chimeBtn.setAttribute("aria-pressed", String(chimeOn)); chimeLabel.textContent = chimeOn ? "Bell on" : "Bell off"; };
+  showChime();
+  function chime() {
+    if (!chimeOn || document.hidden || Date.now() - lastChime < 3000) return;
+    const a = audio(); if (!a || a.state !== "running") return;
+    lastChime = Date.now();
+    const t = a.currentTime + 0.02;
+    [[1046.5, 0], [784, 0.22]].forEach(([f, at]) => {
+      [[1, .16, 1.6], [2.76, .05, .8], [5.4, .02, .4]].forEach(([m, g, d]) => {
+        const o = a.createOscillator(), v = a.createGain(); o.type = "sine"; o.frequency.value = f * m;
+        v.gain.setValueAtTime(0, t + at); v.gain.linearRampToValueAtTime(g, t + at + 0.008); v.gain.exponentialRampToValueAtTime(0.0006, t + at + d);
+        o.connect(v); v.connect(a.destination); o.start(t + at); o.stop(t + at + d + 0.05);
+      });
+    });
+    chimeBtn.classList.remove("ringing"); void chimeBtn.offsetWidth; chimeBtn.classList.add("ringing");
+  }
+  chimeBtn.addEventListener("click", () => { chimeOn = !chimeOn; store.set("tweetober-chime", chimeOn ? "" : "off"); showChime(); if (chimeOn) { lastChime = 0; chime(); } });
   const ringBell = () => { ding(); sendBtn.classList.remove("ringing"); void sendBtn.offsetWidth; sendBtn.classList.add("ringing"); };
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     if (!nameIn.value.trim() || !bodyIn.value.trim()) return;
-    ringBell();
+    ringBell(); lastPost = Date.now();
     if (sample) {
       const fm = bodyIn.value.trim().match(/^\/flip\b\s*(.*)$/i);
       if (fm) {   // the preview can still flip a coin, just for this viewer
@@ -1895,7 +1930,7 @@ const emblemSrc = (code) => "data:image/svg+xml," + encodeURIComponent(emblemSvg
       if (!codeWrap.hidden && code) { store.set("tweetober-code", code); codeWrap.hidden = true; }
       store.set("tweetober-name", nameIn.value.trim());
       bodyIn.value = ""; count.textContent = "0 / 280"; msg.textContent = "";
-      if (data.message) { render([data.message], false); list.scrollTop = list.scrollHeight; }
+      if (data.message) { mine.add(Number(data.message.id)); render([data.message], false); list.scrollTop = list.scrollHeight; }
     } catch { msg.textContent = "Couldn't reach the board. Check your connection."; msg.classList.add("err"); }
     finally { sendBtn.disabled = false; }
   });
