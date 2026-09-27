@@ -610,7 +610,28 @@
   .post.embed .twitter-tweet { margin: 0 auto !important; max-width: 100%; }
   .post.embed blockquote.twitter-tweet:not(.twitter-tweet-rendered) { color: var(--ink); font-size: .95rem; padding: 8px 4px 12px; border: 0; }
   .post.embed blockquote.twitter-tweet:not(.twitter-tweet-rendered) a { color: var(--ink); text-decoration: none; }
-  .fame { gap: 18px; padding: 4px; }
+  /* Trophy tweets drawn by the page: the plaque is the tweet's only frame */
+  .post.tweet { gap: 9px; padding: 12px 16px 12px; }
+  .post.tweet .tw-by, .post.tweet .tw-text, .post.tweet .tw-foot { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; letter-spacing: normal; }
+  .tw-by { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .post.tweet .gt-av { width: 36px; height: 36px; flex: none; border-color: var(--hc); }
+  .tw-who { display: grid; min-width: 0; line-height: 1.2; }
+  .tw-name { font-weight: 700; font-size: .84rem; color: var(--hc); text-decoration: none; overflow-wrap: anywhere; }
+  .post:not(.h333):not(.h500) .tw-name { color: var(--ink); }
+  .tw-handle { font-size: .74rem; color: var(--ink-3); overflow-wrap: anywhere; }
+  .tw-text { margin: 0; font-size: .86rem; line-height: 1.4; color: var(--ink); white-space: pre-line; overflow-wrap: anywhere; }
+  .tw-text a { color: var(--gold); text-decoration: none; } .tw-text a.mention.h333 { color: var(--h333); } .tw-text a.mention.h500 { color: var(--h500); }
+  .post.tweet .gt-media { margin-top: 0; max-width: 100%; border-radius: 8px; }
+  .tw-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; font-size: .74rem; color: var(--ink-3); }
+  .tw-foot a { margin-left: auto; color: var(--gold); text-decoration: none; } .tw-foot a:hover { color: var(--gold-bright); }
+  .post.wait .text { font-size: .9rem; }
+  .post .top, .post .text, .post .foot { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; letter-spacing: normal; }
+  .post .top { font-size: .84rem; } .post .text { font-size: .86rem; line-height: 1.4; } .post .foot { font-size: .74rem; color: var(--ink-3); }
+  .fame { gap: 18px; padding: 6px 10px 6px 6px; max-height: 640px; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; scrollbar-color: var(--gold-deep) transparent; scrollbar-width: thin; }
+  /* once it runs long it scrolls; the bottom edge fades while there is more below */
+  .fame.more { -webkit-mask-image: linear-gradient(#000 calc(100% - 56px), transparent); mask-image: linear-gradient(#000 calc(100% - 56px), transparent); }
+  .fame-hint { margin: -4px 0 0; font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); text-align: center; }
+  @media (max-width: 640px) { .fame { max-height: 560px; } }
   @media (max-width: 640px) { .post .laurel { margin-left: 0; } }
   .post:not(.h333):not(.h500) .plaque-head:not(:has(.laurel)) { display: none; }
   .stamp { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: .85rem; color: var(--ink-3); }
@@ -854,6 +875,7 @@ try { if (sessionStorage.getItem("tweetober-gates") === "1") document.getElement
         <h2 class="heading">The Trophy Room</h2>
         <p class="feed-note" style="margin-top:-6px">The tweets that took it to another level.</p>
         <div class="fame" id="fame"></div>
+        <p class="fame-hint" id="fameHint" hidden></p>
       </div>
       <div class="panel board-panel">
         <div class="board-head">
@@ -1410,7 +1432,7 @@ async function loadTrophy() {
     const rows = readTab(await r.text(), ["url", "handle", "house", "honor", "text", "likes", "reposts", "date"],
       { url: ["link", "url"], handle: ["handle", "user"], house: ["house"], honor: ["honor", "title", "award"], text: ["tweet", "text"], likes: ["like"], reposts: ["retweet", "repost"], date: ["date"] });
     TROPHY = rows.filter(p => (p.handle && p.text) || /\/status\/\d+/.test(p.url)).map(p => ({ ...p, handle: (p.handle || (p.url.match(/(?:x|twitter)\.com\/([^/]+)\/status/i) || [])[1] || "").replace(/^@/, ""), date: prettyDate(p.date), likes: p.likes ? num(p.likes) : null, reposts: p.reposts ? num(p.reposts) : null }));
-    renderFame();
+    renderFame(); trophyAsked = ""; loadTrophyTweets();
   } catch (e) { console.warn("Trophy Room tab not read", e); }
 }
 async function loadEvents() {
@@ -1425,6 +1447,7 @@ async function loadEvents() {
 }
 
 /* ---------- The Trophy Room ---------- */
+let TROPHY_TWEETS = {}, trophyServer = null;   // trophyServer: null until /api/tweets has answered, then true/false   // tweet id -> tweet from /api/tweets (empty in previews, where Twitter's embeds are used)
 function renderFame() {
   const list = TROPHY ?? (CONFIG.hallOfFame || []);
   // Each trophy hangs in a frame of its house's color: grey for 333, pink for 500.
@@ -1435,12 +1458,37 @@ function renderFame() {
     const head = `<div class="plaque-head"><span class="plaque-house"><img class="plaque-heart" alt="" aria-hidden="true"></span>${p.honor ? `<span class="laurel">${esc(p.honor)}</span>` : ""}</div>`;
     return { hk, hh, head };
   };
+  const day = (t) => t ? new Date(t).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "";
+  let embeds = 0;
   $("#fame").innerHTML = list.length ? list.map(p => {
     const statusUrl = (p.url || "").match(/^https?:\/\/(?:www\.|mobile\.)?(?:x|twitter)\.com\/(\w{1,15})\/status\/(\d+)/i);
     if (statusUrl && !p.handle) p = { ...p, handle: statusUrl[1] };
+    const tw = statusUrl && TROPHY_TWEETS[statusUrl[2]];
+    if (tw && tw.missing) return "";   // deleted or made private since it was added
+    if (tw && tw.author) p = { ...p, handle: tw.author.userName || p.handle };
     const { hk, hh, head } = plaque(p);
+    if (tw && tw.author) {
+      // our own card: the plaque is the tweet's only frame
+      const a = tw.author, link = safeUrl(tw.url) || `https://x.com/${encodeURIComponent(a.userName)}/status/${encodeURIComponent(tw.id)}`, av = safeUrl(a.avatar);
+      const text = trimMediaLink(tw.text, (tw.media || []).length);
+      return `<article class="post tweet ${hk}"${hh}><i class="corners" aria-hidden="true"></i>
+        ${head}
+        <div class="tw-by">
+          <a class="gt-av" href="${xUrl(a.userName)}" target="_blank" rel="noopener">${av ? `<img src="${av}" alt="" width="36" height="36" loading="lazy" referrerpolicy="no-referrer">` : ""}</a>
+          <div class="tw-who"><a class="tw-name" href="${xUrl(a.userName)}" target="_blank" rel="noopener">${esc(a.name || a.userName)}</a><span class="tw-handle">@${esc(a.userName)}</span></div>
+        </div>
+        ${text ? `<p class="tw-text">${linkify(text)}</p>` : ""}
+        ${mediaHtml(tw.media, link)}
+        <div class="tw-foot"><span>♥ ${fmt(tw.likes || 0)}</span><span>⟲ ${fmt(tw.retweets || 0)}</span><span class="muted">${day(tw.created)}</span><a href="${link}" target="_blank" rel="noopener">View on X ↗</a></div>
+      </article>`;
+    }
+    if (statusUrl && trophyServer === null) {
+      // waiting to hear from the server: a quiet placeholder rather than flashing Twitter's embed
+      return `<div class="post wait ${hk}"${hh}><i class="corners" aria-hidden="true"></i>${head}<div class="top"><b>@${esc(p.handle)}</b></div><p class="text muted">${p.text ? esc(p.text) : "Fetching the tweet…"}</p></div>`;
+    }
     if (statusUrl) {
-      // Embed the real tweet. The link is rewritten to twitter.com, which the widget script expects.
+      // No server to fetch it (previews): embed Twitter's own card. The link is rewritten to twitter.com, which the widget script expects.
+      embeds++;
       const canon = `https://twitter.com/${statusUrl[1]}/status/${statusUrl[2]}`;
       return `<div class="post embed ${hk}"${hh}><i class="corners" aria-hidden="true"></i>
         ${head}
@@ -1458,8 +1506,35 @@ function renderFame() {
     </${tag}>`;
   }).join("") : `<p class="empty">No tweets have earned a place here yet.</p>`;
   $("#fame").querySelectorAll(".plaque-heart").forEach(img => { img.src = emblemSrc(img.closest(".h500") ? "500" : "333"); });
-  if (window.twttr?.widgets?.load) window.twttr.widgets.load($("#fame"));
+  if (embeds && window.twttr?.widgets?.load) window.twttr.widgets.load($("#fame"));
+  fameEdge();
 }
+/* Ask the Worker for the linked tweets (cached there), then redraw with our own cards */
+let trophyAsked = "";
+async function loadTrophyTweets() {
+  const ids = (TROPHY || []).map(p => ((p.url || "").match(/\/status\/(\d+)/) || [])[1]).filter(Boolean);
+  const key = ids.join(","); if (!ids.length || key === trophyAsked) return; trophyAsked = key;
+  try {
+    const r = await fetch("/api/tweets?ids=" + key, { cache: "no-store" });
+    const d = r.ok && (r.headers.get("content-type") || "").includes("json") ? await r.json() : null;
+    if (d && Array.isArray(d.tweets)) { TROPHY_TWEETS = Object.fromEntries(d.tweets.filter(t => t && t.id).map(t => [String(t.id), t])); trophyServer = true; }
+    else if (!trophyServer) trophyServer = false;
+  } catch { if (!trophyServer) trophyServer = false; }
+  renderFame();
+}
+/* The Trophy Room scrolls once it's taller than its box: fade the bottom edge and count what's hidden below */
+function fameEdge() {
+  const f = $("#fame"), hint = $("#fameHint"); if (!f) return;
+  const n = f.querySelectorAll(".post").length;
+  const long = f.scrollHeight > f.clientHeight + 4, atEnd = f.scrollTop + f.clientHeight >= f.scrollHeight - 6;
+  f.classList.toggle("more", long && !atEnd);
+  hint.hidden = !long; hint.textContent = long ? `${n} trophies · scroll for more` : "";
+}
+(function watchFame() {
+  const f = $("#fame"); if (!f) return;
+  f.addEventListener("scroll", fameEdge, { passive: true });
+  if (window.ResizeObserver) { const ro = new ResizeObserver(fameEdge); ro.observe(f); new MutationObserver(() => f.querySelectorAll(".post").forEach(el => ro.observe(el))).observe(f, { childList: true }); }
+})();
 /* ---------- Events ---------- */
 function renderEvents() {
   const list = [...(EVENTS ?? CONFIG.events ?? [])].sort((a, b) => a.date.localeCompare(b.date));
@@ -1505,6 +1580,27 @@ function houseOfHandle(name) {
    On the live site the Worker serves the Tweetober list at /api/feed (fetched from twitterapi.io, cached).
    We draw it ourselves so names can wear their house colors. If that isn't set up, fall back to Twitter's
    own embed, and if that doesn't render either, to a card with a link to the list. */
+/* Tweet helpers shared by the Scrying Glass and the Trophy Room */
+// text -> safe HTML with links for URLs, @mentions and #hashtags
+const unent = (t) => String(t || "").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&");   // Twitter sends text HTML-escaped
+const linkify = (txt) => esc(unent(txt))
+  .replace(/https?:\/\/[^\s<]+/g, (u) => `<a href="${u}" target="_blank" rel="noopener">${u.replace(/^https?:\/\/(www\.)?/, "").slice(0, 32)}${u.length > 40 ? "…" : ""}</a>`)
+  .replace(/(^|[^\w&])@(\w{1,15})/g, (m, pre, h) => `${pre}<a class="mention ${houseOfHandle(h)}" data-hh="${h}" href="https://x.com/${h}" target="_blank" rel="noopener">@${h}</a>`)
+  .replace(/(^|[^\w&])#(\w+)/g, (m, pre, t) => `${pre}<a href="https://x.com/hashtag/${t}" target="_blank" rel="noopener">#${t}</a>`);
+const twMedia = (u) => /^https:\/\/(pbs|video)\.twimg\.com\//.test(String(u || "")) ? esc(u) : "";
+const mediaHtml = (list, link) => {
+  const items = (list || []).filter(m => twMedia(m.img) || twMedia(m.video)).slice(0, 4);
+  if (!items.length) return "";
+  const one = items.length === 1, ratio = (m) => (m.w && m.h) ? `aspect-ratio:${m.w}/${m.h};` : "";
+  return `<div class="gt-media n${items.length}">${items.map(m => {
+    const img = twMedia(m.img), vid = twMedia(m.video), style = one ? ratio(m) : "";
+    if (m.type === "gif" && vid) return `<video class="gt-m" style="${style}" src="${vid}" ${img ? `poster="${img}"` : ""} autoplay muted loop playsinline preload="metadata"></video>`;
+    if (m.type === "video" && vid) return `<div class="gt-m gt-vid" style="${style}" data-src="${vid}">${img ? `<img src="${img}" alt="" loading="lazy" referrerpolicy="no-referrer">` : ""}<button type="button" class="gt-play" aria-label="Play video">▶</button></div>`;
+    return img ? `<a class="gt-m" style="${style}" href="${link}" target="_blank" rel="noopener"><img src="${img}${/pbs\.twimg\.com\/media\//.test(img) && !/[?&]name=/.test(img) ? (img.includes("?") ? "&" : "?") + "name=small" : ""}" alt="" loading="lazy" referrerpolicy="no-referrer"></a>` : "";
+  }).join("")}</div>`;
+};
+// text ends with a t.co link that just points at the attached media; hide it when we're showing the media
+const trimMediaLink = (txt, has) => has ? String(txt || "").replace(/\s*https:\/\/t\.co\/\w+\s*$/, "") : txt;
 function mountFeed() {
   const slot = $("#feedSlot");
   const hasList = /^\d+$/.test(String(CONFIG.listId));
@@ -1514,26 +1610,6 @@ function mountFeed() {
     if (s < 60) return "now"; if (s < 3600) return `${Math.floor(s / 60)}m`; if (s < 86400) return `${Math.floor(s / 3600)}h`;
     return new Date(t).toLocaleString("en-US", { month: "short", day: "numeric" });
   };
-  // text -> safe HTML with links for URLs, @mentions and #hashtags
-  const unent = (t) => String(t || "").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&");   // Twitter sends text HTML-escaped
-  const linkify = (txt) => esc(unent(txt))
-    .replace(/https?:\/\/[^\s<]+/g, (u) => `<a href="${u}" target="_blank" rel="noopener">${u.replace(/^https?:\/\/(www\.)?/, "").slice(0, 32)}${u.length > 40 ? "…" : ""}</a>`)
-    .replace(/(^|[^\w&])@(\w{1,15})/g, (m, pre, h) => `${pre}<a class="mention ${houseOfHandle(h)}" data-hh="${h}" href="https://x.com/${h}" target="_blank" rel="noopener">@${h}</a>`)
-    .replace(/(^|[^\w&])#(\w+)/g, (m, pre, t) => `${pre}<a href="https://x.com/hashtag/${t}" target="_blank" rel="noopener">#${t}</a>`);
-  const twMedia = (u) => /^https:\/\/(pbs|video)\.twimg\.com\//.test(String(u || "")) ? esc(u) : "";
-  const mediaHtml = (list, link) => {
-    const items = (list || []).filter(m => twMedia(m.img) || twMedia(m.video)).slice(0, 4);
-    if (!items.length) return "";
-    const one = items.length === 1, ratio = (m) => (m.w && m.h) ? `aspect-ratio:${m.w}/${m.h};` : "";
-    return `<div class="gt-media n${items.length}">${items.map(m => {
-      const img = twMedia(m.img), vid = twMedia(m.video), style = one ? ratio(m) : "";
-      if (m.type === "gif" && vid) return `<video class="gt-m" style="${style}" src="${vid}" ${img ? `poster="${img}"` : ""} autoplay muted loop playsinline preload="metadata"></video>`;
-      if (m.type === "video" && vid) return `<div class="gt-m gt-vid" style="${style}" data-src="${vid}">${img ? `<img src="${img}" alt="" loading="lazy" referrerpolicy="no-referrer">` : ""}<button type="button" class="gt-play" aria-label="Play video">▶</button></div>`;
-      return img ? `<a class="gt-m" style="${style}" href="${link}" target="_blank" rel="noopener"><img src="${img}${/pbs\.twimg\.com\/media\//.test(img) && !/[?&]name=/.test(img) ? (img.includes("?") ? "&" : "?") + "name=small" : ""}" alt="" loading="lazy" referrerpolicy="no-referrer"></a>` : "";
-    }).join("")}</div>`;
-  };
-  // text ends with a t.co link that just points at the attached media; hide it when we're showing the media
-  const trimMediaLink = (txt, has) => has ? String(txt || "").replace(/\s*https:\/\/t\.co\/\w+\s*$/, "") : txt;
   const tweetHtml = (t) => {
     const a = t.author || {}, hk = houseOfHandle(a.userName);
     const link = safeUrl(t.url) || `https://x.com/${encodeURIComponent(a.userName)}/status/${encodeURIComponent(t.id)}`;
@@ -1585,7 +1661,7 @@ function mountFeed() {
   s.onload = () => { window.twttr?.widgets?.load($("#fame")); };
   document.body.appendChild(s);
 
-  slot.addEventListener("click", (e) => {
+  document.addEventListener("click", (e) => {
     const v = e.target.closest(".gt-vid"); if (!v || v.querySelector("video")) return;
     const src = twMedia(v.dataset.src); if (!src) return;
     const poster = v.querySelector("img")?.getAttribute("src") || "";
