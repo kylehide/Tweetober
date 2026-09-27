@@ -8,6 +8,9 @@
 //   GET    /api/trumpet              -> { count }   how many times the trumpet has been sounded
 //   POST   /api/trumpet              -> { count }   sound it once more
 //   GET    /api/feed                 -> { tweets, fetched }  the Tweetober list, via twitterapi.io, cached
+//   GET    /api/tweets?ids=A,B       -> { tweets }  Trophy Room tweets (only ones linked in the sheet), cached
+//   GET    /api/oath                 -> { oaths }   the Roll of the Sworn: handle + drawn signature
+//   POST   /api/oath                 -> { name, sig }  sign the Honor Code (one oath per handle)
 //
 // Settings (Cloudflare dashboard -> this Worker -> Settings -> Variables and Secrets):
 //   HALL_CODE  secret  optional. Leave unset and anyone can post. Set it (e.g. hinge) to require a password.
@@ -30,6 +33,7 @@ async function ensureTable(db) {
   await db.prepare("CREATE INDEX IF NOT EXISTS messages_who ON messages (who, created)").run();
   await db.prepare("CREATE TABLE IF NOT EXISTS counters (name TEXT PRIMARY KEY, value INTEGER NOT NULL)").run();
   await db.prepare("CREATE TABLE IF NOT EXISTS feed_cache (id INTEGER PRIMARY KEY, body TEXT NOT NULL, fetched INTEGER NOT NULL)").run();
+  await db.prepare("CREATE TABLE IF NOT EXISTS oaths (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE COLLATE NOCASE, sig TEXT NOT NULL, created INTEGER NOT NULL, who TEXT)").run();
   await db.prepare("CREATE TABLE IF NOT EXISTS tweet_cache (id TEXT PRIMARY KEY, body TEXT NOT NULL, fetched INTEGER NOT NULL)").run();
   ready = true;
 }
@@ -94,6 +98,53 @@ async function handle(request, env, url) {
     return json({ deleted: target });
   }
 
+  return json({ error: "Method not allowed." }, 405);
+}
+
+/* ---------- The Honor Code: signed oaths ----------
+   A signature is a list of pen strokes, each a flat list of x,y points on a 1000 x 300 sheet.
+   To remove one: D1 console -> DELETE FROM oaths WHERE name = 'handle'; */
+function cleanSig(sig) {
+  if (!Array.isArray(sig) || !sig.length || sig.length > 60) return null;
+  let points = 0, ink = 0;
+  const out = [];
+  for (const stroke of sig) {
+    if (!Array.isArray(stroke) || stroke.length < 2 || stroke.length % 2) return null;
+    const st = [];
+    for (let i = 0; i < stroke.length; i += 2) {
+      const x = Math.round(Number(stroke[i])), y = Math.round(Number(stroke[i + 1]));
+      if (!(x >= 0 && x <= 1000 && y >= 0 && y <= 300)) return null;
+      if (st.length) ink += Math.hypot(x - st[st.length - 2], y - st[st.length - 1]);
+      st.push(x, y);
+    }
+    points += st.length / 2; out.push(st);
+  }
+  if (points > 2500 || ink < 60) return null;   // too long, or barely a mark
+  return out;
+}
+async function oath(request, env) {
+  if (!env.DB) return json({ error: "No database." }, 503);
+  await ensureTable(env.DB);
+  if (request.method === "GET") {
+    const { results } = await env.DB.prepare("SELECT id, name, sig, created FROM oaths ORDER BY id DESC LIMIT 1000").all();
+    return json({ oaths: results.map(r => ({ ...r, sig: JSON.parse(r.sig) })) });
+  }
+  if (request.method === "POST") {
+    let input;
+    try { input = await request.json(); } catch { return json({ error: "That oath couldn't be read." }, 400); }
+    const name = String(input.name || "").trim().replace(/^@/, "");
+    if (!/^[A-Za-z0-9_]{1,15}$/.test(name)) return json({ error: "Sign with your Twitter handle (letters, numbers and _ only)." }, 400);
+    const sig = cleanSig(input.sig);
+    if (!sig) return json({ error: "Draw your signature on the line first." }, 400);
+    const id = await who(request), now = Date.now();
+    const last = await env.DB.prepare("SELECT created FROM oaths WHERE who = ? ORDER BY created DESC LIMIT 1").bind(id).first();
+    if (last && now - last.created < 10000) return json({ error: "Wait a moment before swearing again." }, 429);
+    const taken = await env.DB.prepare("SELECT id FROM oaths WHERE name = ?").bind(name).first();
+    if (taken) return json({ error: `@${name} has already sworn the oath.` }, 409);
+    const row = await env.DB.prepare("INSERT INTO oaths (name, sig, created, who) VALUES (?, ?, ?, ?) RETURNING id, name, sig, created")
+      .bind(name, JSON.stringify(sig), now, id).first();
+    return json({ oath: { ...row, sig } }, 201);
+  }
   return json({ error: "Method not allowed." }, 405);
 }
 
@@ -258,6 +309,10 @@ export default {
     }
     if (url.pathname === "/api/tweets") {
       try { return await trophies(env, url); }
+      catch (e) { return json({ error: "Something went wrong on the server." }, 500); }
+    }
+    if (url.pathname === "/api/oath") {
+      try { return await oath(request, env); }
       catch (e) { return json({ error: "Something went wrong on the server." }, 500); }
     }
     if (url.pathname === "/api/trumpet") {
