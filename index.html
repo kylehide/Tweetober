@@ -398,16 +398,41 @@
     animation: sheen 2.6s ease-in-out .3s infinite; }
   @keyframes sheen { 0% { left: -60%; } 45%, 100% { left: 130%; } }
   .pledge-note { margin: 0; font-size: .82rem; color: var(--ink-3); letter-spacing: .04em; min-height: 1.2em; }
-  .seal { position: absolute; right: 18px; bottom: 16px; width: 92px; height: 92px; pointer-events: none; opacity: 0; transform: scale(2.2) rotate(-25deg);
-    filter: drop-shadow(0 4px 6px rgba(0,0,0,.6)); z-index: 2; }
+  .seal { position: absolute; right: 18px; bottom: 16px; width: 92px; height: 92px; pointer-events: none; opacity: 0;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,.6)); z-index: 3; overflow: visible; --sx: -100px; }
   .seal:not(.set):not(.stamp) { display: none; }   /* no invisible oversized seal waiting at the edge of the page */
-  .seal.set { opacity: 1; transform: scale(1) rotate(-12deg); }
-  .seal.stamp { animation: stamp .45s cubic-bezier(.2,1.2,.3,1) forwards; }
-  @keyframes stamp { 0% { opacity: 0; transform: scale(2.2) rotate(-25deg); } 60% { opacity: 1; transform: scale(.94) rotate(-10deg); } 100% { opacity: 1; transform: scale(1) rotate(-12deg); } }
-  .honor.thud { animation: thud .35s ease-out; }
-  @keyframes thud { 0% { transform: none; } 30% { transform: translateY(3px) scale(.995); } 100% { transform: none; } }
+  .seal.set { opacity: 1; transform: rotate(-12deg); }
+  .seal .ooze { fill: #8A1227; transform-origin: 50px 50px; transform: scale(1.07) rotate(9deg); opacity: .9; }
+  .seal .glint { transform: translateX(0); }
+  /* Swearing: the seal is lifted high over the Code while the three calls sound, then slams down on the chord */
+  .seal.stamp { animation: sealDrop 2.4s linear forwards; }
+  .seal.stamp .ooze { animation: ooze 2.4s linear forwards; }
+  .seal.stamp .glint { animation: glint .9s ease-in-out 2.55s both; }
+  @keyframes sealDrop {
+    0%   { opacity: 0;   transform: translate(calc(var(--sx) * 1.5), -190px) scale(3.1) rotate(-52deg); filter: drop-shadow(34px 130px 26px rgba(0,0,0,0)); animation-timing-function: ease-out; }
+    14%  { opacity: .96; transform: translate(calc(var(--sx) * 1.3), -170px) scale(2.8) rotate(-42deg); filter: drop-shadow(28px 112px 22px rgba(0,0,0,.32)); animation-timing-function: ease-in-out; }
+    64%  { opacity: 1;   transform: translate(var(--sx), -130px) scale(2.5) rotate(-31deg); filter: drop-shadow(22px 92px 18px rgba(0,0,0,.42)); animation-timing-function: cubic-bezier(.6,0,1,1); }
+    77%  { transform: translate(0, 0) scale(.84) rotate(-8deg); filter: drop-shadow(0 1px 1px rgba(0,0,0,.85)); animation-timing-function: ease-out; }
+    82%  { transform: scale(1.12) rotate(-15deg); }
+    88%  { transform: scale(.95) rotate(-10.5deg); }
+    94%  { transform: scale(1.03) rotate(-12.6deg); }
+    100% { opacity: 1; transform: scale(1) rotate(-12deg); filter: drop-shadow(0 4px 6px rgba(0,0,0,.6)); }
+  }
+  @keyframes ooze { 0%, 76% { transform: scale(.7) rotate(0deg); opacity: 0; } 80% { opacity: .9; } 90% { transform: scale(1.12) rotate(9deg); } 100% { transform: scale(1.07) rotate(9deg); opacity: .9; } }
+  @keyframes glint { from { transform: translateX(0); } to { transform: translateX(190px); } }
+  .honor { transition: box-shadow .6s ease; }
+  .honor.hush { box-shadow: var(--shadow), 0 0 0 1px rgba(242,210,114,.45), 0 0 46px rgba(242,210,114,.22); }
+  .honor.thud { animation: thud .55s cubic-bezier(.3,.7,.4,1); }
+  @keyframes thud { 0% { transform: none; } 12% { transform: translate(0, 7px) scale(.99); } 26% { transform: translate(-4px, -2px) rotate(-.4deg); } 42% { transform: translate(3px, 1px) rotate(.3deg); } 60% { transform: translate(-1px, 0); } 100% { transform: none; } }
+  #code { overflow-x: clip; }   /* the lifted seal is big; never let it widen the page */
+  .seal-fx { position: fixed; left: 0; top: 0; width: 0; height: 0; pointer-events: none; z-index: 60; }
+  .seal-fx i { position: absolute; left: 0; top: 0; border-radius: 50%; }
+  .seal-fx .ring { width: 100px; height: 100px; margin: -50px 0 0 -50px; border: 3px solid rgba(242,210,114,.85); box-shadow: 0 0 18px rgba(242,210,114,.5), inset 0 0 12px rgba(196,42,66,.5); }
+  .seal-fx .flash { width: 220px; height: 220px; margin: -110px 0 0 -110px; background: radial-gradient(circle, rgba(255,240,200,.85), rgba(242,210,114,.35) 35%, transparent 68%); }
+  .seal-fx .drop { background: radial-gradient(circle at 35% 30%, #D8465E, #9E172C 60%, #6E0C1E); }
+  .seal-fx .spark { background: #FFE39A; box-shadow: 0 0 6px 1px rgba(255,210,110,.9); }
   /* On narrow screens the seal sits in the flow beneath the date instead of over it */
-  @media (max-width: 860px) { .seal { position: static; width: 80px; height: 80px; margin-top: 4px; } .seal:not(.set):not(.stamp) { display: none; } }
+  @media (max-width: 860px) { .seal { position: static; width: 80px; height: 80px; margin-top: 4px; --sx: 0px; } .seal:not(.set):not(.stamp) { display: none; } }
   @media (max-width: 860px) { .code-grid { grid-template-columns: 1fr; } }
 
   /* ---------- Decree ---------- */
@@ -886,13 +911,18 @@ try { if (sessionStorage.getItem("tweetober-gates") === "1") document.getElement
           <p class="pledge-note" id="pledgeNote" aria-live="polite"></p>
         </div>
         <svg class="seal" id="seal" viewBox="0 0 100 100" aria-hidden="true">
-          <defs><radialGradient id="wax" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#C42A42"/><stop offset=".6" stop-color="#A6182E"/><stop offset="1" stop-color="#7A0F22"/></radialGradient></defs>
-          <path d="M50.0 4.0 C53.1 4.0 56.0 8.3 59.3 9.1 C62.7 9.8 67.2 7.2 70.0 8.6 C72.8 9.9 73.5 15.0 76.2 17.2 C78.9 19.3 84.0 18.9 86.0 21.3 C87.9 23.8 86.4 28.7 87.8 31.8 C89.3 34.9 94.2 36.7 94.8 39.8 C95.5 42.8 92.0 46.6 92.0 50.0 C92.0 53.4 95.5 57.2 94.8 60.2 C94.2 63.3 89.3 65.1 87.8 68.2 C86.4 71.3 87.9 76.2 86.0 78.7 C84.0 81.1 78.9 80.7 76.2 82.8 C73.5 85.0 72.8 90.1 70.0 91.4 C67.2 92.8 62.7 90.2 59.3 90.9 C56.0 91.7 53.1 96.0 50.0 96.0 C46.9 96.0 44.0 91.7 40.7 90.9 C37.3 90.2 32.8 92.8 30.0 91.4 C27.2 90.1 26.5 85.0 23.8 82.8 C21.1 80.7 16.0 81.1 14.0 78.7 C12.1 76.2 13.6 71.3 12.2 68.2 C10.7 65.1 5.8 63.3 5.2 60.2 C4.5 57.2 8.0 53.4 8.0 50.0 C8.0 46.6 4.5 42.8 5.2 39.8 C5.8 36.7 10.7 34.9 12.2 31.8 C13.6 28.7 12.1 23.8 14.0 21.3 C16.0 18.9 21.1 19.3 23.8 17.2 C26.5 15.0 27.2 9.9 30.0 8.6 C32.8 7.2 37.3 9.8 40.7 9.1 C44.0 8.3 46.9 4.0 50.0 4.0Z" fill="url(#wax)" stroke="#6E0C1E" stroke-width="1.2" stroke-linejoin="round"/>
+          <defs><radialGradient id="wax" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#C42A42"/><stop offset=".6" stop-color="#A6182E"/><stop offset="1" stop-color="#7A0F22"/></radialGradient>
+            <path id="sealEdge" d="M50.0 4.0 C53.1 4.0 56.0 8.3 59.3 9.1 C62.7 9.8 67.2 7.2 70.0 8.6 C72.8 9.9 73.5 15.0 76.2 17.2 C78.9 19.3 84.0 18.9 86.0 21.3 C87.9 23.8 86.4 28.7 87.8 31.8 C89.3 34.9 94.2 36.7 94.8 39.8 C95.5 42.8 92.0 46.6 92.0 50.0 C92.0 53.4 95.5 57.2 94.8 60.2 C94.2 63.3 89.3 65.1 87.8 68.2 C86.4 71.3 87.9 76.2 86.0 78.7 C84.0 81.1 78.9 80.7 76.2 82.8 C73.5 85.0 72.8 90.1 70.0 91.4 C67.2 92.8 62.7 90.2 59.3 90.9 C56.0 91.7 53.1 96.0 50.0 96.0 C46.9 96.0 44.0 91.7 40.7 90.9 C37.3 90.2 32.8 92.8 30.0 91.4 C27.2 90.1 26.5 85.0 23.8 82.8 C21.1 80.7 16.0 81.1 14.0 78.7 C12.1 76.2 13.6 71.3 12.2 68.2 C10.7 65.1 5.8 63.3 5.2 60.2 C4.5 57.2 8.0 53.4 8.0 50.0 C8.0 46.6 4.5 42.8 5.2 39.8 C5.8 36.7 10.7 34.9 12.2 31.8 C13.6 28.7 12.1 23.8 14.0 21.3 C16.0 18.9 21.1 19.3 23.8 17.2 C26.5 15.0 27.2 9.9 30.0 8.6 C32.8 7.2 37.3 9.8 40.7 9.1 C44.0 8.3 46.9 4.0 50.0 4.0Z"/>
+            <clipPath id="sealClip"><use href="#sealEdge"/></clipPath>
+            <linearGradient id="glintG" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#FFE9B0" stop-opacity=".75"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs>
+          <use href="#sealEdge" class="ooze"/>
+          <use href="#sealEdge" fill="url(#wax)" stroke="#6E0C1E" stroke-width="1.2" stroke-linejoin="round"/>
           <circle cx="50" cy="50" r="34" fill="none" stroke="#7A0F22" stroke-width="1.6"/>
           <circle cx="50" cy="50" r="31.5" fill="none" stroke="#D8546B" stroke-width=".8" opacity=".55"/>
           <ellipse cx="38" cy="30" rx="11" ry="5" fill="#fff" opacity=".13" transform="rotate(-35 38 30)"/>
           <!-- the crowned bird from the crest, pressed into the wax -->
           <image href="assets/seal-bird.png" x="24" y="24" width="52" height="52" preserveAspectRatio="xMidYMid meet"/>
+          <g clip-path="url(#sealClip)"><g transform="rotate(22 50 50)"><rect class="glint" x="-60" y="-30" width="28" height="160" fill="url(#glintG)"/></g></g>
         </svg>
       </div>
     </div>
@@ -1788,6 +1818,21 @@ const fanfare = (() => {
     (TUNES[kind] || TUNES.herald).forEach(([f, at, d]) => voice(f, t + at, d, kind === "oath" ? 0.14 : 0.16));
     return true;
   }
+  // a heavy wax-seal thump: a falling low tone plus a short muffled knock
+  play.thud = () => {
+    try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); } catch { return; }
+    if (ac.state === "suspended") ac.resume();
+    const t = ac.currentTime + 0.005;
+    const o = ac.createOscillator(), g = ac.createGain(); o.type = "sine";
+    o.frequency.setValueAtTime(120, t); o.frequency.exponentialRampToValueAtTime(38, t + 0.35);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.55, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
+    o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t + 0.55);
+    const len = Math.floor(ac.sampleRate * 0.12), buf = ac.createBuffer(1, len, ac.sampleRate), ch = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) ch[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3);
+    const n = ac.createBufferSource(), lp = ac.createBiquadFilter(), ng = ac.createGain(); n.buffer = buf;
+    lp.type = "lowpass"; lp.frequency.value = 700; ng.gain.value = 0.5;
+    n.connect(lp); lp.connect(ng); ng.connect(ac.destination); n.start(t);
+  };
   play.ready = () => !!ac && ac.state === "running";
   return play;
 })();
@@ -1899,19 +1944,54 @@ function applyFinale() {
 (function pledge() {
   const btn = $("#pledgeBtn"), label = $("#pledgeLabel"), note = $("#pledgeNote"), seal = $("#seal"), panel = document.querySelector(".honor"); if (!btn || !seal) return;
   const when = (t) => new Date(t).toLocaleString("en-US", { month: "long", day: "numeric" });
+  const IMPACT = 1850;   // ms: the seal lands on the oath's closing chord
+  // the moment of impact: flash, two shockwaves, flung wax and sparks, and the panel jolts
+  function impact() {
+    panel.classList.remove("thud"); void panel.offsetWidth; panel.classList.add("thud");
+    fanfare.thud && fanfare.thud();
+    // measure where the seal comes to rest (jump its animation to the end for a moment, then put it back)
+    const anims = seal.getAnimations ? seal.getAnimations() : [], times = anims.map(x => x.currentTime);
+    anims.forEach(x => { try { x.currentTime = x.effect.getComputedTiming().endTime - 1; } catch {} });
+    const r = seal.getBoundingClientRect();
+    anims.forEach((x, i) => { try { x.currentTime = times[i]; } catch {} });
+    const fx = document.body.appendChild(document.createElement("div"));
+    fx.className = "seal-fx"; fx.setAttribute("aria-hidden", "true");
+    fx.style.transform = `translate(${r.left + r.width / 2}px, ${r.top + r.height / 2}px)`;
+    const add = (cls, css) => { const i = document.createElement("i"); i.className = cls; Object.assign(i.style, css || {}); fx.appendChild(i); return i; };
+    add("flash").animate([{ transform: "scale(.3)", opacity: 1 }, { transform: "scale(1.3)", opacity: 0 }], { duration: 520, easing: "ease-out", fill: "forwards" });
+    [0, 110].forEach((delay, k) => add("ring").animate([{ transform: "scale(.5)", opacity: 1 }, { transform: `scale(${k ? 2.3 : 3})`, opacity: 0 }], { duration: 700, delay, easing: "cubic-bezier(.1,.7,.3,1)", fill: "both" }));
+    const fling = (cls, n, [dMin, dMax], [sMin, sMax], dur) => {
+      for (let j = 0; j < n; j++) {
+        const a = (j / n) * Math.PI * 2 + Math.random() * .5, d = dMin + Math.random() * (dMax - dMin), s = sMin + Math.random() * (sMax - sMin);
+        const x = Math.cos(a) * d, y = Math.sin(a) * d;
+        add(cls, { width: s + "px", height: s + "px", marginLeft: -s / 2 + "px", marginTop: -s / 2 + "px" }).animate([
+          { transform: "translate(0,0) scale(1)", opacity: 1 },
+          { transform: `translate(${x * .8}px, ${y * .8 - 10}px) scale(1)`, opacity: 1, offset: .55 },
+          { transform: `translate(${x}px, ${y + 26}px) scale(.3)`, opacity: 0 },
+        ], { duration: dur + Math.random() * 250, easing: "cubic-bezier(.15,.8,.35,1)", fill: "forwards" });
+      }
+    };
+    fling("drop", 16, [48, 110], [5, 11], 750);
+    fling("spark", 22, [70, 170], [2, 4], 900);
+    setTimeout(() => fx.remove(), 1400);
+  }
   const sworn = (t, fresh) => {
     btn.disabled = true; label.textContent = "Oath sworn"; btn.classList.add("sworn");
     note.textContent = `You swore the Honor Code on ${when(t)}.`;
     seal.classList.add(fresh ? "stamp" : "set");
-    if (fresh) { panel.classList.remove("thud"); void panel.offsetWidth; panel.classList.add("thud"); }
+    if (fresh) {
+      panel.classList.add("hush");
+      setTimeout(impact, IMPACT);
+      setTimeout(() => panel.classList.remove("hush"), IMPACT + 1400);
+    }
   };
   let saved = null; try { saved = Number(localStorage.getItem("tweetober-oath")) || null; } catch {}
   if (saved) sworn(saved, false);
   btn.addEventListener("click", () => {
     const t = Date.now();
     try { localStorage.setItem("tweetober-oath", String(t)); } catch {}
-    sworn(t, true);
     if (window.herald) window.herald(false, true, "oath");   // the trumpets sound a solemn call for a sworn oath
+    sworn(t, true);
   });
 })();
 
