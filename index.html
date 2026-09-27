@@ -466,6 +466,13 @@
   @media (max-width: 760px) { .tavern { border-width: 26px; border-image-width: 26px; padding: 4px 4px; } }
   .tavern li { display: grid; gap: 5px; line-height: 1.2; overflow-wrap: anywhere; }
   .tavern .who { display: flex; flex-wrap: wrap; column-gap: 10px; align-items: baseline; }
+  /* desktop: name, time and message on one line, the message wrapping in its own column; phones keep it underneath */
+  @media (min-width: 761px) {
+    .tavern li[data-id] { grid-template-columns: auto minmax(0, 1fr); column-gap: 14px; align-items: baseline; }
+    .tavern li[data-id] .who { flex-wrap: nowrap; max-width: 22em; }
+    .tavern li[data-id] .who b { min-width: 0; }
+    .tavern li[data-id] .who time { white-space: nowrap; }
+  }
   /* names in their bright gem color on a darker band of the same hue, like a highlighter */
   .tavern .who b { font-weight: 400; font-size: .84rem; letter-spacing: .02em; line-height: 1; padding: 1px 3px 0; border-radius: 0; box-decoration-break: clone; -webkit-box-decoration-break: clone; }   /* names in the site's pixel font; messages below in handwriting */
   .tavern .who time { font-size: .68rem; color: #7A5E3A; letter-spacing: .06em; }
