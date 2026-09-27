@@ -30,6 +30,7 @@ async function ensureTable(db) {
   await db.prepare("CREATE INDEX IF NOT EXISTS messages_who ON messages (who, created)").run();
   await db.prepare("CREATE TABLE IF NOT EXISTS counters (name TEXT PRIMARY KEY, value INTEGER NOT NULL)").run();
   await db.prepare("CREATE TABLE IF NOT EXISTS feed_cache (id INTEGER PRIMARY KEY, body TEXT NOT NULL, fetched INTEGER NOT NULL)").run();
+  await db.prepare("CREATE TABLE IF NOT EXISTS tweet_cache (id TEXT PRIMARY KEY, body TEXT NOT NULL, fetched INTEGER NOT NULL)").run();
   ready = true;
 }
 
@@ -121,8 +122,13 @@ function when(s) {
 // Attached photos, GIFs and videos. twitterapi.io has used a few shapes for these, so accept any of them,
 // and keep only Twitter's own media hosts.
 const TW_MEDIA = /^https:\/\/(pbs|video)\.twimg\.com\//;
-function mediaOf(t) {
+function mediaOf(t, depth = 0) {
   const lists = [t.media, t.extendedEntities?.media, t.extended_entities?.media, t.entities?.media].filter(Array.isArray);
+  // a retweet carries its pictures on the original tweet
+  if (!lists.some(l => l.length) && depth < 1) {
+    const inner = t.retweeted_tweet || t.retweetedTweet || t.retweeted_status || t.quoted_tweet || t.quotedTweet || t.quoted_status;
+    if (inner && typeof inner === "object") return mediaOf(inner, depth + 1);
+  }
   const seen = new Set(), out = [];
   for (const list of lists) for (const m of list) {
     if (!m) continue;
@@ -172,7 +178,9 @@ async function feed(env) {
   ).bind(now, now - ttl).run();
   if (row && !claim.meta.changes) return json({ tweets: cached, fetched: row.fetched });
   try {
-    const newest = cached.reduce((m, t) => Math.max(m, t.created || 0), 0);
+    // tweets cached before media support have no "media" field; start fresh once so they pick up their pictures
+    const oldFormat = cached.some(t => !Array.isArray(t.media));
+    const newest = oldFormat ? 0 : cached.reduce((m, t) => Math.max(m, t.created || 0), 0);
     const seen = new Set(cached.map(t => t.id));
     let fresh = [];
     if (newest && now - newest < CATCHUP_MS && row && now - row.fetched < CATCHUP_MS) {
@@ -200,11 +208,56 @@ async function feed(env) {
   }
 }
 
+/* ---------- The Trophy Room: the tweets linked in the sheet's Trophy Room tab, drawn by the page in house colors ----------
+   Only tweets that are actually linked in the Trophy Room tab are fetched, so nobody can use this to run up the bill.
+   Each tweet is re-checked at most every TROPHY_MINUTES (default 30) to keep like counts fresh. */
+const TROPHY_SHEET = "https://docs.google.com/spreadsheets/d/1b3AqoSgvyc1s-21rQQuVK0-HBeTz6cZVUJuWW9BRKy4/gviz/tq?tqx=out:csv&sheet=Trophy%20Room";
+async function trophies(env, url) {
+  if (!env.TWITTERAPI_KEY) return json({ error: "not configured" }, 503);
+  if (!env.DB) return json({ error: "No database." }, 503);
+  await ensureTable(env.DB);
+  const ids = [...new Set(String(url.searchParams.get("ids") || "").split(",").map(x => x.trim()).filter(x => /^\d{5,25}$/.test(x)))].slice(0, 60);
+  if (!ids.length) return json({ tweets: [] });
+  const ttl = Math.max(5, Number(env.TROPHY_MINUTES) || 30) * 60000, now = Date.now();
+  const marks = ids.map(() => "?").join(",");
+  const rows = (await env.DB.prepare(`SELECT id, body, fetched FROM tweet_cache WHERE id IN (${marks})`).bind(...ids).all()).results || [];
+  const have = new Map(rows.map(r => [r.id, r]));
+  let need = ids.filter(id => !have.has(id) || now - have.get(id).fetched > ttl);
+  if (need.length) {
+    try {
+      // only tweets that are really in the Trophy Room tab
+      const sheet = await (await fetch(env.TROPHY_CSV || TROPHY_SHEET, { cf: { cacheTtl: 60 } })).text();
+      const listed = new Set([...sheet.matchAll(/status(?:es)?\/(\d{5,25})/g)].map(m => m[1]));
+      need = need.filter(id => listed.has(id));
+      if (need.length) {
+        const u = new URL("https://api.twitterapi.io/twitter/tweets");
+        u.searchParams.set("tweet_ids", need.join(","));
+        const r = await fetch(u, { headers: { "X-API-Key": env.TWITTERAPI_KEY } });
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok || !Array.isArray(data.tweets)) throw new Error(data.message || data.msg || ("HTTP " + r.status));
+        const got = new Map(data.tweets.filter(t => t && t.id).map(t => [String(t.id), slim(t)]));
+        const stmt = env.DB.prepare("INSERT INTO tweet_cache (id, body, fetched) VALUES (?, ?, ?) ON CONFLICT(id) DO UPDATE SET body = excluded.body, fetched = excluded.fetched");
+        // a tweet that didn't come back (deleted or private) is remembered as missing, so it isn't asked for on every visit
+        await env.DB.batch(need.map(id => stmt.bind(id, JSON.stringify(got.get(id) || { id, missing: true }), now)));
+        need.forEach(id => have.set(id, { id, body: JSON.stringify(got.get(id) || { id, missing: true }), fetched: now }));
+      }
+    } catch (e) {
+      if (!have.size) return json({ error: "The tweets could not be fetched.", detail: String(e.message || e).slice(0, 200) }, 502);
+    }
+  }
+  const tweets = ids.map(id => have.get(id)).filter(Boolean).map(r => JSON.parse(r.body));
+  return json({ tweets });
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     if (url.pathname === "/api/feed") {
       try { return await feed(env); }
+      catch (e) { return json({ error: "Something went wrong on the server." }, 500); }
+    }
+    if (url.pathname === "/api/tweets") {
+      try { return await trophies(env, url); }
       catch (e) { return json({ error: "Something went wrong on the server." }, 500); }
     }
     if (url.pathname === "/api/trumpet") {
