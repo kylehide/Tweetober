@@ -470,6 +470,8 @@
   /* On narrow screens the seal sits in the flow beneath the date instead of over it */
   @media (max-width: 860px) { .seal { position: static; width: 80px; height: 80px; margin-top: 4px; --sx: 0px; } .seal:not(.set):not(.stamp) { display: none; } }
   @media (max-width: 860px) { .code-grid { grid-template-columns: 1fr; } }
+  /* side by side, the scroll unrolls to the full height of the Honor Code beside it */
+  @media (min-width: 861px) { .rules { grid-template-rows: auto 1fr auto; align-content: stretch; } .parchment { align-content: start; } }
 
   /* ---------- Decree ---------- */
   .decree { padding: 30px 34px; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 36px; align-items: center; }
