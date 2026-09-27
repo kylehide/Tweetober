@@ -381,6 +381,42 @@
   .honor { text-align: center; justify-items: center; align-content: center; }
   .pledge { margin: 0; max-width: 40ch; font-style: italic; line-height: 1.5; color: var(--ink); }
   .oath { margin: 0; font-size: 1.5rem; line-height: 1.1; }
+  /* Signing the Honor Code: a handle and a signature drawn on the line, in gold ink */
+  .sign { display: grid; gap: 10px; justify-items: center; width: 100%; max-width: 380px; position: relative; }
+  .sign .seal { right: -38px; bottom: -14px; }   /* the seal is pressed at the end of the signature line */
+  .sworn-list .sig-ink { stroke-width: 16; }
+  .sign-name { display: flex; align-items: center; width: 100%; border-bottom: 1px solid var(--line-strong); }
+  .sign-name:focus-within { border-bottom-color: var(--gold-bright); }
+  .sign-name .at { color: var(--ink-3); padding-left: 4px; }
+  .sign-name input { flex: 1; min-width: 0; font: inherit; font-size: 1rem; color: var(--ink); background: none; border: 0; outline: none; padding: 6px 4px; text-align: left; }
+  .sign-pad { position: relative; width: 100%; aspect-ratio: 10 / 3; background: rgba(0,0,0,.18); border: 1px dashed var(--line-strong); cursor: crosshair; touch-action: none; }
+  .sign-pad canvas { touch-action: none; }
+  .sign-pad canvas, .sign-pad svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .sign-pad::after { content: ""; position: absolute; left: 12%; right: 6%; bottom: 24%; border-bottom: 1px solid var(--gold-deep); pointer-events: none; }
+  .sign-x { position: absolute; left: 5%; bottom: 22%; color: var(--gold-deep); font-size: .9rem; pointer-events: none; }
+  .sign-hint { position: absolute; inset: 0; display: grid; place-items: center; font-family: "Pirata One", serif; font-size: 1.3rem; color: var(--ink-3); opacity: .6; pointer-events: none; transition: opacity .2s; }
+  .sign-pad.inked .sign-hint { opacity: 0; }
+  .sign-clear { position: absolute; top: 4px; right: 4px; font: inherit; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); background: var(--surface); border: 1px solid var(--line); padding: 2px 7px; cursor: pointer; }
+  .sign-clear:hover { color: var(--gold-bright); border-color: var(--gold-bright); }
+  .sign.signed .sign-pad { border-style: solid; border-color: transparent; background: none; cursor: default; }
+  .sign.signed .sign-name { border-bottom-color: transparent; justify-content: center; }
+  .sign.signed .sign-name input { text-align: center; color: var(--gold-bright); -webkit-text-fill-color: var(--gold-bright); opacity: 1; }
+  .sign.signed .sign-name input, .sign.signed .sign-name .at { pointer-events: none; }
+  .sign.signed .sign-name .at { display: none; }
+  .sign.shake { animation: shake .4s; }
+  .pledge-btn.not-ready { opacity: .6; }
+  .sig-ink { fill: none; stroke: currentColor; stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; }
+  /* The Roll of the Sworn */
+  .sworn { margin-top: 22px; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); padding: 20px 22px; display: grid; gap: 12px; }
+  .sworn .scroll-head h3 { margin: 0; font-size: 1.24rem; }
+  .sworn-list { list-style: none; margin: 0; padding: 2px; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; max-height: 360px; overflow-y: auto; overscroll-behavior: contain; scrollbar-color: var(--gold-deep) transparent; scrollbar-width: thin; }
+  .sworn-list li { display: grid; gap: 2px; justify-items: center; padding: 6px 8px 8px; border: 1px solid var(--line); background: var(--surface-2); color: var(--gold); min-width: 0; }
+  .sworn-list li.h333 { color: var(--h333); } .sworn-list li.h500 { color: var(--h500); }
+  .sworn-list svg { width: 100%; aspect-ratio: 10 / 3; display: block; }
+  .sworn-list a { font-size: .8rem; color: inherit; text-decoration: none; overflow-wrap: anywhere; text-align: center; }
+  .sworn-list a:hover { text-decoration: underline; }
+  .sworn-list li.new { animation: swornIn 1.2s ease; }
+  @keyframes swornIn { from { box-shadow: 0 0 0 2px var(--gold-bright), 0 0 24px rgba(242,210,114,.5); } to { box-shadow: none; } }
   /* Pledge: press the button and a wax seal is stamped onto the Honor Code */
   .pledge-row { display: grid; justify-items: center; gap: 8px; margin-top: 4px; }
   .pledge-btn { display: inline-flex; align-items: center; gap: 10px; font: inherit; font-size: .9rem; letter-spacing: .12em; text-transform: uppercase; cursor: pointer;
@@ -977,14 +1013,15 @@ try { if (sessionStorage.getItem("tweetober-gates") === "1") document.getElement
         <h3 class="heading">The Honor Code</h3>
         <p class="pledge">Tweetober is a noble pursuit, ruled by chivalry and honor. I will only post quality tweets. I will not try to beat the system. I tweet good and true, for the love of the game.</p>
         <p class="oath heading">May the best tweeter win.</p>
-        <div class="pledge-row">
-          <button class="pledge-btn" id="pledgeBtn" type="button">
-            <svg class="ico-check" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg>
-            <span id="pledgeLabel">Swear the oath</span>
-          </button>
-          <p class="pledge-note" id="pledgeNote" aria-live="polite"></p>
-        </div>
-        <svg class="seal" id="seal" viewBox="0 0 100 100" aria-hidden="true">
+        <div class="sign" id="sign">
+          <label class="sign-name"><span class="at">@</span><input id="signName" maxlength="15" placeholder="yourhandle" autocapitalize="off" autocomplete="off" spellcheck="false" aria-label="Your Twitter handle"></label>
+          <div class="sign-pad" id="signPadWrap">
+            <canvas id="signPad" aria-label="Draw your signature here with your finger or mouse"></canvas>
+            <span class="sign-x" aria-hidden="true">✕</span>
+            <span class="sign-hint" id="signHint" aria-hidden="true">Sign here</span>
+            <button type="button" class="sign-clear" id="signClear" hidden>Clear</button>
+          </div>
+          <svg class="seal" id="seal" viewBox="0 0 100 100" aria-hidden="true">
           <defs><radialGradient id="wax" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#C42A42"/><stop offset=".6" stop-color="#A6182E"/><stop offset="1" stop-color="#7A0F22"/></radialGradient>
             <path id="sealEdge" d="M50.0 4.0 C53.1 4.0 56.0 8.3 59.3 9.1 C62.7 9.8 67.2 7.2 70.0 8.6 C72.8 9.9 73.5 15.0 76.2 17.2 C78.9 19.3 84.0 18.9 86.0 21.3 C87.9 23.8 86.4 28.7 87.8 31.8 C89.3 34.9 94.2 36.7 94.8 39.8 C95.5 42.8 92.0 46.6 92.0 50.0 C92.0 53.4 95.5 57.2 94.8 60.2 C94.2 63.3 89.3 65.1 87.8 68.2 C86.4 71.3 87.9 76.2 86.0 78.7 C84.0 81.1 78.9 80.7 76.2 82.8 C73.5 85.0 72.8 90.1 70.0 91.4 C67.2 92.8 62.7 90.2 59.3 90.9 C56.0 91.7 53.1 96.0 50.0 96.0 C46.9 96.0 44.0 91.7 40.7 90.9 C37.3 90.2 32.8 92.8 30.0 91.4 C27.2 90.1 26.5 85.0 23.8 82.8 C21.1 80.7 16.0 81.1 14.0 78.7 C12.1 76.2 13.6 71.3 12.2 68.2 C10.7 65.1 5.8 63.3 5.2 60.2 C4.5 57.2 8.0 53.4 8.0 50.0 C8.0 46.6 4.5 42.8 5.2 39.8 C5.8 36.7 10.7 34.9 12.2 31.8 C13.6 28.7 12.1 23.8 14.0 21.3 C16.0 18.9 21.1 19.3 23.8 17.2 C26.5 15.0 27.2 9.9 30.0 8.6 C32.8 7.2 37.3 9.8 40.7 9.1 C44.0 8.3 46.9 4.0 50.0 4.0Z"/>
             <clipPath id="sealClip"><use href="#sealEdge"/></clipPath>
@@ -998,7 +1035,19 @@ try { if (sessionStorage.getItem("tweetober-gates") === "1") document.getElement
           <image href="assets/seal-bird.png" x="24" y="24" width="52" height="52" preserveAspectRatio="xMidYMid meet"/>
           <g clip-path="url(#sealClip)"><g transform="rotate(22 50 50)"><rect class="glint" x="-60" y="-30" width="28" height="160" fill="url(#glintG)"/></g></g>
         </svg>
+        </div>
+        <div class="pledge-row">
+          <button class="pledge-btn" id="pledgeBtn" type="button">
+            <svg class="ico-check" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg>
+            <span id="pledgeLabel">Swear the oath</span>
+          </button>
+          <p class="pledge-note" id="pledgeNote" aria-live="polite"></p>
+        </div>
       </div>
+    </div>
+    <div class="sworn" id="sworn" hidden>
+      <div class="scroll-head"><h3 class="heading">The Roll of the Sworn</h3><span class="muted" id="swornCount"></span></div>
+      <ol class="sworn-list" id="swornList"></ol>
     </div>
   </section>
 
@@ -2141,9 +2190,48 @@ function applyFinale() {
     fling("spark", 22, [70, 170], [2, 4], 900);
     setTimeout(() => fx.remove(), 1400);
   }
-  const sworn = (t, fresh) => {
-    btn.disabled = true; label.textContent = "Oath sworn"; btn.classList.add("sworn");
-    note.textContent = `You swore the Honor Code on ${when(t)}.`;
+  // ---- signing: handle + a signature drawn on the line (strokes of x,y points on a 1000 x 300 sheet) ----
+  const sign = $("#sign"), nameIn = $("#signName"), padWrap = $("#signPadWrap"), pad = $("#signPad"), clearBtn = $("#signClear");
+  const HANDLE = /^[A-Za-z0-9_]{1,15}$/;
+  let strokes = [], cur = null, ink = 0, busy = false;
+  const ctx = pad.getContext("2d");
+  function fit() {
+    const r = pad.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1);
+    if (!r.width) return;
+    pad.width = Math.round(r.width * dpr); pad.height = Math.round(r.height * dpr);
+    ctx.setTransform(pad.width / 1000, 0, 0, pad.height / 300, 0, 0);
+    ctx.lineCap = ctx.lineJoin = "round"; ctx.lineWidth = 7; ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue("--gold-bright").trim() || "#F2D272";
+    strokes.forEach(st => { for (let i = 2; i < st.length; i += 2) seg(st[i - 2], st[i - 1], st[i], st[i + 1]); if (st.length === 2) seg(st[0], st[1], st[0] + .5, st[1]); });
+  }
+  const seg = (x1, y1, x2, y2) => { ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); };
+  const at = (e) => { const r = pad.getBoundingClientRect(); return [Math.max(0, Math.min(1000, Math.round((e.clientX - r.left) / r.width * 1000))), Math.max(0, Math.min(300, Math.round((e.clientY - r.top) / r.height * 300)))]; };
+  const ready = () => HANDLE.test(nameIn.value.trim().replace(/^@/, "")) && ink >= 60;
+  const refresh = () => { padWrap.classList.toggle("inked", strokes.length > 0); clearBtn.hidden = !strokes.length; btn.classList.toggle("not-ready", !ready()); };
+  pad.addEventListener("pointerdown", (e) => {
+    if (sign.classList.contains("signed")) return;
+    e.preventDefault(); pad.setPointerCapture(e.pointerId);
+    cur = at(e); strokes.push(cur); seg(cur[0], cur[1], cur[0] + .5, cur[1]); note.textContent = ""; refresh();
+  });
+  pad.addEventListener("pointermove", (e) => {
+    if (!cur) return;
+    const [x, y] = at(e), lx = cur[cur.length - 2], ly = cur[cur.length - 1];
+    const d = Math.hypot(x - lx, y - ly); if (d < 4) return;
+    seg(lx, ly, x, y); cur.push(x, y); ink += d; refresh();
+  });
+  const end = () => { cur = null; };
+  pad.addEventListener("pointerup", end); pad.addEventListener("pointercancel", end);
+  clearBtn.addEventListener("click", () => { strokes = []; ink = 0; ctx.clearRect(0, 0, 1000, 300); refresh(); });
+  nameIn.addEventListener("input", () => { if (/^@/.test(nameIn.value)) nameIn.value = nameIn.value.replace(/^@+/, ""); if (!btn.disabled) note.textContent = ""; refresh(); });
+  addEventListener("resize", () => { if (!sign.classList.contains("signed")) fit(); });
+  requestAnimationFrame(fit);
+
+  const sworn = (t, fresh, name, sig) => {
+    btn.disabled = true; label.textContent = "Oath sworn"; btn.classList.add("sworn"); btn.classList.remove("not-ready");
+    note.textContent = `Sworn by @${name || "you"} on ${when(t)}.`;
+    // the signature stays on the line, drawn in ink
+    sign.classList.add("signed"); nameIn.value = name || ""; nameIn.readOnly = true; clearBtn.hidden = true;
+    padWrap.classList.add("inked"); padWrap.innerHTML = `${sigSvg(sig || [])}<span class="sign-x" aria-hidden="true">✕</span>`;
+    padWrap.firstElementChild.style.color = "var(--gold-bright)";
     seal.classList.add(fresh ? "stamp" : "set");
     if (fresh) {
       panel.classList.add("hush");
@@ -2151,15 +2239,71 @@ function applyFinale() {
       setTimeout(() => panel.classList.remove("hush"), IMPACT + 1400);
     }
   };
-  let saved = null; try { saved = Number(localStorage.getItem("tweetober-oath")) || null; } catch {}
-  if (saved) sworn(saved, false);
-  btn.addEventListener("click", () => {
+  let saved = null; try { saved = JSON.parse(localStorage.getItem("tweetober-oath2") || "null"); } catch {}
+  if (saved && saved.t) sworn(saved.t, false, saved.name, saved.sig); else refresh();
+  btn.addEventListener("click", async () => {
+    if (busy || btn.disabled) return;
+    const name = nameIn.value.trim().replace(/^@/, "");
+    if (!ready()) {
+      note.textContent = !HANDLE.test(name) ? "Write your Twitter handle above the line first." : "Now sign your name on the line.";
+      sign.classList.remove("shake"); void sign.offsetWidth; sign.classList.add("shake");
+      (!HANDLE.test(name) ? nameIn : pad).focus?.();
+      return;
+    }
+    busy = true; note.textContent = "Sealing…";
+    let rec = null, local = false;
+    try {
+      const r = await fetch("/api/oath", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name, sig: strokes }) });
+      const isJson = (r.headers.get("content-type") || "").includes("json");
+      if (!isJson) local = true;   // no server here (preview): the oath is kept on this device only
+      else { const d = await r.json(); if (!r.ok) { note.textContent = d.error || "The oath could not be sealed. Try again."; busy = false; return; } rec = d.oath; }
+    } catch { note.textContent = "Couldn't reach the castle. Check your connection and try again."; busy = false; return; }
     const t = Date.now();
-    try { localStorage.setItem("tweetober-oath", String(t)); } catch {}
+    try { localStorage.setItem("tweetober-oath2", JSON.stringify({ t, name, sig: strokes })); } catch {}
     if (window.herald) window.herald(false, true, "oath");   // the trumpets sound a solemn call for a sworn oath
-    sworn(t, true);
+    sworn(t, true, name, strokes);
+    if (rec) addSworn(rec, true);
+    busy = false;
   });
 })();
+
+/* A drawn signature as ink: smooth curves through the recorded points */
+function sigSvg(sig) {
+  const path = (st) => {
+    if (st.length <= 2) return `M${st[0]} ${st[1]}l.5 0`;
+    let d = `M${st[0]} ${st[1]}`;
+    for (let i = 2; i < st.length - 2; i += 2) d += `Q${st[i]} ${st[i + 1]} ${(st[i] + st[i + 2]) / 2} ${(st[i + 1] + st[i + 3]) / 2}`;
+    return d + `L${st[st.length - 2]} ${st[st.length - 1]}`;
+  };
+  return `<svg viewBox="0 0 1000 300" aria-hidden="true"><path class="sig-ink" d="${(sig || []).filter(Array.isArray).map(path).join("")}"/></svg>`;
+}
+
+/* ---------- The Roll of the Sworn: everyone who signed the Honor Code ---------- */
+let SWORN = [];
+function swornRow(o, fresh) {
+  const hk = houseOfHandle(o.name);
+  return `<li class="${hk}${fresh ? " new" : ""}" data-hh="${esc(o.name)}" title="Sworn ${esc(new Date(o.created).toLocaleString("en-US", { month: "long", day: "numeric" }))}">${sigSvg(o.sig)}<a href="${xUrl(o.name)}" target="_blank" rel="noopener">@${esc(o.name)}</a></li>`;
+}
+function renderSworn() {
+  const box = $("#sworn"); if (!box) return;
+  box.hidden = !SWORN.length;
+  $("#swornCount").textContent = SWORN.length ? `${SWORN.length} ${SWORN.length === 1 ? "Tweetobie has" : "Tweetobies have"} sworn` : "";
+  $("#swornList").innerHTML = SWORN.map(o => swornRow(o)).join("");
+}
+function addSworn(o, fresh) {
+  if (SWORN.some(x => x.name.toLowerCase() === o.name.toLowerCase())) return;
+  SWORN.unshift(o); renderSworn();
+  if (fresh) $("#swornList").firstElementChild?.classList.add("new");
+}
+async function loadSworn() {
+  try {
+    const r = await fetch("/api/oath", { cache: "no-store" });
+    if (!r.ok || !(r.headers.get("content-type") || "").includes("json")) return;
+    const d = await r.json(); if (!Array.isArray(d.oaths)) return;
+    SWORN = d.oaths; renderSworn();
+  } catch {}
+}
+loadSworn();
 
 /* ---------- The gates: a half-second curtain, then the keep ---------- */
 /* openGates(ready): parts the doors once `ready` settles and at least one and a half seconds have passed (six at most).
@@ -2224,7 +2368,7 @@ openGates(Promise.allSettled([
   document.fonts ? document.fonts.ready : null,
   new Promise(r => document.readyState === "complete" ? r() : addEventListener("load", r, { once: true })),
 ]));
-setInterval(() => { loadLedger(); loadTrophy(); loadEvents(); }, Math.max(1, CONFIG.refreshMinutes) * 60 * 1000);
+setInterval(() => { loadLedger(); loadTrophy(); loadEvents(); loadSworn(); }, Math.max(1, CONFIG.refreshMinutes) * 60 * 1000);
 </script>
 </body>
 </html>
