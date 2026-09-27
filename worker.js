@@ -19,7 +19,7 @@
 //                           Nothing is fetched while nobody has the site open.
 
 const COLORS = ["#F26F96", "#E6E4E0", "#F2D272", "#B99CFF", "#8CC8FF", "#8FE3B6", "#FF9D5C", "#FFB3C7"];
-const MAX_NAME = 24, MAX_BODY = 280, COOLDOWN_MS = 8000, PAGE = 60;
+const MAX_NAME = 25, MAX_BODY = 280, COOLDOWN_MS = 8000, PAGE = 60;
 
 let ready = false;
 async function ensureTable(db) {
