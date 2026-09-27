@@ -279,7 +279,8 @@
   .house-top { padding: 24px 22px 18px; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px; align-items: center; border-bottom: 1px solid var(--line); }
   .house.h333 .house-top { background: linear-gradient(180deg, var(--h333-soft), transparent); }
   .house.h500 .house-top { background: linear-gradient(180deg, var(--h500-soft), transparent); }
-  .emblem { width: 74px; height: 96px; object-fit: cover; border: 2px solid var(--gold); box-shadow: 0 0 0 3px rgba(0,0,0,.4), 0 6px 14px rgba(0,0,0,.5); }
+  .emblem { width: 96px; height: 121px; object-fit: contain; filter: drop-shadow(0 6px 10px rgba(0,0,0,.55)); transition: transform .3s ease; }
+  .house:hover .emblem { transform: rotate(-3deg) scale(1.04); }
   .house h3 { margin: 0; font-size: 1.38rem; line-height: 1; }
   .house.h333 h3 { color: var(--h333); }
   .house.h500 h3 { color: var(--h500); }
@@ -781,6 +782,7 @@
     .decree { justify-items: center; text-align: center; gap: 20px; }
     .decree img { width: 150px; }
   }
+  @media (max-width: 480px) { .emblem { width: 76px; height: 96px; } }
   @media (max-width: 440px) {
     .tiles { grid-template-columns: 1fr; }
     .rule::before, .rule::after { width: 40px; }
@@ -1139,7 +1141,7 @@ const CONFIG = {
       motto: "Three hundred thirty-three, and not one fewer.",
       leader: { handle: "trinity333__", title: "Head of House · past Tweetober champion", avatar: "assets/head-333.jpg" },
       // Image shown on the house card. Drop a new file in assets/ and change the name here.
-      emblem: "assets/emblem-333.png",
+      emblem: "assets/crest-333.png",
       // Roster from the House Draft doc. Used until the sheet loads; once it does, the sheet's House column decides membership.
       members: ["paleomagnetizm", "juulingkills", "jadore808", "nectarineavery", "ryjbot", "iikkaaaaa", "trinitybellaa", "d0gtired", "intimateemoji", "womanwqualities", "0atmik", "corporatemaiden", "weirdassfishes", "mouse_cafe", "ok___but", "megab00f", "anteluca", "daradrat227", "champagnenoona", "ematearecee", "semalations", "degogo_"]
     },
@@ -1148,7 +1150,7 @@ const CONFIG = {
       name: "House of 500",
       motto: "Five hundred a day keeps the silence away.",
       leader: { handle: "mickal500", title: "Head of House · past Tweetober champion", avatar: "assets/head-500.jpg" },
-      emblem: "assets/emblem-500.png",
+      emblem: "assets/crest-500.png",
       members: ["chloe247365", "shell_beloved", "visceraldream", "rafajohnmisty", "ohnoidontknow", "galil2a", "decemberhunting", "ourfirstcaress", "out_of_eggs", "fish_oii", "sn0oozey", "our_decay", "alivegirI001101", "smellagillis", "o8040", "muol291945", "tiny_charm", "malemanlpulator", "thatdaigle", "24hrheadlock", "notscreaming", "slyzieboo"]
     }
   ]
@@ -1296,7 +1298,7 @@ function renderHouses() {
 function houseCard(h, members) { return `
   <article class="house ${h.key}">
     <div class="house-top">
-      <img class="emblem" src="${h.key === "h333" ? EMBLEM.h333 : EMBLEM.h500}" alt="" width="74" height="96">
+      <img class="emblem" src="${h.key === "h333" ? EMBLEM.h333 : EMBLEM.h500}" alt="${esc(h.name)} crest" width="96" height="121">
       <div><h3 class="heading">${h.name}</h3><p class="motto">${h.motto}</p></div>
     </div>
     <a class="leader" href="${xUrl(h.leader.handle)}" target="_blank" rel="noopener">
