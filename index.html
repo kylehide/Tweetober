@@ -275,8 +275,8 @@
 
   /* ---------- Houses ---------- */
   .houses { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 22px; }
-  .house { padding: 0 0 22px; display: grid; gap: 18px; position: relative; }
-  .house-top { padding: 24px 22px 18px; display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: center; border-bottom: 1px solid var(--line); }
+  .house { padding: 0 0 22px; display: grid; gap: 18px; position: relative; min-width: 0; grid-template-columns: minmax(0, 1fr); }
+  .house-top { padding: 24px 22px 18px; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px; align-items: center; border-bottom: 1px solid var(--line); }
   .house.h333 .house-top { background: linear-gradient(180deg, var(--h333-soft), transparent); }
   .house.h500 .house-top { background: linear-gradient(180deg, var(--h500-soft), transparent); }
   .emblem { width: 74px; height: 96px; object-fit: cover; border: 2px solid var(--gold); box-shadow: 0 0 0 3px rgba(0,0,0,.4), 0 6px 14px rgba(0,0,0,.5); }
@@ -284,7 +284,7 @@
   .house.h333 h3 { color: var(--h333); }
   .house.h500 h3 { color: var(--h500); }
   .motto { margin: 4px 0 0; color: var(--ink-2); font-size: .95rem; }
-  .leader { margin: 0 22px; display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: center; padding: 10px 14px; border: 1px solid var(--line-strong); background: var(--surface-2); text-decoration: none; color: inherit; }
+  .leader { margin: 0 22px; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; align-items: center; padding: 10px 14px; border: 1px solid var(--line-strong); background: var(--surface-2); text-decoration: none; color: inherit; }
   .leader:hover { border-color: var(--gold-bright); }
   .leader .av { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; border: 2px solid var(--gold); }
   .h500 .leader .av { border-color: var(--h500); }
@@ -292,10 +292,10 @@
   .leader .who { display: grid; }
   .leader .who b { font-size: 1.05rem; }
   .leader .who span { font-size: .85rem; color: var(--ink-2); }
-  .roster { list-style: none; margin: 0; padding: 0 22px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 14px; }
-  .roster li { display: flex; align-items: center; gap: 8px; font-size: 1rem; }
+  .roster { list-style: none; margin: 0; padding: 0 22px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 14px; }
+  .roster li { display: flex; align-items: center; gap: 8px; font-size: 1rem; min-width: 0; }
   .roster li::before { content: ""; width: 6px; height: 6px; transform: rotate(45deg); background: var(--gold); flex: none; }
-  .roster a { color: var(--ink); text-decoration: none; border-bottom: 1px dotted var(--line-strong); }
+  .roster a { color: var(--ink); text-decoration: none; border-bottom: 1px dotted var(--line-strong); min-width: 0; overflow-wrap: anywhere; }
   .roster a:hover { color: var(--gold-bright); border-bottom-style: solid; }
   .count { margin: 0 22px; font-size: .9rem; color: var(--ink-3); }
 
@@ -446,6 +446,14 @@
   .hall { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 22px; align-items: start; }
   .panel { padding: 20px; display: grid; gap: 14px; min-width: 0; position: relative; }
   .board-panel { grid-column: 1 / -1; }
+  /* Desktop: the Scrying Glass and the Trophy Room stand side by side at the same height, each scrolling inside */
+  @media (min-width: 761px) {
+    .glass-panel, .trophy-panel { height: 880px; display: flex; flex-direction: column; }
+    .glass-panel .feed-slot { flex: 1; min-height: 0; }
+    .glass-panel .feed-slot.glass { display: flex; flex-direction: column; }
+    .glass-panel .gt-list { flex: 1; min-height: 0; max-height: none; }
+    .trophy-panel .fame { flex: 1; min-height: 0; max-height: none; }
+  }
   .board-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
   .board-head h2 { margin: 0; font-size: 1.24rem; }
   .board-status { font-size: .75rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
@@ -456,10 +464,10 @@
     background: none; filter: drop-shadow(0 8px 14px rgba(0,0,0,.5));
     color: #2B1A0E; scrollbar-color: #A08050 transparent; }
   @media (max-width: 760px) { .tavern { border-width: 26px; border-image-width: 26px; padding: 4px 4px; } }
-  .tavern li { display: grid; gap: 0; line-height: 1.2; overflow-wrap: anywhere; }
+  .tavern li { display: grid; gap: 5px; line-height: 1.2; overflow-wrap: anywhere; }
   .tavern .who { display: flex; flex-wrap: wrap; column-gap: 10px; align-items: baseline; }
   /* names in their bright gem color on a darker band of the same hue, like a highlighter */
-  .tavern .who b { font-weight: 400; font-size: .92rem; letter-spacing: .02em; line-height: 1.15; padding: 1px 7px 2px; border-radius: 3px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }   /* names in the site's pixel font; messages below in handwriting */
+  .tavern .who b { font-weight: 400; font-size: .84rem; letter-spacing: .02em; line-height: 1; padding: 1px 3px 0; border-radius: 0; box-decoration-break: clone; -webkit-box-decoration-break: clone; }   /* names in the site's pixel font; messages below in handwriting */
   .tavern .who time { font-size: .68rem; color: #7A5E3A; letter-spacing: .06em; }
   .tavern .body { font-family: "Almendra", "Pirata One", Georgia, serif; font-weight: 400; font-size: .74rem; line-height: 1.35; color: #2B1A0E; text-shadow: 0 0 .5px rgba(43,26,14,.45); }   /* a medieval book hand, in ink */
   /* moderator's × (only shown once the page has been opened with ?key=…) */
@@ -867,11 +875,11 @@ try { if (sessionStorage.getItem("tweetober-gates") === "1") document.getElement
       <p>The latest tweets, the month’s finest, and a place to talk among yourselves.</p>
     </div>
     <div class="hall">
-      <div class="panel">
+      <div class="panel glass-panel">
         <h2 class="heading">The Scrying Glass</h2>
         <div class="feed-slot" id="feedSlot"></div>
       </div>
-      <div class="panel">
+      <div class="panel trophy-panel">
         <h2 class="heading">The Trophy Room</h2>
         <p class="feed-note" style="margin-top:-6px">The tweets that took it to another level.</p>
         <div class="fame" id="fame"></div>
@@ -1756,7 +1764,7 @@ const emblemSrc = (code) => "data:image/svg+xml," + encodeURIComponent(emblemSvg
   };
   const safeColor = (c) => COLORS.includes(c) ? c : COLORS[0];
   // on the papyrus each gem writes in a deeper ink of its own hue
-  const INKS = { "#F26F96": "#A3244C", "#E6E4E0": "#46525E", "#F2D272": "#8A6208", "#B99CFF": "#5B3A9E", "#8CC8FF": "#1F5A96", "#8FE3B6": "#1E6E4C", "#FF9D5C": "#A2461A", "#FFB3C7": "#A8406A" };
+  const INKS = { "#F26F96": "#A3244C", "#E6E4E0": "#74777B", "#F2D272": "#8A6208", "#B99CFF": "#5B3A9E", "#8CC8FF": "#1F5A96", "#8FE3B6": "#1E6E4C", "#FF9D5C": "#A2461A", "#FFB3C7": "#A8406A" };
   const ink = (c) => INKS[safeColor(c)];
   // House flair: a name that matches a roster handle gets a small heart beside it (grey for 333, pink for 500)
   const houseOfName = houseOfHandle;
