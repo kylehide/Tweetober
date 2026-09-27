@@ -1031,9 +1031,12 @@ const SHIELD_UNUSED = (key) => `
 
 /* ---------- Ledger ---------- */
 (function gate() {
+  // The unlock uses the browser's crypto, which only exists on https pages: send http visitors to https first.
+  if (location.protocol === "http:" && !/^(localhost|127\.)/.test(location.hostname)) { location.replace("https://" + location.host + location.pathname + location.search + location.hash); return; }
   const G = CONFIG.ledgerGate, form = $("#gateForm"), msg = $("#gateMsg"), link = $("#ledgerLink"), box = $("#gate");
   const enc = new TextEncoder(), b64 = (s) => Uint8Array.from(atob(s), c => c.charCodeAt(0)), b64e = (a) => btoa(String.fromCharCode(...new Uint8Array(a)));
-  const norm = (v) => String(v || "").trim().toLowerCase();
+  // forgiving about what phones add: capitals, spaces, an autocorrect period, invisible characters, curly quotes
+  const norm = (v) => String(v || "").normalize("NFKC").replace(/[\u200B-\u200D\uFEFF]/g, "").replace(/[\u2018\u2019]/g, "'").trim().replace(/[.!,;:\s]+$/, "").toLowerCase();
   const reveal = (url) => { link.href = url; link.hidden = false; form.hidden = true; };
   try { const saved = localStorage.getItem("tweetober-ledger"); if (saved && /^https:\/\/docs\.google\.com\//.test(saved)) reveal(saved); } catch {}
   async function unlock(code) {
@@ -1051,6 +1054,7 @@ const SHIELD_UNUSED = (key) => `
     if (!code) return;
     msg.textContent = "Checking…"; msg.classList.remove("err");
     let url = null;
+    if (!(window.crypto && crypto.subtle)) { msg.textContent = "This browser can't check the password here. Try opening https://tweetober.com in Safari or Chrome."; msg.classList.add("err"); return; }
     try { url = await unlock(code); } catch (err) { console.warn(err); }
     if (url) {
       msg.textContent = "";
