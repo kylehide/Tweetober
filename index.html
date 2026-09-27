@@ -660,23 +660,30 @@
   .pill { display: inline-block; padding: 2px 8px; border: 1px solid var(--line-strong); font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); }
 
   /* ---------- Easter eggs ---------- */
-  /* Loading gates: two stone doors part to reveal the keep */
-  .gates { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; pointer-events: none; }
-  .gates .door { position: absolute; top: 0; bottom: 0; width: 50.5%; background-color: var(--bg);
+  /* Loading gates: two stone doors meet exactly in the middle of the screen, with the crest set across the seam.
+     When they open, the crest splits down the middle and each half leaves with its door. */
+  .gates { position: fixed; inset: 0; z-index: 100; pointer-events: none; overflow: hidden; background: var(--bg); --cw: 104px; --ch: 131px; }
+  .gates.open { background: transparent; }
+  .gates .door { position: absolute; top: 0; bottom: 0; width: 50%; background-color: var(--bg);
     background-image: linear-gradient(rgba(20,14,8,.6), rgba(20,14,8,.6)), var(--stone); background-size: 100% 100%, 900px 900px; }
-  /* The gates stay shut until the page has loaded behind them (and at least two seconds have passed); JS then adds .open */
-  .gates .door.l { left: 0; border-right: 3px solid var(--gold-deep); box-shadow: 6px 0 24px rgba(0,0,0,.7); }
-  .gates .door.r { right: 0; border-left: 3px solid var(--gold-deep); box-shadow: -6px 0 24px rgba(0,0,0,.7); }
-  .gates.open .door.l { animation: doorL .75s cubic-bezier(.7,0,.3,1) forwards; }
-  .gates.open .door.r { animation: doorR .75s cubic-bezier(.7,0,.3,1) forwards; }
-  .gates-inner { position: relative; display: grid; justify-items: center; gap: 10px; }
-  .gates.open .gates-inner { animation: gateFade .3s ease forwards; }
-  .gates-inner img { width: 96px; height: auto; filter: drop-shadow(0 6px 12px rgba(0,0,0,.7)); animation: crestIn .6s ease both; }
-  .gates-inner p { animation: crestIn .6s ease .15s both; }
-  .gates-inner p { margin: 0; font-size: 1.3rem; }
-  @keyframes doorL { to { transform: translateX(-102%); } }
-  @keyframes doorR { to { transform: translateX(102%); } }
+  .gates .door.l { left: 0; background-position: 0 0, right center; box-shadow: inset -2px 0 0 var(--gold-deep), 8px 0 26px rgba(0,0,0,.75); }
+  .gates .door.r { left: 50%; background-position: 0 0, left center; box-shadow: inset 2px 0 0 var(--gold-deep), -8px 0 26px rgba(0,0,0,.75); }
+  /* each door carries half of the crest; together they make the whole crest, centered on the screen */
+  .gates .half { position: absolute; top: 50%; width: calc(var(--cw) / 2); height: var(--ch); margin-top: calc(var(--ch) / -2); overflow: hidden; z-index: 1; }
+  .gates .door.l .half { right: 0; } .gates .door.r .half { left: 0; }
+  .gates .half img { position: absolute; top: 0; width: var(--cw); height: var(--ch); max-width: none; filter: drop-shadow(0 6px 12px rgba(0,0,0,.7)); }
+  .gates .door.l .half img { left: 0; } .gates .door.r .half img { right: 0; }
+  .gates .half { animation: crestIn .6s ease both; }
+  .gates .door.l .half { transform-origin: right center; } .gates .door.r .half { transform-origin: left center; }
+  .gates-say { position: absolute; left: 0; right: 0; top: 50%; margin: calc(var(--ch) / 2 + 14px) 0 0; text-align: center; font-size: 1.3rem; z-index: 2; padding: 0 16px; animation: crestIn .6s ease .15s both; }
+  /* opening: the seam cracks, then the doors swing wide */
+  .gates.open .door.l { animation: doorL .9s cubic-bezier(.6,0,.25,1) forwards; }
+  .gates.open .door.r { animation: doorR .9s cubic-bezier(.6,0,.25,1) forwards; }
+  .gates.open .gates-say { animation: gateFade .25s ease forwards; }
+  @keyframes doorL { 0% { transform: none; } 18% { transform: translateX(-10px); } 100% { transform: translateX(-104%); } }
+  @keyframes doorR { 0% { transform: none; } 18% { transform: translateX(10px); } 100% { transform: translateX(104%); } }
   @keyframes gateFade { to { opacity: 0; } }
+  @media (max-width: 760px) { .gates { --cw: 88px; --ch: 111px; } .gates-say { font-size: 1.15rem; } }
   @keyframes crestIn { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: none; } }
   /* Milestone ribbon under the tug of war */
   .milestone { justify-self: center; text-align: center; font-family: "Pirata One", serif; font-size: 1.05rem; letter-spacing: .06em; color: var(--gold-bright);
@@ -744,8 +751,8 @@
 </head>
 <body>
 <div class="gates" id="gates" aria-hidden="true">
-  <div class="door l"></div><div class="door r"></div>
-  <div class="gates-inner"><img src="assets/crest.png" alt="" width="96" height="120"><p class="heading">The gates are opening…</p></div>
+  <div class="door l"><div class="half"><img src="assets/crest.png" alt=""></div></div><div class="door r"><div class="half"><img src="assets/crest.png" alt=""></div></div>
+  <p class="gates-say heading">The gates are opening…</p>
 </div>
 <script>/* Reloads in the same tab skip the gates entirely: everything is cached by then. */
 try { if (sessionStorage.getItem("tweetober-gates") === "1") document.getElementById("gates").remove(); } catch (e) {}</script>
@@ -2155,17 +2162,17 @@ function applyFinale() {
 })();
 
 /* ---------- The gates: a half-second curtain, then the keep ---------- */
-/* openGates(ready): parts the doors once `ready` settles and at least two seconds have passed (six at most).
+/* openGates(ready): parts the doors once `ready` settles and at least one and a half seconds have passed (six at most).
    Reloads in the same tab never see the gates (a small script by the markup removes them before first paint). */
 function openGates(ready) {
   const g = document.getElementById("gates");
   try { sessionStorage.setItem("tweetober-gates", "1"); } catch {}
   if (!g) { confetti.launch(); return; }
   const wait = (ms) => new Promise(r => setTimeout(r, ms));
-  Promise.all([wait(2000), Promise.race([ready, wait(6000)])]).then(() => {
+  Promise.all([wait(1500), Promise.race([ready, wait(6000)])]).then(() => {
     g.classList.add("open");
-    setTimeout(() => confetti.launch(), 450);      // as the doors part
-    setTimeout(() => g.remove(), 1100);
+    setTimeout(() => confetti.launch(), 500);      // as the doors part
+    setTimeout(() => g.remove(), 1200);
   });
 }
 
