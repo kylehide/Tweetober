@@ -576,20 +576,43 @@
   .feed-note { font-size: .9rem; color: var(--ink-3); margin: 0; }
   .feed-note code { font: inherit; color: var(--gold); }
   .fame { display: grid; gap: 10px; }
-  .post { border: 1px solid var(--line); background: var(--surface-2); padding: 14px 16px; display: grid; gap: 8px; min-width: 0; text-decoration: none; color: inherit; position: relative; }
-  .post:hover { border-color: var(--gold-bright); }
+  /* Trophy Room: every tweet hangs in a frame of its house's color, with bracketed corners */
+  .post { --hc: var(--gold); --hc-soft: rgba(217,178,74,.35); --hc-tint: rgba(217,178,74,.06);
+    border: 1px solid var(--hc-soft); background: linear-gradient(180deg, var(--hc-tint), transparent 70%), var(--surface-2);
+    padding: 12px 16px 14px; display: grid; gap: 8px; min-width: 0; text-decoration: none; color: inherit; position: relative;
+    transition: border-color .25s ease, box-shadow .25s ease; }
+  .post.h333 { --hc: var(--h333); --hc-soft: rgba(230,228,224,.32); --hc-tint: rgba(230,228,224,.07); }
+  .post.h500 { --hc: var(--h500); --hc-soft: rgba(242,111,150,.38); --hc-tint: rgba(242,111,150,.08); }
+  .post:hover { border-color: var(--hc); box-shadow: 0 0 0 1px var(--hc-soft), 0 6px 22px rgba(0,0,0,.35); }
+  .post .corners { position: absolute; inset: -4px; pointer-events: none; --c: var(--hc); --l: 16px; --w: 2px;
+    background:
+      linear-gradient(var(--c), var(--c)) top left / var(--l) var(--w), linear-gradient(var(--c), var(--c)) top left / var(--w) var(--l),
+      linear-gradient(var(--c), var(--c)) top right / var(--l) var(--w), linear-gradient(var(--c), var(--c)) top right / var(--w) var(--l),
+      linear-gradient(var(--c), var(--c)) bottom left / var(--l) var(--w), linear-gradient(var(--c), var(--c)) bottom left / var(--w) var(--l),
+      linear-gradient(var(--c), var(--c)) bottom right / var(--l) var(--w), linear-gradient(var(--c), var(--c)) bottom right / var(--w) var(--l);
+    background-repeat: no-repeat; transition: inset .25s ease; }
+  .post:hover .corners { inset: -6px; }
+  .plaque-head { display: flex; align-items: center; justify-content: space-between; gap: 8px 12px; flex-wrap: wrap; padding-bottom: 8px; border-bottom: 1px solid var(--hc-soft); }
+  .plaque-house { display: inline-flex; align-items: center; gap: 7px; font-size: .72rem; letter-spacing: .16em; text-transform: uppercase; color: var(--hc); }
+  .post:not(.h333):not(.h500) .plaque-house { display: none; }
+  .post.h333 .plaque-house::after { content: "House of 333"; } .post.h500 .plaque-house::after { content: "House of 500"; }
+  .plaque-heart { width: 15px; height: 14px; filter: drop-shadow(0 1px 0 rgba(0,0,0,.6)); }
+  .post .laurel { font-family: "Pirata One", serif; color: var(--gold); font-size: 1.05rem; letter-spacing: .04em; margin-left: auto; }
+  .post .laurel::before { content: "✦ "; font-size: .8em; }
   .post .top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: .95rem; }
-  .post .top b { font-weight: 600; }
-  .post .top .h333 { color: var(--h333); } .post .top .h500 { color: var(--h500); }
+  .post .top b { font-weight: 600; color: var(--hc); }
+  .post:not(.h333):not(.h500) .top b { color: var(--ink); }
   .post .text { margin: 0; font-size: 1rem; line-height: 1.5; }
   .post .foot { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: .85rem; color: var(--ink-2); }
-  .post .laurel { font-family: "Pirata One", serif; color: var(--gold); font-size: 1.05rem; letter-spacing: .04em; }
   .post .open { color: var(--gold); }
   .post.embed { padding: 12px 12px 4px; }
-  .post.embed .laurel { padding: 0 4px 6px; }
+  .post.embed .plaque-head { margin: 0 4px 2px; }
   .post.embed .twitter-tweet { margin: 0 auto !important; max-width: 100%; }
   .post.embed blockquote.twitter-tweet:not(.twitter-tweet-rendered) { color: var(--ink); font-size: .95rem; padding: 8px 4px 12px; border: 0; }
   .post.embed blockquote.twitter-tweet:not(.twitter-tweet-rendered) a { color: var(--ink); text-decoration: none; }
+  .fame { gap: 18px; padding: 4px; }
+  @media (max-width: 640px) { .post .laurel { margin-left: 0; } }
+  .post:not(.h333):not(.h500) .plaque-head:not(:has(.laurel)) { display: none; }
   .stamp { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: .85rem; color: var(--ink-3); }
   .pill { display: inline-block; padding: 2px 8px; border: 1px solid var(--line-strong); font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); }
 
@@ -1404,30 +1427,39 @@ async function loadEvents() {
 /* ---------- The Trophy Room ---------- */
 function renderFame() {
   const list = TROPHY ?? (CONFIG.hallOfFame || []);
+  // Each trophy hangs in a frame of its house's color: grey for 333, pink for 500.
+  // The House column wins; otherwise the handle is looked up in the Ledger (and repainted when the Ledger arrives).
+  const plaque = (p) => {
+    const set = houseKeyFrom(p.house) || "", hk = set || houseOfHandle(p.handle);
+    const hh = set ? "" : ` data-hh="${esc(p.handle || "")}"`;
+    const head = `<div class="plaque-head"><span class="plaque-house"><img class="plaque-heart" alt="" aria-hidden="true"></span>${p.honor ? `<span class="laurel">${esc(p.honor)}</span>` : ""}</div>`;
+    return { hk, hh, head };
+  };
   $("#fame").innerHTML = list.length ? list.map(p => {
-    const hk = houseKeyFrom(p.house) || "";
     const statusUrl = (p.url || "").match(/^https?:\/\/(?:www\.|mobile\.)?(?:x|twitter)\.com\/(\w{1,15})\/status\/(\d+)/i);
+    if (statusUrl && !p.handle) p = { ...p, handle: statusUrl[1] };
+    const { hk, hh, head } = plaque(p);
     if (statusUrl) {
       // Embed the real tweet. The link is rewritten to twitter.com, which the widget script expects.
       const canon = `https://twitter.com/${statusUrl[1]}/status/${statusUrl[2]}`;
-      return `<div class="post embed">
-        ${p.honor ? `<div class="laurel">✦ ${esc(p.honor)}</div>` : ""}
+      return `<div class="post embed ${hk}"${hh}><i class="corners" aria-hidden="true"></i>
+        ${head}
         <blockquote class="twitter-tweet" data-theme="dark" data-dnt="true" data-conversation="none"><a href="${canon}">@${esc(p.handle || statusUrl[1])}${p.text ? ": " + esc(p.text) : ""}</a></blockquote>
       </div>`;
     }
     const stats = [p.likes != null && `${fmt(p.likes)} likes`, p.reposts != null && `${fmt(p.reposts)} retweets`].filter(Boolean).join(" · ");
     const link = safeUrl(p.url);
     const tag = link ? "a" : "div";
-    return `<${tag} class="post" ${link ? `href="${link}" target="_blank" rel="noopener"` : ""}>
-      ${p.honor ? `<div class="laurel">✦ ${esc(p.honor)}</div>` : ""}
-      <div class="top"><b class="${hk}">@${esc(p.handle)}</b>${hk ? `<span class="chip ${hk}">${hk.slice(1)}</span>` : ""}${p.date ? `<span class="muted">${esc(p.date)}</span>` : ""}</div>
+    return `<${tag} class="post ${hk}"${hh} ${link ? `href="${link}" target="_blank" rel="noopener"` : ""}><i class="corners" aria-hidden="true"></i>
+      ${head}
+      <div class="top"><b>@${esc(p.handle)}</b>${p.date ? `<span class="muted">${esc(p.date)}</span>` : ""}</div>
       <p class="text">${esc(p.text)}</p>
       <div class="foot"><span>${stats}</span>${link ? `<span class="open">View on Twitter ↗</span>` : ""}</div>
     </${tag}>`;
   }).join("") : `<p class="empty">No tweets have earned a place here yet.</p>`;
+  $("#fame").querySelectorAll(".plaque-heart").forEach(img => { img.src = emblemSrc(img.closest(".h500") ? "500" : "333"); });
   if (window.twttr?.widgets?.load) window.twttr.widgets.load($("#fame"));
 }
-
 /* ---------- Events ---------- */
 function renderEvents() {
   const list = [...(EVENTS ?? CONFIG.events ?? [])].sort((a, b) => a.date.localeCompare(b.date));
@@ -1458,6 +1490,7 @@ function paintHouses() {
   document.querySelectorAll("[data-hh]").forEach(el => {
     const k = houseOfHandle(el.dataset.hh);
     el.classList.remove("h333", "h500"); if (k) el.classList.add(k);
+    const heart = el.querySelector && el.querySelector(":scope > .plaque-head .plaque-heart"); if (heart) heart.src = emblemSrc(k === "h500" ? "500" : "333");
     if (el.classList.contains("flair")) { if (k) el.title = `House of ${k.slice(1)}`; else el.removeAttribute("title"); }
   });
 }
