@@ -300,13 +300,14 @@ async function trophies(env, url) {
   return json({ tweets });
 }
 
-/* ---------- Private day report (temporary tool for the organizers) ----------
-   /api/day?key=ADMIN_KEY&date=2026-10-01   every tweet the list posted that day (New York time),
-   with current like counts: the most-liked tweets and how many tweets each person posted.
-   Scans in chunks (the page refreshes itself until done); add &fresh=1 to scan again from scratch. */
+/* ---------- Private report for the organizers ----------
+   /api/day?key=ADMIN_KEY   today's tweets (New York time) and the month so far, from everyone on the list:
+   tweets per house, the most-liked tweets and tweets per person.
+   Each finished day is scanned once after it ends; today is re-scanned at most every REPORT_MINUTES (default 30)
+   so like counts stay fresh. The page refreshes itself while a scan is running. &fresh=1 re-scans today now. */
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const page = (title, body, refresh) => new Response(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">${refresh ? `<meta http-equiv="refresh" content="${refresh}">` : ""}<title>${esc(title)}</title>
-<style>body{font:15px/1.45 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:#1c150e;color:#f3e6c8;margin:0;padding:20px}main{max-width:820px;margin:0 auto}h1{color:#f2d272;font-size:1.5rem}h2{color:#f2d272;font-size:1.1rem;margin-top:28px}table{border-collapse:collapse;width:100%}td,th{padding:6px 8px;border-bottom:1px solid #4a3a24;text-align:left;vertical-align:top}th{color:#c9b48a;font-weight:600}.n{text-align:right;white-space:nowrap}a{color:#f2d272}.muted{color:#a8957a}.h333{color:#e6e4e0}.h500{color:#f26f96}</style></head><body><main>${body}</main></body></html>`,
+const page = (title, body, refresh) => new Response(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">${refresh ? `<meta http-equiv="refresh" content="${esc(refresh)}">` : ""}<title>${esc(title)}</title>
+<style>body{font:15px/1.45 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:#1c150e;color:#f3e6c8;margin:0;padding:20px}main{max-width:820px;margin:0 auto}h1{color:#f2d272;font-size:1.5rem}h3{color:#e9d6a8;font-size:1rem;margin-top:18px}details{margin-top:14px}summary{cursor:pointer;color:#f2d272}h2{color:#f2d272;font-size:1.1rem;margin-top:28px}table{border-collapse:collapse;width:100%}td,th{padding:6px 8px;border-bottom:1px solid #4a3a24;text-align:left;vertical-align:top}th{color:#c9b48a;font-weight:600}.n{text-align:right;white-space:nowrap}a{color:#f2d272}.muted{color:#a8957a}.h333{color:#e6e4e0}.h500{color:#f26f96}</style></head><body><main>${body}</main></body></html>`,
   { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "x-robots-tag": "noindex" } });
 const LEDGER_SHEET = "https://docs.google.com/spreadsheets/d/1b3AqoSgvyc1s-21rQQuVK0-HBeTz6cZVUJuWW9BRKy4/gviz/tq?tqx=out:csv";
 function csvRows(text) {
@@ -338,74 +339,112 @@ async function ledgerHouses(env) {
   } catch {}
   return map;
 }
+const DAY_MS = 864e5, OCT1 = Date.UTC(2026, 9, 1, 4);   // midnight Oct 1, New York (EDT)
+const dayStart = (d) => OCT1 + (d - 1) * DAY_MS;
+const blankDay = () => ({ users: {}, top: [], ids: [], n: { tweet: 0, quote: 0, reply: 0, retweet: 0 } });
+// one chunk of a day's scan: up to 25 pages of the list, folded into that day's running totals
+async function scanChunk(env, d, st, until) {
+  const start = dayStart(d), seen = new Set(st.data.ids);
+  for (let i = 0; i < 25; i++) {
+    const u = new URL("https://api.twitterapi.io/twitter/list/tweets");
+    u.searchParams.set("listId", env.LIST_ID || DEFAULT_LIST); u.searchParams.set("includeReplies", "true");
+    u.searchParams.set("sinceTime", String(Math.floor(start / 1000))); u.searchParams.set("untilTime", String(Math.floor(until / 1000)));
+    if (st.cursor) u.searchParams.set("cursor", st.cursor);
+    const r = await fetch(u, { headers: { "X-API-Key": env.TWITTERAPI_KEY } });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok || !Array.isArray(data.tweets)) throw new Error("twitterapi.io: " + (data.message || data.msg || r.status));
+    let older = false;
+    for (const t of data.tweets) {
+      const created = when(t.createdAt), id = String(t.id || "");
+      if (created && created < start) older = true;
+      if (!id || seen.has(id) || created < start || created >= until) continue;
+      seen.add(id); st.data.ids.push(id);
+      const user = String(t.author?.userName || "");
+      const kind = (t.retweeted_tweet || t.retweetedTweet || /^RT @/.test(t.text || "")) ? "retweet"
+        : (t.isReply && String(t.inReplyToUsername || "").toLowerCase() !== user.toLowerCase()) ? "reply"
+        : (t.quoted_tweet || t.quotedTweet) ? "quote" : "tweet";
+      st.data.n[kind]++;
+      const p = st.data.users[user] ||= [0, 0, 0, 0];   // counted, likes on counted, replies, retweets
+      if (kind === "reply") p[2]++; else if (kind === "retweet") p[3]++; else {
+        p[0]++; p[1] += t.likeCount | 0;
+        st.data.top.push([user, id, t.likeCount | 0, t.retweetCount | 0, String(t.text || "").slice(0, 160)]);
+        if (st.data.top.length > 40) { st.data.top.sort((a, b) => b[2] - a[2]); st.data.top.length = 30; }
+      }
+    }
+    st.cursor = data.has_next_page && data.next_cursor && data.tweets.length && !older ? data.next_cursor : "";
+    if (!st.cursor) return true;
+  }
+  return false;
+}
 async function dayReport(request, env, url) {
   if (!env.ADMIN_KEY || url.searchParams.get("key") !== env.ADMIN_KEY) return page("Not allowed", "<h1>Not allowed</h1><p>Add <code>?key=</code> with your ADMIN_KEY.</p>");
   if (!env.TWITTERAPI_KEY || !env.DB) return page("Not set up", "<h1>Not set up</h1><p>TWITTERAPI_KEY or the database is missing.</p>");
-  const date = /^\d{4}-\d{2}-\d{2}$/.test(url.searchParams.get("date") || "") ? url.searchParams.get("date") : new Date(Date.now() - 4 * 3600e3).toISOString().slice(0, 10);
-  const [y, m, d] = date.split("-").map(Number);
-  const start = Date.UTC(y, m - 1, d, 4), end = start + 864e5;   // midnight to midnight, New York (EDT) time
-  await env.DB.prepare("CREATE TABLE IF NOT EXISTS day_scan (day TEXT PRIMARY KEY, cursor TEXT, done INTEGER NOT NULL, tweets TEXT NOT NULL, updated INTEGER NOT NULL)").run();
-  if (url.searchParams.get("fresh")) await env.DB.prepare("DELETE FROM day_scan WHERE day = ?").bind(date).run();
-  let row = await env.DB.prepare("SELECT * FROM day_scan WHERE day = ?").bind(date).first();
-  let tweets = row ? JSON.parse(row.tweets) : [], cursor = row ? row.cursor || "" : "", done = row ? !!row.done : false;
-  if (!done) {
-    const seen = new Set(tweets.map(t => t.id));
-    for (let i = 0; i < 25 && !done; i++) {   // a chunk of pages per visit keeps each request within Cloudflare's limits
-      const u = new URL("https://api.twitterapi.io/twitter/list/tweets");
-      u.searchParams.set("listId", env.LIST_ID || DEFAULT_LIST); u.searchParams.set("includeReplies", "true");
-      u.searchParams.set("sinceTime", String(Math.floor(start / 1000))); u.searchParams.set("untilTime", String(Math.floor(end / 1000)));
-      if (cursor) u.searchParams.set("cursor", cursor);
-      const r = await fetch(u, { headers: { "X-API-Key": env.TWITTERAPI_KEY } });
-      const data = await r.json().catch(() => ({}));
-      if (!r.ok || !Array.isArray(data.tweets)) return page("Error", `<h1>twitterapi.io said no</h1><p>${esc(data.message || data.msg || r.status)}</p><p><a href="">Try again</a></p>`);
-      let older = false;
-      for (const t of data.tweets) {
-        const created = when(t.createdAt), id = String(t.id || "");
-        if (created && created < start) older = true;
-        if (!id || seen.has(id) || created < start || created >= end) continue;
-        seen.add(id);
-        const user = String(t.author?.userName || "");
-        const rt = !!(t.retweeted_tweet || t.retweetedTweet) || /^RT @/.test(t.text || "");
-        const quote = !!(t.quoted_tweet || t.quotedTweet);
-        const reply = !!t.isReply && String(t.inReplyToUsername || "").toLowerCase() !== user.toLowerCase();
-        tweets.push({ id, user, url: String(t.url || `https://x.com/${user}/status/${id}`), likes: t.likeCount | 0, rts: t.retweetCount | 0, created,
-          kind: rt ? "retweet" : reply ? "reply" : quote ? "quote" : "tweet", text: String(t.text || "").slice(0, 200) });
-      }
-      cursor = data.has_next_page && data.next_cursor && data.tweets.length && !older ? data.next_cursor : "";
-      if (!cursor) done = true;
-    }
-    await env.DB.prepare("INSERT INTO day_scan (day, cursor, done, tweets, updated) VALUES (?, ?, ?, ?, ?) ON CONFLICT(day) DO UPDATE SET cursor = excluded.cursor, done = excluded.done, tweets = excluded.tweets, updated = excluded.updated")
-      .bind(date, cursor, done ? 1 : 0, JSON.stringify(tweets), Date.now()).run();
-    if (!done) return page("Scanning", `<h1>Scanning ${esc(date)}&hellip;</h1><p>${tweets.length} tweets so far. This page refreshes itself until it's done.</p>`, 2);
+  const now = Date.now();
+  const today = Math.max(1, Math.min(31, Math.floor((now - OCT1) / DAY_MS) + 1));
+  const ttl = Math.max(5, Number(env.REPORT_MINUTES) || 30) * 60000;
+  await env.DB.prepare("CREATE TABLE IF NOT EXISTS report_days (day INTEGER PRIMARY KEY, data TEXT NOT NULL, cursor TEXT, scanning INTEGER NOT NULL, final INTEGER NOT NULL, scanned INTEGER NOT NULL, upto INTEGER NOT NULL)").run();
+  const { results } = await env.DB.prepare("SELECT * FROM report_days").all();
+  const rows = Object.fromEntries(results.map(r => [r.day, r]));
+  // what needs scanning: a finished day that was never scanned after it ended, or today if it's stale (or &fresh=1)
+  let job = null;
+  for (let d = 1; d <= today && !job; d++) {
+    const r = rows[d], ended = now >= dayStart(d) + DAY_MS;
+    if (r && r.scanning) job = d;
+    else if (ended && !(r && r.final)) job = d;
+    else if (!ended && (!r || now - r.scanned > ttl || (url.searchParams.get("fresh") && !url.searchParams.get("cont")))) job = d;
   }
-  const counts = tweets.filter(t => t.kind !== "retweet" && t.kind !== "reply");
-  const top = [...counts].sort((a, b) => b.likes - a.likes || b.rts - a.rts).slice(0, 15);
-  const per = {};
-  for (const t of tweets) { const p = per[t.user] ||= { user: t.user, counted: 0, reply: 0, retweet: 0, likes: 0 }; if (t.kind === "reply") p.reply++; else if (t.kind === "retweet") p.retweet++; else { p.counted++; p.likes += t.likes; } }
-  const people = Object.values(per).sort((a, b) => b.counted - a.counted || b.likes - a.likes);
-  // house of each person, from the Ledger
+  if (job && now <= dayStart(31) + 2 * DAY_MS) {
+    const r = rows[job], cont = r && r.scanning;
+    const st = cont ? { data: JSON.parse(r.data), cursor: r.cursor || "" } : { data: blankDay(), cursor: "" };
+    const until = cont ? r.upto : Math.min(now, dayStart(job) + DAY_MS);
+    let done;
+    try { done = await scanChunk(env, job, st, until); }
+    catch (e) { return page("Error", `<h1>Couldn't scan</h1><p>${esc(e.message || e)}</p><p><a href="">Try again</a></p>`); }
+    if (done) { st.data.top.sort((a, b) => b[2] - a[2]); st.data.top.length = Math.min(st.data.top.length, 30); }
+    await env.DB.prepare("INSERT INTO report_days (day, data, cursor, scanning, final, scanned, upto) VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT(day) DO UPDATE SET data = excluded.data, cursor = excluded.cursor, scanning = excluded.scanning, final = excluded.final, scanned = excluded.scanned, upto = excluded.upto")
+      .bind(job, JSON.stringify(st.data), st.cursor, done ? 0 : 1, done && until >= dayStart(job) + DAY_MS ? 1 : 0, now, until).run();
+    const k = encodeURIComponent(url.searchParams.get("key"));
+    return page("Scanning", `<h1>Scanning October ${job}&hellip;</h1><p>${st.data.ids.length} posts so far. This page refreshes itself until it's done.</p>`, `1;url=?key=${k}&cont=1`);
+  }
+  // ---- render ----
+  const days = Object.fromEntries(results.map(r => [r.day, JSON.parse(r.data)]));
   const houses = await ledgerHouses(env), houseOf = (u) => houses[String(u).toLowerCase()] || "";
   const H = { "333": { name: "House of 333", cls: "h333" }, "500": { name: "House of 500", cls: "h500" }, "": { name: "Not in the Ledger", cls: "muted" } };
-  const hs = { "333": { counted: 0, likes: 0, reply: 0, retweet: 0, people: 0 }, "500": { counted: 0, likes: 0, reply: 0, retweet: 0, people: 0 }, "": { counted: 0, likes: 0, reply: 0, retweet: 0, people: 0 } };
-  for (const p of people) { const h = hs[houseOf(p.user)]; h.counted += p.counted; h.likes += p.likes; h.reply += p.reply; h.retweet += p.retweet; h.people++; }
-  const houseRows = ["333", "500", ""].filter(k => k || hs[k].people).map(k => `<tr><td class="${H[k].cls}">${H[k].name}</td><td class="n">${hs[k].counted}</td><td class="n">${hs[k].likes}</td><td class="n">${hs[k].people}</td><td class="n">${hs[k].reply}</td><td class="n">${hs[k].retweet}</td></tr>`).join("");
-  const lead = hs["333"].counted === hs["500"].counted ? "Dead even." : `${hs["333"].counted > hs["500"].counted ? "House of 333" : "House of 500"} leads by ${Math.abs(hs["333"].counted - hs["500"].counted)}.`;
-  const who = (u) => { const k = houseOf(u); return `<span class="${H[k].cls}">@${esc(u)}</span>`; };
-  const by = (k) => tweets.filter(t => t.kind === k).length;
-  const asOf = new Date((row && row.updated) || Date.now()).toLocaleString("en-US", { timeZone: "America/New_York", dateStyle: "medium", timeStyle: "short" });
-  return page(`Tweetober ${date}`, `<h1>Tweetober list &middot; ${esc(date)}</h1>
-    <p class="muted">${tweets.length} posts found (${by("tweet")} tweets, ${by("quote")} quote tweets, ${by("reply")} replies to others, ${by("retweet")} retweets). Likes as of ${esc(asOf)} New York time. <a href="?key=${encodeURIComponent(url.searchParams.get("key"))}&date=${date}&fresh=1">Scan again</a></p>
-    <h2>Tweets per house</h2>
-    <p>${lead}</p>
-    <table><tr><th>House</th><th class="n">Counted tweets</th><th class="n">Likes on them</th><th class="n">People posting</th><th class="n">Replies</th><th class="n">Retweets</th></tr>${houseRows}</table>
-    <p class="muted">Houses come from the Ledger sheet. "Not in the Ledger" is anyone on the list who isn't in it (or whose handle is spelled differently there).</p>
-    <h2>Most liked (tweets and quote tweets)</h2>
-    <table><tr><th>#</th><th>Who</th><th>Tweet</th><th class="n">Likes</th><th class="n">RTs</th></tr>
-    ${top.map((t, i) => `<tr><td>${i + 1}</td><td>${who(t.user)}</td><td><a href="${esc(t.url)}" target="_blank" rel="noopener">${esc(t.text) || "(media)"}</a></td><td class="n">${t.likes}</td><td class="n">${t.rts}</td></tr>`).join("")}</table>
-    <h2>Posts per person</h2>
-    <p class="muted">"Counted" = original tweets, quote tweets and replies to yourself (threads), per the rules. Replies to others and retweets are listed separately.</p>
-    <table><tr><th>#</th><th>Who</th><th class="n">Counted</th><th class="n">Likes on them</th><th class="n">Replies</th><th class="n">Retweets</th></tr>
-    ${people.map((p, i) => `<tr><td>${i + 1}</td><td>${who(p.user)}</td><td class="n">${p.counted}</td><td class="n">${p.likes}</td><td class="n">${p.reply}</td><td class="n">${p.retweet}</td></tr>`).join("")}</table>`);
+  const who = (u) => `<span class="${H[houseOf(u)].cls}">@${esc(u)}</span>`;
+  function section(title, list) {
+    const users = {}, n = { tweet: 0, quote: 0, reply: 0, retweet: 0 }; let top = [];
+    for (const d of list) {
+      for (const [u, v] of Object.entries(d.users)) { const p = users[u] ||= [0, 0, 0, 0]; v.forEach((x, i) => p[i] += x); }
+      for (const k in n) n[k] += d.n[k] || 0;
+      top = top.concat(d.top);
+    }
+    top.sort((a, b) => b[2] - a[2] || b[3] - a[3]); top = top.slice(0, 10);
+    const hs = { "333": [0, 0, 0, 0, 0], "500": [0, 0, 0, 0, 0], "": [0, 0, 0, 0, 0] };
+    for (const [u, p] of Object.entries(users)) { const h = hs[houseOf(u)]; p.forEach((x, i) => h[i] += x); h[4]++; }
+    const lead = hs["333"][0] === hs["500"][0] ? "Dead even." : `${hs["333"][0] > hs["500"][0] ? "House of 333" : "House of 500"} leads by ${Math.abs(hs["333"][0] - hs["500"][0]).toLocaleString("en-US")}.`;
+    const people = Object.entries(users).sort((a, b) => b[1][0] - a[1][0] || b[1][1] - a[1][1]);
+    const f = (x) => Number(x).toLocaleString("en-US");
+    return `<h2>${title}</h2>
+      <p class="muted">${f(n.tweet + n.quote + n.reply + n.retweet)} posts: ${f(n.tweet)} tweets, ${f(n.quote)} quote tweets, ${f(n.reply)} replies to others, ${f(n.retweet)} retweets.</p>
+      <h3>Tweets per house</h3><p>${lead}</p>
+      <table><tr><th>House</th><th class="n">Counted tweets</th><th class="n">Likes on them</th><th class="n">People posting</th><th class="n">Replies</th><th class="n">Retweets</th></tr>
+      ${["333", "500", ""].filter(k => k || hs[k][4]).map(k => `<tr><td class="${H[k].cls}">${H[k].name}</td><td class="n">${f(hs[k][0])}</td><td class="n">${f(hs[k][1])}</td><td class="n">${hs[k][4]}</td><td class="n">${f(hs[k][2])}</td><td class="n">${f(hs[k][3])}</td></tr>`).join("")}</table>
+      <h3>Top 10 most liked</h3>
+      <table><tr><th>#</th><th>Who</th><th>Tweet</th><th class="n">Likes</th><th class="n">RTs</th></tr>
+      ${top.map((t, i) => `<tr><td>${i + 1}</td><td>${who(t[0])}</td><td><a href="https://x.com/${esc(t[0])}/status/${esc(t[1])}" target="_blank" rel="noopener">${esc(t[4]) || "(media)"}</a></td><td class="n">${f(t[2])}</td><td class="n">${f(t[3])}</td></tr>`).join("")}</table>
+      <details><summary>Tweets per person (${people.length})</summary>
+      <table><tr><th>#</th><th>Who</th><th class="n">Counted</th><th class="n">Likes on them</th><th class="n">Replies</th><th class="n">Retweets</th></tr>
+      ${people.map(([u, p], i) => `<tr><td>${i + 1}</td><td>${who(u)}</td><td class="n">${f(p[0])}</td><td class="n">${f(p[1])}</td><td class="n">${f(p[2])}</td><td class="n">${f(p[3])}</td></tr>`).join("")}</table></details>`;
+  }
+  const ny = (t) => new Date(t).toLocaleString("en-US", { timeZone: "America/New_York", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  const tRow = rows[today], k = encodeURIComponent(url.searchParams.get("key"));
+  const monthDays = Object.keys(days).map(Number).filter(d => d <= today).map(d => days[d]);
+  return page("Tweetober report", `<h1>Tweetober report</h1>
+    <p class="muted">"Counted" = original tweets, quote tweets and replies to yourself (threads), per the rules. Houses come from the Ledger; "Not in the Ledger" is anyone on the list who isn't in it or is spelled differently there.</p>
+    ${days[today] ? section(`Today &middot; October ${today}`, [days[today]]) : ""}
+    <p class="muted">Today's likes as of ${tRow ? esc(ny(tRow.scanned)) : "-"} (re-checked at most every ${Math.round(ttl / 60000)} minutes). <a href="?key=${k}&fresh=1">Re-check now</a></p>
+    ${section(`October so far &middot; days 1&ndash;${today}`, monthDays)}
+    <p class="muted">Finished days are counted once, shortly after they end, so their like counts are from then.</p>`);
 }
 
 export default {
