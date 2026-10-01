@@ -308,6 +308,36 @@ const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<"
 const page = (title, body, refresh) => new Response(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">${refresh ? `<meta http-equiv="refresh" content="${refresh}">` : ""}<title>${esc(title)}</title>
 <style>body{font:15px/1.45 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:#1c150e;color:#f3e6c8;margin:0;padding:20px}main{max-width:820px;margin:0 auto}h1{color:#f2d272;font-size:1.5rem}h2{color:#f2d272;font-size:1.1rem;margin-top:28px}table{border-collapse:collapse;width:100%}td,th{padding:6px 8px;border-bottom:1px solid #4a3a24;text-align:left;vertical-align:top}th{color:#c9b48a;font-weight:600}.n{text-align:right;white-space:nowrap}a{color:#f2d272}.muted{color:#a8957a}.h333{color:#e6e4e0}.h500{color:#f26f96}</style></head><body><main>${body}</main></body></html>`,
   { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "x-robots-tag": "noindex" } });
+const LEDGER_SHEET = "https://docs.google.com/spreadsheets/d/1b3AqoSgvyc1s-21rQQuVK0-HBeTz6cZVUJuWW9BRKy4/gviz/tq?tqx=out:csv";
+function csvRows(text) {
+  const rows = []; let row = [], cell = "", q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) { if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += c; }
+    else if (c === '"') q = true;
+    else if (c === ",") { row.push(cell); cell = ""; }
+    else if (c === "\n" || c === "\r") { if (c === "\r" && text[i + 1] === "\n") i++; row.push(cell); rows.push(row); row = []; cell = ""; }
+    else cell += c;
+  }
+  if (cell || row.length) { row.push(cell); rows.push(row); }
+  return rows;
+}
+// handle (lowercase) -> "333" or "500", read from the Ledger sheet
+async function ledgerHouses(env) {
+  const map = {};
+  try {
+    const rows = csvRows(await (await fetch(env.LEDGER_CSV || LEDGER_SHEET, { cf: { cacheTtl: 120 } })).text());
+    const hi = rows.findIndex(r => r.some(v => /handle/i.test(v))); if (hi < 0) return map;
+    const head = rows[hi].map(h => h.trim().toLowerCase());
+    const iH = head.findIndex(h => /handle|name|user/.test(h));
+    let iHouse = head.findIndex(h => /house/.test(h)); if (iHouse < 0) iHouse = iH + 1;
+    for (const r of rows.slice(hi + 1)) {
+      const h = String(r[iH] || "").trim().replace(/^@/, "").toLowerCase(), m = String(r[iHouse] || "").match(/333|500/);
+      if (h && !/\s/.test(h) && m) map[h] = m[0];
+    }
+  } catch {}
+  return map;
+}
 async function dayReport(request, env, url) {
   if (!env.ADMIN_KEY || url.searchParams.get("key") !== env.ADMIN_KEY) return page("Not allowed", "<h1>Not allowed</h1><p>Add <code>?key=</code> with your ADMIN_KEY.</p>");
   if (!env.TWITTERAPI_KEY || !env.DB) return page("Not set up", "<h1>Not set up</h1><p>TWITTERAPI_KEY or the database is missing.</p>");
@@ -353,17 +383,29 @@ async function dayReport(request, env, url) {
   const per = {};
   for (const t of tweets) { const p = per[t.user] ||= { user: t.user, counted: 0, reply: 0, retweet: 0, likes: 0 }; if (t.kind === "reply") p.reply++; else if (t.kind === "retweet") p.retweet++; else { p.counted++; p.likes += t.likes; } }
   const people = Object.values(per).sort((a, b) => b.counted - a.counted || b.likes - a.likes);
+  // house of each person, from the Ledger
+  const houses = await ledgerHouses(env), houseOf = (u) => houses[String(u).toLowerCase()] || "";
+  const H = { "333": { name: "House of 333", cls: "h333" }, "500": { name: "House of 500", cls: "h500" }, "": { name: "Not in the Ledger", cls: "muted" } };
+  const hs = { "333": { counted: 0, likes: 0, reply: 0, retweet: 0, people: 0 }, "500": { counted: 0, likes: 0, reply: 0, retweet: 0, people: 0 }, "": { counted: 0, likes: 0, reply: 0, retweet: 0, people: 0 } };
+  for (const p of people) { const h = hs[houseOf(p.user)]; h.counted += p.counted; h.likes += p.likes; h.reply += p.reply; h.retweet += p.retweet; h.people++; }
+  const houseRows = ["333", "500", ""].filter(k => k || hs[k].people).map(k => `<tr><td class="${H[k].cls}">${H[k].name}</td><td class="n">${hs[k].counted}</td><td class="n">${hs[k].likes}</td><td class="n">${hs[k].people}</td><td class="n">${hs[k].reply}</td><td class="n">${hs[k].retweet}</td></tr>`).join("");
+  const lead = hs["333"].counted === hs["500"].counted ? "Dead even." : `${hs["333"].counted > hs["500"].counted ? "House of 333" : "House of 500"} leads by ${Math.abs(hs["333"].counted - hs["500"].counted)}.`;
+  const who = (u) => { const k = houseOf(u); return `<span class="${H[k].cls}">@${esc(u)}</span>`; };
   const by = (k) => tweets.filter(t => t.kind === k).length;
   const asOf = new Date((row && row.updated) || Date.now()).toLocaleString("en-US", { timeZone: "America/New_York", dateStyle: "medium", timeStyle: "short" });
   return page(`Tweetober ${date}`, `<h1>Tweetober list &middot; ${esc(date)}</h1>
     <p class="muted">${tweets.length} posts found (${by("tweet")} tweets, ${by("quote")} quote tweets, ${by("reply")} replies to others, ${by("retweet")} retweets). Likes as of ${esc(asOf)} New York time. <a href="?key=${encodeURIComponent(url.searchParams.get("key"))}&date=${date}&fresh=1">Scan again</a></p>
+    <h2>Tweets per house</h2>
+    <p>${lead}</p>
+    <table><tr><th>House</th><th class="n">Counted tweets</th><th class="n">Likes on them</th><th class="n">People posting</th><th class="n">Replies</th><th class="n">Retweets</th></tr>${houseRows}</table>
+    <p class="muted">Houses come from the Ledger sheet. "Not in the Ledger" is anyone on the list who isn't in it (or whose handle is spelled differently there).</p>
     <h2>Most liked (tweets and quote tweets)</h2>
     <table><tr><th>#</th><th>Who</th><th>Tweet</th><th class="n">Likes</th><th class="n">RTs</th></tr>
-    ${top.map((t, i) => `<tr><td>${i + 1}</td><td>@${esc(t.user)}</td><td><a href="${esc(t.url)}" target="_blank" rel="noopener">${esc(t.text) || "(media)"}</a></td><td class="n">${t.likes}</td><td class="n">${t.rts}</td></tr>`).join("")}</table>
+    ${top.map((t, i) => `<tr><td>${i + 1}</td><td>${who(t.user)}</td><td><a href="${esc(t.url)}" target="_blank" rel="noopener">${esc(t.text) || "(media)"}</a></td><td class="n">${t.likes}</td><td class="n">${t.rts}</td></tr>`).join("")}</table>
     <h2>Posts per person</h2>
     <p class="muted">"Counted" = original tweets, quote tweets and replies to yourself (threads), per the rules. Replies to others and retweets are listed separately.</p>
     <table><tr><th>#</th><th>Who</th><th class="n">Counted</th><th class="n">Likes on them</th><th class="n">Replies</th><th class="n">Retweets</th></tr>
-    ${people.map((p, i) => `<tr><td>${i + 1}</td><td>@${esc(p.user)}</td><td class="n">${p.counted}</td><td class="n">${p.likes}</td><td class="n">${p.reply}</td><td class="n">${p.retweet}</td></tr>`).join("")}</table>`);
+    ${people.map((p, i) => `<tr><td>${i + 1}</td><td>${who(p.user)}</td><td class="n">${p.counted}</td><td class="n">${p.likes}</td><td class="n">${p.reply}</td><td class="n">${p.retweet}</td></tr>`).join("")}</table>`);
 }
 
 export default {
