@@ -300,6 +300,72 @@ async function trophies(env, url) {
   return json({ tweets });
 }
 
+/* ---------- Private day report (temporary tool for the organizers) ----------
+   /api/day?key=ADMIN_KEY&date=2026-10-01   every tweet the list posted that day (New York time),
+   with current like counts: the most-liked tweets and how many tweets each person posted.
+   Scans in chunks (the page refreshes itself until done); add &fresh=1 to scan again from scratch. */
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const page = (title, body, refresh) => new Response(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">${refresh ? `<meta http-equiv="refresh" content="${refresh}">` : ""}<title>${esc(title)}</title>
+<style>body{font:15px/1.45 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:#1c150e;color:#f3e6c8;margin:0;padding:20px}main{max-width:820px;margin:0 auto}h1{color:#f2d272;font-size:1.5rem}h2{color:#f2d272;font-size:1.1rem;margin-top:28px}table{border-collapse:collapse;width:100%}td,th{padding:6px 8px;border-bottom:1px solid #4a3a24;text-align:left;vertical-align:top}th{color:#c9b48a;font-weight:600}.n{text-align:right;white-space:nowrap}a{color:#f2d272}.muted{color:#a8957a}.h333{color:#e6e4e0}.h500{color:#f26f96}</style></head><body><main>${body}</main></body></html>`,
+  { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "x-robots-tag": "noindex" } });
+async function dayReport(request, env, url) {
+  if (!env.ADMIN_KEY || url.searchParams.get("key") !== env.ADMIN_KEY) return page("Not allowed", "<h1>Not allowed</h1><p>Add <code>?key=</code> with your ADMIN_KEY.</p>");
+  if (!env.TWITTERAPI_KEY || !env.DB) return page("Not set up", "<h1>Not set up</h1><p>TWITTERAPI_KEY or the database is missing.</p>");
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(url.searchParams.get("date") || "") ? url.searchParams.get("date") : new Date(Date.now() - 4 * 3600e3).toISOString().slice(0, 10);
+  const [y, m, d] = date.split("-").map(Number);
+  const start = Date.UTC(y, m - 1, d, 4), end = start + 864e5;   // midnight to midnight, New York (EDT) time
+  await env.DB.prepare("CREATE TABLE IF NOT EXISTS day_scan (day TEXT PRIMARY KEY, cursor TEXT, done INTEGER NOT NULL, tweets TEXT NOT NULL, updated INTEGER NOT NULL)").run();
+  if (url.searchParams.get("fresh")) await env.DB.prepare("DELETE FROM day_scan WHERE day = ?").bind(date).run();
+  let row = await env.DB.prepare("SELECT * FROM day_scan WHERE day = ?").bind(date).first();
+  let tweets = row ? JSON.parse(row.tweets) : [], cursor = row ? row.cursor || "" : "", done = row ? !!row.done : false;
+  if (!done) {
+    const seen = new Set(tweets.map(t => t.id));
+    for (let i = 0; i < 25 && !done; i++) {   // a chunk of pages per visit keeps each request within Cloudflare's limits
+      const u = new URL("https://api.twitterapi.io/twitter/list/tweets");
+      u.searchParams.set("listId", env.LIST_ID || DEFAULT_LIST); u.searchParams.set("includeReplies", "true");
+      u.searchParams.set("sinceTime", String(Math.floor(start / 1000))); u.searchParams.set("untilTime", String(Math.floor(end / 1000)));
+      if (cursor) u.searchParams.set("cursor", cursor);
+      const r = await fetch(u, { headers: { "X-API-Key": env.TWITTERAPI_KEY } });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok || !Array.isArray(data.tweets)) return page("Error", `<h1>twitterapi.io said no</h1><p>${esc(data.message || data.msg || r.status)}</p><p><a href="">Try again</a></p>`);
+      let older = false;
+      for (const t of data.tweets) {
+        const created = when(t.createdAt), id = String(t.id || "");
+        if (created && created < start) older = true;
+        if (!id || seen.has(id) || created < start || created >= end) continue;
+        seen.add(id);
+        const user = String(t.author?.userName || "");
+        const rt = !!(t.retweeted_tweet || t.retweetedTweet) || /^RT @/.test(t.text || "");
+        const quote = !!(t.quoted_tweet || t.quotedTweet);
+        const reply = !!t.isReply && String(t.inReplyToUsername || "").toLowerCase() !== user.toLowerCase();
+        tweets.push({ id, user, url: String(t.url || `https://x.com/${user}/status/${id}`), likes: t.likeCount | 0, rts: t.retweetCount | 0, created,
+          kind: rt ? "retweet" : reply ? "reply" : quote ? "quote" : "tweet", text: String(t.text || "").slice(0, 200) });
+      }
+      cursor = data.has_next_page && data.next_cursor && data.tweets.length && !older ? data.next_cursor : "";
+      if (!cursor) done = true;
+    }
+    await env.DB.prepare("INSERT INTO day_scan (day, cursor, done, tweets, updated) VALUES (?, ?, ?, ?, ?) ON CONFLICT(day) DO UPDATE SET cursor = excluded.cursor, done = excluded.done, tweets = excluded.tweets, updated = excluded.updated")
+      .bind(date, cursor, done ? 1 : 0, JSON.stringify(tweets), Date.now()).run();
+    if (!done) return page("Scanning", `<h1>Scanning ${esc(date)}&hellip;</h1><p>${tweets.length} tweets so far. This page refreshes itself until it's done.</p>`, 2);
+  }
+  const counts = tweets.filter(t => t.kind !== "retweet" && t.kind !== "reply");
+  const top = [...counts].sort((a, b) => b.likes - a.likes || b.rts - a.rts).slice(0, 15);
+  const per = {};
+  for (const t of tweets) { const p = per[t.user] ||= { user: t.user, counted: 0, reply: 0, retweet: 0, likes: 0 }; if (t.kind === "reply") p.reply++; else if (t.kind === "retweet") p.retweet++; else { p.counted++; p.likes += t.likes; } }
+  const people = Object.values(per).sort((a, b) => b.counted - a.counted || b.likes - a.likes);
+  const by = (k) => tweets.filter(t => t.kind === k).length;
+  const asOf = new Date((row && row.updated) || Date.now()).toLocaleString("en-US", { timeZone: "America/New_York", dateStyle: "medium", timeStyle: "short" });
+  return page(`Tweetober ${date}`, `<h1>Tweetober list &middot; ${esc(date)}</h1>
+    <p class="muted">${tweets.length} posts found (${by("tweet")} tweets, ${by("quote")} quote tweets, ${by("reply")} replies to others, ${by("retweet")} retweets). Likes as of ${esc(asOf)} New York time. <a href="?key=${encodeURIComponent(url.searchParams.get("key"))}&date=${date}&fresh=1">Scan again</a></p>
+    <h2>Most liked (tweets and quote tweets)</h2>
+    <table><tr><th>#</th><th>Who</th><th>Tweet</th><th class="n">Likes</th><th class="n">RTs</th></tr>
+    ${top.map((t, i) => `<tr><td>${i + 1}</td><td>@${esc(t.user)}</td><td><a href="${esc(t.url)}" target="_blank" rel="noopener">${esc(t.text) || "(media)"}</a></td><td class="n">${t.likes}</td><td class="n">${t.rts}</td></tr>`).join("")}</table>
+    <h2>Posts per person</h2>
+    <p class="muted">"Counted" = original tweets, quote tweets and replies to yourself (threads), per the rules. Replies to others and retweets are listed separately.</p>
+    <table><tr><th>#</th><th>Who</th><th class="n">Counted</th><th class="n">Likes on them</th><th class="n">Replies</th><th class="n">Retweets</th></tr>
+    ${people.map((p, i) => `<tr><td>${i + 1}</td><td>@${esc(p.user)}</td><td class="n">${p.counted}</td><td class="n">${p.likes}</td><td class="n">${p.reply}</td><td class="n">${p.retweet}</td></tr>`).join("")}</table>`);
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -314,6 +380,10 @@ export default {
     if (url.pathname === "/api/oath") {
       try { return await oath(request, env); }
       catch (e) { return json({ error: "Something went wrong on the server." }, 500); }
+    }
+    if (url.pathname === "/api/day") {
+      try { return await dayReport(request, env, url); }
+      catch (e) { return page("Error", "<h1>Something went wrong</h1><p>" + esc(String(e && e.message || e)) + "</p>"); }
     }
     if (url.pathname === "/api/trumpet") {
       try { return await trumpet(request, env); }
