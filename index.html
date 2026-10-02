@@ -219,6 +219,7 @@
   .wk .pair { display: flex; justify-content: center; gap: 8px; font-weight: 700; font-variant-numeric: tabular-nums; font-size: 1rem; flex-wrap: wrap; }
   .wk .pair .h333 { color: var(--h333); } .wk .pair .h500 { color: var(--h500); }
   .wk.won-h333 { border-color: var(--h333); } .wk.won-h500 { border-color: var(--h500); }
+  .wk.live { border-style: dashed; border-color: var(--gold-deep); } .wk.live .crown { color: var(--ink-2); font-style: italic; }
   .wk .crown { font-size: .75rem; color: var(--gold); letter-spacing: .06em; min-height: 1em; }
   @media (max-width: 760px) { .weeks { grid-template-columns: repeat(auto-fit, minmax(105px, 1fr)); } }
 
@@ -1086,6 +1087,7 @@ try { if (sessionStorage.getItem("tweetober-gates") === "1") document.getElement
 
   <footer>
     <img src="assets/crest.png" alt="">
+    <div>Tweetober is a friendly competition among friends.</div>
     <div class="credit">Website by <a href="http://kyle.church" target="_blank" rel="noopener">Kyle Hide</a></div>
   </footer>
 </div>
@@ -1268,12 +1270,17 @@ function readLedger(text) {
   return rows.slice(hi + 1).map(r => {
     const handle = String(r[iH] ?? "").trim().replace(/^@/, "");
     const house = houseKeyFrom(r[iHouse]);
-    const weeks = weekCols.map(i => num(r[i]));
     const days = {};
     dayCols.forEach(i => { const d = Number((head[i].match(/(\d{1,2})(?!.*\d)/) || head[i].match(/\d+/) || [])[1] || (head[i].match(/\d+/) || [])[0]); const v = String(r[i] ?? "").trim(); if (d) days[d] = v === "" ? null : num(v); });
-    const score = iG >= 0 ? num(r[iG]) : (dayCols.length ? dayCols.reduce((a, i) => a + num(r[i]), 0) : weeks.reduce((a, b) => a + b, 0));
+    // A new row added without the tally / grand-total formulas still counts: blank totals are worked out from the days.
+    const daySum = (from, to) => Object.entries(days).reduce((s, [d, v]) => s + (d >= from && d <= to ? (v || 0) : 0), 0);
+    const SPAN = [[1, 5], [6, 10], [11, 15], [16, 20], [21, 25], [26, 31]];
+    const blank = (i) => i < 0 || String(r[i] ?? "").trim() === "";
+    const weeks = (weekCols.length ? weekCols : SPAN.map(() => -1)).map((i, k) => !blank(i) ? num(r[i]) : (dayCols.length && SPAN[k] ? daySum(...SPAN[k]) : 0));
+    const score = !blank(iG) ? num(r[iG]) : (dayCols.length ? daySum(1, 31) : weeks.reduce((a, b) => a + b, 0));
     return { handle, house, score: Math.max(0, score), weeks, days };
-  }).filter(p => p.handle && p.house && !/^how to use/i.test(p.handle));
+  // real Tweetobies only: handles never contain spaces, so notes and any "House of 333 total"-style summary rows are skipped
+  }).filter(p => p.handle && p.house && !/\s/.test(p.handle) && !/^how to use|total|tally/i.test(p.handle));
 }
 
 let LEDGER = [];
@@ -1377,8 +1384,13 @@ function renderWeeks() {
   const sumWeek = (key, i) => LEDGER.filter(p => p.house === key).reduce((s, p) => s + (p.weeks[i] || 0), 0);
   $("#weeks").innerHTML = Array.from({ length: n }, (_, i) => {
     const ta = sumWeek(a.key, i), tb = sumWeek(b.key, i);
-    const won = ta === tb ? "" : ta > tb ? "won-h333" : "won-h500";
-    const crown = ta + tb === 0 ? "" : ta === tb ? "tied" : `${ta > tb ? "333" : "500"} takes it`;
+    // a tally is only won once its last day is over; until then it's "leading so far"
+    const ENDS = [5, 10, 15, 20, 25, 31], STARTS = [1, 6, 11, 16, 21, 26];
+    const today = isoDay(NOW()), dayStr = (d) => `${CONFIG.startDate.slice(0, 8)}${String(d).padStart(2, "0")}`;
+    const over = ENDS[i] ? today > dayStr(ENDS[i]) : true, live = !over && ENDS[i] && today >= dayStr(STARTS[i]);
+    const ahead = ta === tb ? "" : ta > tb ? "333" : "500";
+    const won = !over || !ahead ? (live ? "live" : "") : `won-h${ahead}`;
+    const crown = !over && !live ? "" : ta + tb === 0 ? (live ? "in progress" : "") : !over ? (ahead ? `${ahead} leads so far` : "tied so far") : ahead ? `${ahead} takes it` : "tied";
     const label = i === n - 1 && n >= 6 ? "Final tally" : `Tally ${i + 1}`;
     return `<div class="wk ${won}"><div class="eyebrow label">${label}</div><div class="dates">${TALLY_SPANS[i] || ""}</div>
       <div class="pair"><span class="h333">${fmt(ta)}</span><span class="muted">·</span><span class="h500">${fmt(tb)}</span></div><div class="crown">${crown}</div></div>`;
