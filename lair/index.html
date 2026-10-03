@@ -68,8 +68,8 @@
   @keyframes quake { 0%,100% { transform: none; } 15% { transform: translate(-6px, 3px); } 30% { transform: translate(5px, -4px); } 45% { transform: translate(-4px, 2px); } 60% { transform: translate(3px, -1px); } 80% { transform: translate(-1px, 1px); } }
   .smoke { position: fixed; pointer-events: none; z-index: 30; width: 30px; height: 30px; margin: -15px 0 0 -15px; border-radius: 50%; background: radial-gradient(circle, rgba(230,220,235,.75), rgba(160,140,170,.35) 55%, transparent 72%); }
   .flash { position: fixed; pointer-events: none; z-index: 31; width: 60px; height: 60px; margin: -30px 0 0 -30px; border-radius: 50%; background: radial-gradient(circle, #FFF6C8, rgba(255,170,60,.85) 35%, transparent 70%); }
-  .fortune { position: fixed; left: 50%; bottom: 22px; transform: translate(-50%, 140%); max-width: min(560px, calc(100% - 32px)); background: #241028; border: 1px solid var(--pink); box-shadow: var(--glow), 0 12px 40px rgba(0,0,0,.6); padding: 14px 18px; z-index: 20; transition: transform .35s cubic-bezier(.2,1.2,.3,1); font-family: "Almendra", serif; font-size: 1.05rem; }
-  .fortune.show { transform: translate(-50%, 0); }
+  .fortune { position: fixed; left: 50%; bottom: 22px; transform: translate(-50%, calc(100% + 40px)); visibility: hidden; transition-property: transform, visibility; max-width: min(560px, calc(100% - 32px)); background: #241028; border: 1px solid var(--pink); box-shadow: var(--glow), 0 12px 40px rgba(0,0,0,.6); padding: 14px 18px; z-index: 20; transition: transform .35s cubic-bezier(.2,1.2,.3,1); font-family: "Almendra", serif; font-size: 1.05rem; }
+  .fortune.show { transform: translate(-50%, 0); visibility: visible; }
   .fortune b { color: var(--gold); font-family: "VT323", monospace; font-weight: 400; letter-spacing: .08em; text-transform: uppercase; display: block; font-size: .95rem; }
 
   /* ---- panels ---- */
@@ -98,6 +98,34 @@
   .stamp { font-size: .95rem; color: var(--ink-3); display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
   .scan-note { color: var(--gold); }
 
+  /* the scoreboard: plain numbers in a table, easy to read at a glance */
+  .score { width: 100%; border-collapse: collapse; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 1rem; }
+  .score th, .score td { padding: 10px 8px; border-bottom: 1px solid var(--line); text-align: left; }
+  .score th { font-size: .85rem; font-weight: 600; letter-spacing: .04em; color: var(--ink-3); }
+  .score th.h500 { color: var(--pink); } .score th.h333 { color: var(--grey); }
+  .score td { color: var(--ink-2); font-size: .9rem; }
+  .score td.n, .score th.n { text-align: right; white-space: nowrap; }
+  .score td.n { font-size: 1.15rem; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .score td.us { color: var(--pink); } .score td.them { color: var(--grey); }
+  .score td.lead { font-size: .95rem; font-weight: 600; }
+  .score td.lead.ours { color: var(--gold); } .score td.lead.theirs { color: var(--ink-2); }
+  .score tr.main td { font-size: 1rem; } .score tr.main td.n { font-size: 1.6rem; }
+  .lead-sm { display: none; }
+  @media (max-width: 560px) {
+    .score th, .score td { padding: 8px 4px; } .score tr.main td.n { font-size: 1.3rem; } .score td.n { font-size: 1rem; }
+    .score th:last-child, .score td.lead { display: none; }   /* on phones, who's ahead moves under each label */
+    .lead-sm { display: block; font-size: .75rem; font-weight: 600; margin-top: 2px; color: var(--ink-3); }
+    .lead-sm.ours { color: var(--gold); }
+    .score .wide { display: none; }
+  }
+  /* until the first full count is in, the war room shows only a pulsing "gathering intel" */
+  #war { min-height: 260px; }
+  #war .veil { position: absolute; inset: 0; z-index: 2; display: grid; place-items: center; align-content: center; gap: 8px; text-align: center; background: #1B0D21; padding: 20px; }
+  #war .veil .big-msg { font-family: "Pirata One", serif; font-size: clamp(1.8rem, 6vw, 2.6rem); color: var(--pink); text-shadow: 0 0 18px rgba(242,111,150,.5); animation: pulse 1.6s ease-in-out infinite; }
+  #war .veil small { color: var(--ink-3); font-size: 1rem; }
+  #war:not(.loading) .veil { display: none; }
+  @keyframes pulse { 0%, 100% { opacity: .45; transform: scale(.97); } 50% { opacity: 1; transform: scale(1.03); } }
+  .scan-note:not(:empty) { animation: pulse 1.6s ease-in-out infinite; }
   /* minion of the day */
   .mvp { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; }
   .mvp .crown { width: 64px; height: 52px; filter: drop-shadow(0 0 10px rgba(242,210,114,.45)); animation: float 3s ease-in-out infinite; }
@@ -197,17 +225,15 @@
   </header>
 
   <!-- the war room: today's battle -->
-  <section class="panel" id="war">
+  <section class="panel loading" id="war">
+    <div class="veil" aria-live="polite"><span class="big-msg">Gathering intel…</span><small id="veilNote">The spies are counting every tweet. This takes a few seconds.</small></div>
     <h2>The War Room</h2>
     <p class="sub" id="warSub">Today's counted tweets, from Twitter itself</p>
-    <div class="versus">
-      <div class="side us"><span class="who h500">House of 500</span><span class="big" id="us">–</span></div>
-      <div class="vs">vs</div>
-      <div class="side right them"><span class="who h333">House of 333</span><span class="big" id="them">–</span></div>
-    </div>
-    <div class="tug" aria-hidden="true"><span class="a" id="tugA" style="width:50%"></span><span class="b" id="tugB" style="width:50%"></span></div>
+    <table class="score" id="score">
+      <thead><tr><th></th><th class="n h500"><span class="wide">House of </span>500</th><th class="n h333"><span class="wide">House of </span>333</th><th class="n">Who's ahead</th></tr></thead>
+      <tbody><tr><td>–</td><td class="n">–</td><td class="n">–</td><td class="n">–</td></tr></tbody>
+    </table>
     <p class="math" id="math"><span class="skeleton">Counting the enemy…</span></p>
-    <div class="month" id="month"></div>
     <div class="stamp"><span id="stamp"></span><span class="scan-note" id="scanNote"></span></div>
   </section>
 
@@ -290,7 +316,7 @@
     <ol class="infamy" id="infamy"><li class="skeleton">Unrolling the scroll…</li></ol>
   </section>
 
-  <footer>Mickal's Minions · House of 500 · <a href="/">back to the castle</a> · <a href="#" id="leave">leave the lair</a></footer>
+  <footer>Mickal's Minions · House of 500 · <a href="/">back to the castle</a> · <a href="https://x.com/compose/post" target="_blank" rel="noopener">go tweet something</a></footer>
 </div>
 
 <div class="fortune" id="fortune" role="status" aria-live="polite"></div>
@@ -441,7 +467,6 @@ async function enter() {
   start();
 }
 $("#doorForm").addEventListener("submit", (e) => { e.preventDefault(); CODE = $("#doorCode").value.trim(); if (CODE) enter(); });
-$("#leave").addEventListener("click", (e) => { e.preventDefault(); store.set("lair-code", ""); CODE = ""; lock(""); });
 if (CODE) enter(); else lock("");
 
 /* ---------------- the numbers ---------------- */
@@ -452,18 +477,29 @@ let STATS = null, pollTimer = 0;
 async function loadStats() {
   clearTimeout(pollTimer);
   try {
-    const d = await api("/api/lair/stats"); STATS = d; drawStats(d);
+    const d = await api("/api/lair/stats");
+    if (!d.busy || STATS) { STATS = d; drawStats(d); }
+    $("#war").classList.toggle("loading", !STATS);
+    if (!STATS && d.busy) $("#veilNote").textContent = "The spies are counting every tweet. This takes a few seconds.";
+    if (STATS) $("#scanNote").textContent = d.busy ? "Gathering fresh intel…" : d.problem ? "The spies hit a snag; trying again soon." : "";
     // a scan still running: ask again shortly; otherwise check back in five minutes
     pollTimer = setTimeout(loadStats, d.busy ? 1500 : 5 * 60000);
   } catch (e) {
-    if (e.message !== "locked") { $("#scanNote").textContent = "The spies are delayed: " + e.message; pollTimer = setTimeout(loadStats, 60000); }
+    if (e.message !== "locked") { (STATS ? $("#scanNote") : $("#veilNote")).textContent = "The spies are delayed: " + e.message + ". Trying again in a minute."; pollTimer = setTimeout(loadStats, 60000); }
   }
 }
 function drawStats(d) {
   const us = d.todayHouses["500"][0], them = d.todayHouses["333"][0], sum = us + them;
-  $("#us").textContent = fmt(us); $("#them").textContent = fmt(them);
-  $("#tugA").style.width = (sum ? us / sum * 100 : 50) + "%"; $("#tugB").style.width = (sum ? them / sum * 100 : 50) + "%";
-  $("#warSub").textContent = `October ${d.today} · counted tweets so far today (tweets, quote tweets and self-threads)`;
+  $("#warSub").textContent = `Counted tweets = original tweets, quote tweets and replies to yourself. Live from Twitter, not the Ledger.`;
+  const leadText = (a, b) => a === b ? "tied" : a > b ? `500 by ${fmt(a - b)}` : `333 by ${fmt(b - a)}`;
+  const leadCls = (a, b) => a === b ? "" : a > b ? "ours" : "theirs";
+  const row = (label, a, b, cls) => `<tr class="${cls || ""}"><td>${label}<span class="lead-sm ${leadCls(a, b)}">${a === b ? "tied" : "ahead: " + leadText(a, b)}</span></td><td class="n us">${fmt(a)}</td><td class="n them">${fmt(b)}</td><td class="n lead ${leadCls(a, b)}">${leadText(a, b)}</td></tr>`;
+  const T = d.todayHouses, M = d.monthHouses;
+  $("#score").tBodies[0].innerHTML =
+    row(`Tweets today <span class="muted">(Oct ${d.today})</span>`, T["500"][0], T["333"][0], "main") +
+    row("Tweets in October", M["500"][0], M["333"][0], "main") +
+    row("Minions posting today", T["500"][2], T["333"][2]) +
+    row("Likes on today's tweets", T["500"][1], T["333"][1]);
   // battle math
   const minions = Math.max(1, d.minionCount || d.todayHouses["500"][2] || 1), gap = them - us;
   const m = $("#math"); m.classList.toggle("ahead", gap < 0);
@@ -473,10 +509,7 @@ function drawStats(d) {
     m.innerHTML = gap === 0 ? `Dead even. <strong>One tweet from any minion</strong> puts us ahead.`
       : `333 leads today by <strong>${fmt(gap)}</strong>. That's just <strong>${each} more tweet${each === 1 ? "" : "s"} each</strong> from our ${minions} minions to take the lead.`;
   } else m.innerHTML = `We lead today by <strong>${fmt(-gap)}</strong>. ${-gap < minions * 2 ? "Too close for comfort. Keep pressing." : "Do not let them breathe."}`;
-  const mu = d.monthHouses["500"][0], mt = d.monthHouses["333"][0], mg = mu - mt;
-  $("#month").innerHTML = `<span class="h500">October so far: <b>${fmt(mu)}</b></span><span>${mg === 0 ? "tied" : mg > 0 ? `we lead by ${fmt(mg)}` : `333 leads by ${fmt(-mg)}`}</span><span class="h333">333: <b>${fmt(mt)}</b></span>`;
   $("#stamp").textContent = d.scannedAt ? `Updated ${ago(d.scannedAt)} · refreshes every ${d.refreshMinutes} minutes` : "";
-  $("#scanNote").textContent = d.busy ? "Gathering intel…" : d.problem ? "The spies hit a snag; trying again soon." : "";
   // minion of the day
   if (d.mvp && d.mvp.user) {
     $("#mvpSub").textContent = `October ${d.mvp.day}'s most prolific minion`;
