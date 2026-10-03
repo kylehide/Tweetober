@@ -286,8 +286,8 @@
       </div>
     </div>
     <div class="pane" id="pane-trends" hidden>
-      <p class="sub" style="margin:0">What's trending on Twitter in the US right now, and the tweets driving it. Quote one, or jump on the topic.</p>
-      <ul class="trends" id="trends"><li class="skeleton">Reading the winds…</li></ul>
+      <p class="sub" style="margin:0">What's trending on Twitter in the US right now. Tap one to see the chatter, then jump on it.</p>
+      <div class="chips" id="trends"><span class="skeleton">Reading the winds…</span></div>
     </div>
     <div class="pane" id="pane-news" hidden>
       <p class="sub" style="margin:0">Today's big stories. Have an opinion. Have a worse one.</p>
@@ -633,10 +633,7 @@ document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () =>
 async function loadIdeas() {
   try {
     const d = await api("/api/lair/ideas");
-    const sans = (t) => esc(t);
-    $("#trends").innerHTML = d.trends.length ? d.trends.map(t => `<li><div class="tname"><a href="https://x.com/search?q=${encodeURIComponent(t.query || t.name)}" target="_blank" rel="noopener">${esc(t.name)}</a>${t.meta ? `<small>${esc(t.meta)}</small>` : ""}</div>
-      ${(t.tweets || []).map(x => `<blockquote class="quote"><a href="https://x.com/${encodeURIComponent(x.user)}/status/${encodeURIComponent(x.id)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">${sans(x.text)}</a><span class="meta">@${esc(x.user)} · ♥ ${fmt(x.likes)} · <a href="https://x.com/intent/tweet?url=${encodeURIComponent(`https://x.com/${x.user}/status/${x.id}`)}" target="_blank" rel="noopener">Quote it</a></span></blockquote>`).join("")}</li>`).join("")
-      : `<li class="muted">The winds are quiet. Try again later.</li>`;
+    $("#trends").innerHTML = d.trends.length ? d.trends.map(t => `<a class="chip" href="https://x.com/search?q=${encodeURIComponent(t.query || t.name)}" target="_blank" rel="noopener">${esc(t.name)}${t.meta ? `<small>${esc(t.meta)}</small>` : ""}</a>`).join("") : `<span class="muted">The winds are quiet. Try again later.</span>`;
     const W = d.wiki || {}, wl = (p, text) => p && p.link ? `<a href="${esc(p.link)}" target="_blank" rel="noopener">${esc(text)}</a>` : `<span>${esc(text)}</span>`;
     $("#news").innerHTML = (W.news || []).length ? W.news.map(n => `<li>${wl(n.page, n.text)}</li>`).join("") : `<li class="muted">No stories yet today.</li>`;
     $("#mostread").innerHTML = (W.mostread || []).map(a => `<li>${wl(a, a.title)}<span class="blurb">${esc(a.extract || a.blurb)}</span></li>`).join("");
