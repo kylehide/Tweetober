@@ -1,1 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>The Lair · House of 500</title>
+<link rel="icon" type="image/png" href="/assets/crest-500.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=VT323&family=Almendra:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0E0812; --panel: rgba(28, 14, 34, .86); --panel-2: rgba(44, 20, 52, .72);
+    --line: rgba(242, 111, 150, .22); --line-strong: rgba(242, 111, 150, .5);
+    --ink: #F4E6F0; --ink-2: #CDB4C8; --ink-3: #8F7590;
+    --pink: #F26F96; --pink-hot: #FF8FB4; --pink-deep: #A3244C; --violet: #8E5BD8; --grey: #E6E4E0;
+    --gold: #F2D272; --glow: 0 0 22px rgba(242, 111, 150, .35);
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html { background: var(--bg); }
+  body { margin: 0; min-height: 100vh; color: var(--ink); font-family: "VT323", "Courier New", monospace; font-size: 20px; line-height: 1.35;
+    background:
+      radial-gradient(ellipse at 50% -10%, rgba(142, 91, 216, .35), transparent 55%),
+      radial-gradient(ellipse at 10% 110%, rgba(242, 111, 150, .18), transparent 50%),
+      linear-gradient(rgba(14, 8, 18, .86), rgba(14, 8, 18, .93)), url("/assets/stone.jpg") center / 900px repeat;
+    background-attachment: fixed; overflow-x: hidden; }
+  a { color: var(--pink-hot); }
+  h1, h2, h3, .heading { font-family: "Pirata One", serif; font-weight: 400; letter-spacing: .02em; margin: 0; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 28px 16px 60px; display: grid; gap: 22px; }
+  .muted { color: var(--ink-3); }
+  .h333 { color: var(--grey); } .h500 { color: var(--pink); }
+
+  /* ---- the door ---- */
+  .door { min-height: 100vh; display: grid; place-items: center; padding: 24px 16px; }
+  .door-box { width: min(420px, 100%); text-align: center; display: grid; gap: 14px; justify-items: center; padding: 30px 24px; background: var(--panel); border: 1px solid var(--line); box-shadow: var(--glow), 0 20px 60px rgba(0,0,0,.6); }
+  .door-box img { width: 110px; filter: drop-shadow(0 8px 16px rgba(0,0,0,.7)) drop-shadow(0 0 18px rgba(242,111,150,.35)); animation: breathe 4s ease-in-out infinite; }
+  .door-box h1 { font-size: 2rem; color: var(--pink); text-shadow: 0 0 14px rgba(242,111,150,.5); }
+  .door-box p { margin: 0; color: var(--ink-2); }
+  .door form { display: flex; gap: 8px; width: 100%; }
+  input, textarea { font: inherit; font-size: 1.05rem; color: var(--ink); background: rgba(0,0,0,.35); border: 1px solid var(--line-strong); padding: 8px 10px; outline: none; min-width: 0; }
+  input:focus, textarea:focus { border-color: var(--pink-hot); box-shadow: 0 0 0 3px rgba(242,111,150,.18); }
+  .btn { font: inherit; font-size: 1.05rem; letter-spacing: .08em; text-transform: uppercase; color: #1A0A14; background: linear-gradient(180deg, var(--pink-hot), var(--pink) 60%, var(--pink-deep)); border: 0; padding: 8px 16px; cursor: pointer; box-shadow: 0 0 16px rgba(242,111,150,.35); }
+  .btn:hover { filter: brightness(1.1); }
+  .btn.ghost { color: var(--pink-hot); background: none; border: 1px solid var(--line-strong); box-shadow: none; }
+  .err { color: var(--pink-hot); min-height: 1.3em; }
+  .shake { animation: shake .4s; }
+  @keyframes shake { 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
+  @keyframes breathe { 50% { transform: scale(1.04); filter: drop-shadow(0 8px 16px rgba(0,0,0,.7)) drop-shadow(0 0 30px rgba(242,111,150,.6)); } }
+
+  /* ---- header ---- */
+  header.lair-head { display: grid; grid-template-columns: auto 1fr auto; gap: 18px; align-items: center; }
+  header.lair-head img.crest { width: 84px; filter: drop-shadow(0 6px 12px rgba(0,0,0,.6)) drop-shadow(0 0 16px rgba(242,111,150,.4)); }
+  header.lair-head h1 { font-size: clamp(2rem, 6vw, 3.2rem); line-height: 1; color: var(--pink); text-shadow: 0 0 18px rgba(242,111,150,.45), 0 3px 0 rgba(0,0,0,.6); }
+  header.lair-head p { margin: 4px 0 0; color: var(--ink-2); font-family: "Almendra", serif; font-style: italic; font-size: 1.05rem; }
+  .jar { display: grid; justify-items: center; gap: 2px; background: none; border: 0; color: var(--gold); cursor: pointer; font: inherit; font-size: .85rem; letter-spacing: .06em; text-transform: uppercase; }
+  .jar svg { width: 62px; height: 70px; transition: transform .2s; filter: drop-shadow(0 0 10px rgba(242,210,114,.25)); }
+  .jar:hover svg { transform: rotate(-6deg) scale(1.05); }
+  .jar.wiggle svg { animation: wiggle .5s; }
+  @keyframes wiggle { 25% { transform: rotate(-12deg); } 50% { transform: rotate(10deg); } 75% { transform: rotate(-5deg); } }
+  .fortune { position: fixed; left: 50%; bottom: 22px; transform: translate(-50%, 140%); max-width: min(560px, calc(100% - 32px)); background: #241028; border: 1px solid var(--pink); box-shadow: var(--glow), 0 12px 40px rgba(0,0,0,.6); padding: 14px 18px; z-index: 20; transition: transform .35s cubic-bezier(.2,1.2,.3,1); font-family: "Almendra", serif; font-size: 1.05rem; }
+  .fortune.show { transform: translate(-50%, 0); }
+  .fortune b { color: var(--gold); font-family: "VT323", monospace; font-weight: 400; letter-spacing: .08em; text-transform: uppercase; display: block; font-size: .95rem; }
+
+  /* ---- panels ---- */
+  .panel { background: var(--panel); border: 1px solid var(--line); box-shadow: 0 10px 30px rgba(0,0,0,.45); padding: 20px 22px; display: grid; gap: 12px; align-content: start; position: relative; min-width: 0; }
+  .panel::before { content: ""; position: absolute; inset: 5px; border: 1px solid rgba(242,111,150,.1); pointer-events: none; }
+  .panel h2 { font-size: 1.6rem; color: var(--pink-hot); }
+  .panel .sub { margin: -6px 0 0; color: var(--ink-3); font-size: 1rem; }
+  .grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
+  @media (max-width: 760px) { .grid2 { grid-template-columns: 1fr; } header.lair-head { grid-template-columns: auto 1fr; } header.lair-head .jar { grid-column: 1 / -1; justify-self: center; } }
+
+  /* war room */
+  .versus { display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; gap: 10px; }
+  .side { display: grid; gap: 0; } .side.right { text-align: right; }
+  .side .who { font-size: 1.15rem; letter-spacing: .06em; }
+  .side .big { font-family: "Pirata One", serif; font-size: clamp(2.4rem, 9vw, 4rem); line-height: 1; text-shadow: 0 3px 0 rgba(0,0,0,.6); }
+  .side.us .big { color: var(--pink); text-shadow: 0 0 18px rgba(242,111,150,.45), 0 3px 0 rgba(0,0,0,.6); }
+  .side.them .big { color: var(--grey); }
+  .vs { font-family: "Pirata One", serif; color: var(--gold); padding-bottom: 12px; }
+  .tug { display: flex; height: 14px; border: 1px solid var(--line-strong); background: rgba(0,0,0,.4); overflow: hidden; }
+  .tug span { display: block; height: 100%; transition: width .8s ease; } .tug .a { background: var(--pink); box-shadow: 0 0 12px var(--pink); } .tug .b { background: var(--grey); margin-left: auto; }
+  .math { margin: 0; font-family: "Almendra", serif; font-size: 1.25rem; line-height: 1.4; color: var(--ink); }
+  .math strong { color: var(--pink-hot); font-weight: 700; }
+  .math.ahead strong { color: var(--gold); }
+  .month { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding-top: 10px; border-top: 1px dashed var(--line); color: var(--ink-2); }
+  .month b { font-weight: 400; } .month .h500 b { color: var(--pink); }
+  .stamp { font-size: .95rem; color: var(--ink-3); display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .scan-note { color: var(--gold); }
+
+  /* minion of the day */
+  .mvp { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; }
+  .mvp .crown { width: 64px; height: 52px; filter: drop-shadow(0 0 10px rgba(242,210,114,.45)); animation: float 3s ease-in-out infinite; }
+  @keyframes float { 50% { transform: translateY(-5px) rotate(-3deg); } }
+  .mvp .name { font-family: "Pirata One", serif; font-size: 2rem; color: var(--pink); line-height: 1; overflow-wrap: anywhere; }
+  .mvp .name a { color: inherit; text-decoration: none; }
+  .quote { margin: 0; padding: 10px 12px; border-left: 3px solid var(--pink); background: rgba(0,0,0,.25); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: .82rem; line-height: 1.45; color: var(--ink); overflow-wrap: anywhere; }
+  .quote .meta { display: block; margin-top: 4px; color: var(--ink-3); font-size: .74rem; }
+
+  /* quest */
+  .quest { font-family: "Almendra", serif; font-size: 1.35rem; line-height: 1.35; margin: 0; color: var(--ink); }
+  .quest-tag { justify-self: start; display: inline-block; font-size: .9rem; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); border: 1px solid rgba(242,210,114,.4); padding: 1px 8px; }
+
+  /* intel */
+  .intel-row { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; }
+  .intel-row .k { color: var(--ink-3); min-width: 9em; }
+  .redact { background: #000; color: #000; padding: 0 4px; }
+
+  /* hall of infamy */
+  .infamy { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; counter-reset: rank; max-height: 640px; overflow-y: auto; overscroll-behavior: contain; scrollbar-color: var(--pink-deep) transparent; scrollbar-width: thin; padding-right: 4px; }
+  .infamy li { counter-increment: rank; display: grid; grid-template-columns: 2.2em minmax(0, 1fr) auto; gap: 10px; align-items: start; padding: 9px 10px; background: var(--panel-2); border: 1px solid var(--line); }
+  .infamy li.h500 { border-color: rgba(242,111,150,.45); }
+  .infamy li::before { content: "#" counter(rank); color: var(--gold); font-size: 1.1rem; }
+  .infamy .t { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: .8rem; line-height: 1.4; overflow-wrap: anywhere; }
+  .infamy .t a { color: var(--ink); text-decoration: none; } .infamy .t a:hover { text-decoration: underline; }
+  .infamy .by { display: block; font-family: "VT323", monospace; font-size: 1.05rem; }
+  .infamy .likes { color: var(--pink-hot); white-space: nowrap; font-size: 1.1rem; }
+
+  /* the cauldron */
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tab { font: inherit; font-size: 1rem; letter-spacing: .06em; color: var(--ink-2); background: rgba(0,0,0,.3); border: 1px solid var(--line); padding: 4px 12px; cursor: pointer; }
+  .tab[aria-selected="true"] { color: #1A0A14; background: var(--pink); border-color: var(--pink); }
+  .pane[hidden] { display: none; }
+  .scheme { display: grid; gap: 12px; padding: 18px; background: radial-gradient(ellipse at 50% 0%, rgba(142,91,216,.25), transparent 70%), rgba(0,0,0,.25); border: 1px solid var(--line); }
+  .scheme .kind { color: var(--gold); letter-spacing: .12em; text-transform: uppercase; font-size: .95rem; }
+  .scheme .text { font-family: "Almendra", serif; font-size: 1.4rem; line-height: 1.35; margin: 0; }
+  .scheme ol { margin: 0; padding-left: 1.4em; font-family: "Almendra", serif; font-size: 1.05rem; line-height: 1.4; color: var(--ink-2); }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { display: inline-block; padding: 4px 10px; border: 1px solid var(--line-strong); background: rgba(0,0,0,.3); color: var(--ink); text-decoration: none; font-size: 1.05rem; }
+  .chip:hover { border-color: var(--pink-hot); color: var(--pink-hot); }
+  .chip small { color: var(--ink-3); margin-left: 6px; }
+  .news { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .news a { color: var(--ink); text-decoration: none; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: .82rem; }
+  .news a:hover { color: var(--pink-hot); }
+  .news small { color: var(--ink-3); font-size: .9rem; margin-left: 6px; }
+  .bait { list-style: none; margin: 0; padding: 0 4px 0 0; display: grid; gap: 10px; max-height: 520px; overflow-y: auto; overscroll-behavior: contain; scrollbar-color: var(--pink-deep) transparent; scrollbar-width: thin; }
+  .bait li { display: grid; gap: 6px; }
+  .ideas { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; max-height: 360px; overflow-y: auto; }
+  .ideas li { padding: 8px 10px; background: rgba(0,0,0,.25); border-left: 3px solid var(--violet); font-family: "Almendra", serif; font-size: 1.05rem; overflow-wrap: anywhere; }
+  .ideas li b { font-family: "VT323", monospace; font-weight: 400; color: var(--pink-hot); margin-right: 6px; }
+  .idea-form { display: grid; grid-template-columns: 9em 1fr auto; gap: 8px; }
+  @media (max-width: 560px) { .idea-form { grid-template-columns: 1fr; } }
+  footer { text-align: center; color: var(--ink-3); font-size: 1rem; }
+  footer a { color: var(--ink-2); }
+  .skeleton { color: var(--ink-3); font-style: italic; }
+</style>
+</head>
+<body>
+
+<!-- the door: only minions with the word get in -->
+<div class="door" id="door">
+  <div class="door-box" id="doorBox">
+    <img src="/assets/crest-500.png" alt="House of 500 crest">
+    <h1>The Lair</h1>
+    <p>Mickal's Minions only. Speak the word.</p>
+    <form id="doorForm" autocomplete="off">
+      <input id="doorCode" type="password" placeholder="the word" aria-label="Password" style="flex:1">
+      <button class="btn" type="submit">Enter</button>
+    </form>
+    <p class="err" id="doorErr" aria-live="polite"></p>
+  </div>
+</div>
+
+<div class="wrap" id="lair" hidden>
+  <header class="lair-head">
+    <img class="crest" src="/assets/crest-500.png" alt="">
+    <div>
+      <h1>The Lair of House 500</h1>
+      <p>Come to the dark side. We have cookies.</p>
+    </div>
+    <button class="jar" id="jar" type="button" aria-label="Take a cookie">
+      <svg viewBox="0 0 60 70" aria-hidden="true">
+        <rect x="16" y="4" width="28" height="8" rx="2" fill="#8E5BD8" stroke="#2B1030" stroke-width="2"/>
+        <path d="M12 14h36c3 0 5 3 5 6v38c0 5-4 8-8 8H15c-4 0-8-3-8-8V20c0-3 2-6 5-6z" fill="rgba(255,220,240,.18)" stroke="#F26F96" stroke-width="2.5"/>
+        <circle cx="22" cy="44" r="9" fill="#C8873E" stroke="#5A3410" stroke-width="1.5"/><circle cx="20" cy="41" r="1.6" fill="#3A1E08"/><circle cx="25" cy="46" r="1.6" fill="#3A1E08"/><circle cx="19" cy="48" r="1.3" fill="#3A1E08"/>
+        <circle cx="38" cy="50" r="9" fill="#D4944A" stroke="#5A3410" stroke-width="1.5"/><circle cx="36" cy="48" r="1.6" fill="#3A1E08"/><circle cx="41" cy="52" r="1.6" fill="#3A1E08"/><circle cx="40" cy="46" r="1.3" fill="#3A1E08"/>
+        <circle cx="32" cy="33" r="8" fill="#B87A36" stroke="#5A3410" stroke-width="1.5"/><circle cx="30" cy="31" r="1.4" fill="#3A1E08"/><circle cx="34" cy="35" r="1.4" fill="#3A1E08"/>
+        <path d="M13 22c3-2 6-3 9-3" stroke="#fff" stroke-opacity=".5" stroke-width="2" fill="none" stroke-linecap="round"/>
+      </svg>
+      Take a cookie
+    </button>
+  </header>
+
+  <!-- the war room: today's battle -->
+  <section class="panel" id="war">
+    <h2>The War Room</h2>
+    <p class="sub" id="warSub">Today's counted tweets, from Twitter itself</p>
+    <div class="versus">
+      <div class="side us"><span class="who h500">House of 500</span><span class="big" id="us">–</span></div>
+      <div class="vs">vs</div>
+      <div class="side right them"><span class="who h333">House of 333</span><span class="big" id="them">–</span></div>
+    </div>
+    <div class="tug" aria-hidden="true"><span class="a" id="tugA" style="width:50%"></span><span class="b" id="tugB" style="width:50%"></span></div>
+    <p class="math" id="math"><span class="skeleton">Counting the enemy…</span></p>
+    <div class="month" id="month"></div>
+    <div class="stamp"><span id="stamp"></span><span class="scan-note" id="scanNote"></span></div>
+  </section>
+
+  <div class="grid2">
+    <section class="panel">
+      <h2>Minion of the Day</h2>
+      <p class="sub" id="mvpSub">Yesterday's most prolific minion</p>
+      <div id="mvp"><span class="skeleton">Consulting the crystal ball…</span></div>
+    </section>
+    <section class="panel">
+      <h2>Today's Villain Quest</h2>
+      <p class="sub" id="questSub"></p>
+      <span class="quest-tag" id="questTag"></span>
+      <p class="quest" id="quest"></p>
+    </section>
+  </div>
+
+  <div class="grid2">
+    <section class="panel">
+      <h2>Intel on 333</h2>
+      <p class="sub">What the enemy is up to today. <span class="redact">classified</span></p>
+      <div id="intel"><span class="skeleton">Sending the spies…</span></div>
+    </section>
+    <section class="panel">
+      <h2>Quote-Tweet Bait</h2>
+      <p class="sub">Today's hottest tweets on the list. Quote one, add your twist, steal the thunder.</p>
+      <ul class="bait" id="bait"><li class="skeleton">Fishing…</li></ul>
+    </section>
+  </div>
+
+  <section class="panel">
+    <h2>The Hall of Infamy</h2>
+    <p class="sub">The 20 most-liked tweets of Tweetober so far, from both houses</p>
+    <ol class="infamy" id="infamy"><li class="skeleton">Unrolling the scroll…</li></ol>
+  </section>
+
+  <!-- inspiration -->
+  <section class="panel" id="cauldron">
+    <h2>The Cauldron</h2>
+    <p class="sub">Out of ideas? Stir the pot.</p>
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" aria-selected="true" data-pane="schemes">Schemes</button>
+      <button class="tab" role="tab" aria-selected="false" data-pane="threads">Threads</button>
+      <button class="tab" role="tab" aria-selected="false" data-pane="trends">Trending</button>
+      <button class="tab" role="tab" aria-selected="false" data-pane="news">Headlines</button>
+      <button class="tab" role="tab" aria-selected="false" data-pane="minions">From the minions</button>
+    </div>
+
+    <div class="pane" id="pane-schemes">
+      <div class="scheme">
+        <span class="kind" id="schemeKind"></span>
+        <p class="text" id="schemeText"></p>
+        <div class="row"><button class="btn" id="schemeNext" type="button">Another</button><a class="btn ghost" id="schemeTweet" target="_blank" rel="noopener" href="#">Tweet it</a></div>
+      </div>
+    </div>
+    <div class="pane" id="pane-threads" hidden>
+      <div class="scheme">
+        <span class="kind">Thread starter · each reply to yourself counts</span>
+        <p class="text" id="threadText"></p>
+        <ol id="threadSteps"></ol>
+        <div class="row"><button class="btn" id="threadNext" type="button">Another</button></div>
+      </div>
+    </div>
+    <div class="pane" id="pane-trends" hidden>
+      <p class="sub" style="margin:0">What the rest of the world is shouting about right now (US). Tap one to see the chatter.</p>
+      <div class="chips" id="trends"><span class="skeleton">Reading the winds…</span></div>
+    </div>
+    <div class="pane" id="pane-news" hidden>
+      <p class="sub" style="margin:0">Today's headlines. Have an opinion. Have a worse one.</p>
+      <ul class="news" id="news"><li class="skeleton">Reading the papers…</li></ul>
+    </div>
+    <div class="pane" id="pane-minions" hidden>
+      <form class="idea-form" id="ideaForm" autocomplete="off">
+        <input id="ideaName" maxlength="25" placeholder="your handle" aria-label="Your handle">
+        <input id="ideaBody" maxlength="200" placeholder="A tweet idea for the house…" aria-label="Tweet idea">
+        <button class="btn" type="submit">Add</button>
+      </form>
+      <p class="err" id="ideaErr" aria-live="polite"></p>
+      <ul class="ideas" id="ideas"><li class="skeleton">Nothing in the pot yet. Be the first schemer.</li></ul>
+    </div>
+  </section>
+
+  <footer>Mickal's Minions · House of 500 · <a href="/">back to the castle</a> · <a href="#" id="leave">leave the lair</a></footer>
+</div>
+
+<div class="fortune" id="fortune" role="status" aria-live="polite"></div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fmt = (n) => Number(n || 0).toLocaleString("en-US");
+const store = { get: (k) => { try { return localStorage.getItem(k) || ""; } catch { return ""; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch {} } };
+const NY = () => new Date(new Date().toLocaleString("en-US", { timeZone: "America/New_York" }));
+const nyDay = () => { const d = NY(); return d.getMonth() === 9 ? d.getDate() : (d.getMonth() > 9 ? 31 : 1); };
+const hourSlot = (h) => Math.floor(Date.now() / (h * 3600e3));
+const pick = (arr, seed) => arr[((seed % arr.length) + arr.length) % arr.length];
+
+/* ---------------- the words of the house ---------------- */
+const SCHEMES = [
+  ["Villain monologue", "Write the speech you'd give if you finally took over the timeline."],
+  ["Villain monologue", "Explain, calmly and in detail, why you're not the bad guy here."],
+  ["Hot take", "Name a beloved thing that's actually mid. Defend it to the death."],
+  ["Hot take", "The most overrated meal of the day is ___. Go."],
+  ["Hot take", "A song everyone loves that you would banish from the kingdom."],
+  ["Confession", "Something you did as a kid that you're still not sorry about."],
+  ["Confession", "The pettiest grudge you're still holding. Names optional."],
+  ["Confession", "A 'normal' thing you've never done and refuse to start now."],
+  ["Observation", "What's the weirdest thing you saw outside today?"],
+  ["Observation", "Describe your current room like it's a crime scene."],
+  ["Observation", "The vibe of your neighborhood, in one sentence."],
+  ["Question", "Ask your followers something you actually want to know."],
+  ["Question", "Would you rather fight one horse-sized duck or 100 duck-sized horses? Explain your battle plan."],
+  ["Question", "What's a food you'd eat every day for a year if you had to?"],
+  ["Food", "Rank the cookies. Wrong answers will be noted."],
+  ["Food", "Tweet what you ate today like it's a Michelin review."],
+  ["Food", "The snack you'd bring to a villain meeting."],
+  ["Seasonal", "It's October. Tell us your costume and why it's better than everyone's."],
+  ["Seasonal", "Spooky story you swear is true."],
+  ["Seasonal", "Rate today's weather out of 10 with zero explanation."],
+  ["Seasonal", "Your official stance on pumpkin spice. No fence-sitting."],
+  ["Lore", "Tweet a fake historical fact about House of 500."],
+  ["Lore", "What does Mickal keep in the lair's locked drawer?"],
+  ["Lore", "Recruitment pitch: convince one member of 333 to defect."],
+  ["Lore", "Write the House of 500 motto, version 2."],
+  ["Taunt", "A polite, devastating note to House of 333. Keep it friendly. Mostly."],
+  ["Taunt", "Count how many tweets 333 posted today. Respond accordingly."],
+  ["Micro-story", "Write a story in exactly one tweet that ends with a twist."],
+  ["Micro-story", "First line of a novel you'll never write."],
+  ["Micro-story", "A haiku about whatever's within arm's reach."],
+  ["Micro-story", "Describe your day as a dramatic movie trailer."],
+  ["List", "Three things that made you happy today, ranked."],
+  ["List", "Five words that describe you, but one of them is a lie."],
+  ["List", "Your top 3 fictional villains and what you've learned from each."],
+  ["Callback", "Quote-tweet your oldest tweet you can find and react to it."],
+  ["Callback", "Something you believed a year ago that you no longer do."],
+  ["Callback", "Reply to the last tweet that made you laugh out loud."],
+  ["Shower thought", "Something that's technically true but sounds made up."],
+  ["Shower thought", "A job that will exist in 50 years that doesn't exist now."],
+  ["Shower thought", "What would your pet tweet about you?"],
+  ["Night creature", "Post something only the 3 AM crowd will understand."],
+  ["Night creature", "What are you doing right now that you shouldn't be?"],
+  ["Recommendation", "One thing everyone should watch / read / listen to this week."],
+  ["Recommendation", "A free thing that improved your life."],
+  ["Unpopular opinion", "A rule of etiquette you think should be abolished."],
+  ["Unpopular opinion", "A chore you secretly enjoy."],
+  ["Brag", "Your most useless talent. Prove it."],
+  ["Brag", "Your proudest tiny victory this week."],
+  ["Mood", "Describe your mood as a weather forecast."],
+  ["Mood", "Today's soundtrack: one song, no context."],
+  ["Hypothetical", "If you got a villain origin story today, what caused it?"],
+  ["Hypothetical", "You're given one minute to address the whole internet. What do you say?"],
+  ["Hypothetical", "You can delete one invention forever. Which one?"],
+  ["Rapid fire", "Tweet the first thing you think of for: candles, Tuesday, betrayal."],
+  ["Rapid fire", "Describe your ideal day in under 10 words."],
+];
+const THREADS = [
+  ["My villain origin story, in parts 🧵", ["Where it all began", "The betrayal", "The moment I chose the dark side", "Where I am now", "What's next (be afraid)"]],
+  ["Ranking every snack I've had this week 🧵", ["Bottom of the barrel", "Respectable middle", "Solid contenders", "The one I'd die for", "Final verdict"]],
+  ["Things I'd do as supreme ruler of the timeline 🧵", ["Rule #1", "Rule #2", "A new national holiday", "Who gets exiled", "My first royal decree"]],
+  ["Live-tweeting my day like a nature documentary 🧵", ["The creature wakes", "The hunt for coffee", "Midday migration", "Evening rituals", "Retreat to the nest"]],
+  ["Reviewing every room in my home 🧵", ["Kitchen", "Bedroom", "Bathroom", "The weird closet", "Overall rating"]],
+  ["Hot takes, one per tweet, until someone stops me 🧵", ["Food take", "Movie take", "Music take", "Life take", "The take I'll regret"]],
+  ["Teaching you something I know way too much about 🧵", ["What it is", "Why it matters", "The weird fact", "Common mistakes", "How to get into it"]],
+  ["My October bucket list 🧵", ["Spooky thing", "Cozy thing", "Something new", "Something I've avoided", "The big one"]],
+  ["Every celebrity I'd trust to babysit, ranked 🧵", ["Absolutely not", "Maybe", "Probably fine", "Trusted", "Would leave the kids for a week"]],
+  ["A tour of my camera roll from the last 7 days 🧵", ["Day 1", "Day 3", "Day 5", "The weird one", "The best one"]],
+  ["Building the perfect House of 500 villain team 🧵", ["The mastermind", "The muscle", "The hacker", "The one who brings cookies", "The traitor (there's always one)"]],
+  ["Things I believed as a kid 🧵", ["About food", "About adults", "About the world", "About myself", "The one I still believe"]],
+  ["My current obsessions 🧵", ["A song", "A show", "A food", "A person (no names)", "A thought I can't shake"]],
+  ["Answering questions nobody asked 🧵", ["Favorite smell", "Least favorite noise", "Ideal weather", "Comfort movie", "Last thing I googled"]],
+  ["The plot of a movie I just made up 🧵", ["The setting", "The hero (it's me)", "The villain (also me)", "The twist", "The sequel bait"]],
+  ["Every coffee order I've had, judged 🧵", ["The disaster", "The safe one", "The experimental one", "The holy grail", "Advice for the masses"]],
+];
+const QUESTS = [
+  "Post a 5-tweet thread. Each self-reply counts toward the house.",
+  "Quote-tweet a House of 333 member with a respectful but devastating twist.",
+  "Tweet once every hour you're awake. Set an alarm. Be relentless.",
+  "Post something at 3 AM like a true creature of the night (or schedule it, coward).",
+  "Write a tweet in the voice of a cartoon villain. Monologue encouraged.",
+  "Tweet 3 things you're grateful for. Even villains have feelings.",
+  "Post a photo of your lair (your desk, your room, your fridge).",
+  "Live-tweet a meal, course by course.",
+  "Start a thread of 'things I'd outlaw' and keep adding to it all day.",
+  "Quote-tweet the most-liked tweet on today's list and make it better.",
+  "Post a hot take before noon. Defend it until midnight.",
+  "Tweet a recruitment poster for House of 500. Draw it if you dare.",
+  "Ask a question and reply to every answer you get (replies to others don't count, but they bring likes back).",
+  "Tweet 10 times before lunch. Then rest. Then 10 more.",
+  "Write a haiku. Then another. Then a third. Thread them.",
+  "Midpoint of the month: tweet your Tweetober confession.",
+  "Rate 5 random things in your room out of 10, one tweet each.",
+  "Tweet a fake 'leaked memo' from House of 500 headquarters.",
+  "Reply to yourself with a part two to your best tweet from this week.",
+  "Post an unpopular opinion every 2 hours. Keep score of the outrage.",
+  "Describe your day as a quest log, one entry per tweet.",
+  "Tweet a compliment to a fellow minion. Unity is our weapon.",
+  "Find a trending topic in the Cauldron and give it the villain treatment.",
+  "Post the worst pun you know. Then a worse one.",
+  "Pick a headline from the Cauldron and tweet your wildest take on it.",
+  "Make a 7-tweet thread ranking anything at all.",
+  "Tweet a playlist for villains, one song per tweet.",
+  "Tweet a spooky story in 5 parts, ending on a cliffhanger.",
+  "Pre-Halloween: post your costume plan and three backup costumes.",
+  "Halloween Eve: tweet a curse upon House of 333 (a gentle one).",
+  "Final day. Leave nothing in the tank. Every tweet is a cookie for the house. 🍪",
+];
+const FORTUNES = [
+  "Every tweet is a brick in the lair. Lay another.", "The dark side thanks you for your service. Here is your cookie. 🍪",
+  "333 is resting. Villains don't rest.", "A thread a day keeps the defeat away.", "Mickal is watching. Mickal is proud.",
+  "You have been chosen. (Everyone has been chosen. Tweet.)", "Fortune says: post the draft you were scared to post.",
+  "The cookie is a lie. The tweet count is not.", "Quote-tweet someone. Make it personal. Make it nice. Mostly.",
+  "Your next tweet will be legendary. Statistically, one of them has to be.", "Minion tip: replies to yourself count. Threads are free real estate.",
+  "Today's lucky number: 500. Obviously.", "Even evil needs a snack break. Take one, then tweet about it.",
+  "Rumor has it 333 just logged off. Seize the moment.", "Your enemies fear your drafts folder.",
+];
+
+/* ---------------- the door ---------------- */
+let CODE = store.get("lair-code");
+async function api(path, opts = {}) {
+  const r = await fetch(path, { ...opts, headers: { ...(opts.headers || {}), "x-lair-code": CODE, "content-type": "application/json" }, cache: "no-store" });
+  const d = await r.json().catch(() => ({}));
+  if (r.status === 403) { lock(d.error || "That is not the word."); throw new Error("locked"); }
+  if (!r.ok) throw new Error(d.error || ("HTTP " + r.status));
+  return d;
+}
+function lock(msg) { $("#lair").hidden = true; $("#door").hidden = false; if (msg) { $("#doorErr").textContent = msg; const b = $("#doorBox"); b.classList.remove("shake"); void b.offsetWidth; b.classList.add("shake"); } }
+async function enter() {
+  try { await api("/api/lair/check"); } catch (e) { if (e.message !== "locked") lock(e.message); return; }
+  store.set("lair-code", CODE);
+  $("#door").hidden = true; $("#lair").hidden = false;
+  start();
+}
+$("#doorForm").addEventListener("submit", (e) => { e.preventDefault(); CODE = $("#doorCode").value.trim(); if (CODE) enter(); });
+$("#leave").addEventListener("click", (e) => { e.preventDefault(); store.set("lair-code", ""); CODE = ""; lock(""); });
+if (CODE) enter(); else lock("");
+
+/* ---------------- the numbers ---------------- */
+const xUrl = (u) => `https://x.com/${encodeURIComponent(u)}`;
+const tUrl = (t) => `https://x.com/${encodeURIComponent(t.user)}/status/${encodeURIComponent(t.id)}`;
+const ago = (t) => { const m = Math.round((Date.now() - t) / 60000); return m < 1 ? "just now" : m < 60 ? `${m} min ago` : `${Math.floor(m / 60)} h ${m % 60} min ago`; };
+let STATS = null, pollTimer = 0;
+async function loadStats() {
+  clearTimeout(pollTimer);
+  try {
+    const d = await api("/api/lair/stats"); STATS = d; drawStats(d);
+    // a scan still running: ask again shortly; otherwise check back in five minutes
+    pollTimer = setTimeout(loadStats, d.busy ? 1500 : 5 * 60000);
+  } catch (e) {
+    if (e.message !== "locked") { $("#scanNote").textContent = "The spies are delayed: " + e.message; pollTimer = setTimeout(loadStats, 60000); }
+  }
+}
+function drawStats(d) {
+  const us = d.todayHouses["500"][0], them = d.todayHouses["333"][0], sum = us + them;
+  $("#us").textContent = fmt(us); $("#them").textContent = fmt(them);
+  $("#tugA").style.width = (sum ? us / sum * 100 : 50) + "%"; $("#tugB").style.width = (sum ? them / sum * 100 : 50) + "%";
+  $("#warSub").textContent = `October ${d.today} · counted tweets so far today (tweets, quote tweets and self-threads)`;
+  // battle math
+  const minions = Math.max(1, d.minionCount || d.todayHouses["500"][2] || 1), gap = them - us;
+  const m = $("#math"); m.classList.toggle("ahead", gap < 0);
+  if (!sum) m.innerHTML = "The day is young and the field is empty. <strong>Strike first.</strong>";
+  else if (gap >= 0) {
+    const each = Math.ceil((gap + 1) / minions);
+    m.innerHTML = gap === 0 ? `Dead even. <strong>One tweet from any minion</strong> puts us ahead.`
+      : `333 leads today by <strong>${fmt(gap)}</strong>. That's just <strong>${each} more tweet${each === 1 ? "" : "s"} each</strong> from our ${minions} minions to take the lead.`;
+  } else m.innerHTML = `We lead today by <strong>${fmt(-gap)}</strong>. ${-gap < minions * 2 ? "Too close for comfort. Keep pressing." : "Do not let them breathe."}`;
+  const mu = d.monthHouses["500"][0], mt = d.monthHouses["333"][0], mg = mu - mt;
+  $("#month").innerHTML = `<span class="h500">October so far: <b>${fmt(mu)}</b></span><span>${mg === 0 ? "tied" : mg > 0 ? `we lead by ${fmt(mg)}` : `333 leads by ${fmt(-mg)}`}</span><span class="h333">333: <b>${fmt(mt)}</b></span>`;
+  $("#stamp").textContent = d.scannedAt ? `Updated ${ago(d.scannedAt)} · refreshes every ${d.refreshMinutes} minutes` : "";
+  $("#scanNote").textContent = d.busy ? "Gathering intel…" : d.problem ? "The spies hit a snag; trying again soon." : "";
+  // minion of the day
+  if (d.mvp && d.mvp.user) {
+    $("#mvpSub").textContent = `October ${d.mvp.day}'s most prolific minion`;
+    $("#mvp").innerHTML = `<div class="mvp">${CROWN}<div><div class="name"><a href="${xUrl(d.mvp.user)}" target="_blank" rel="noopener">@${esc(d.mvp.user)}</a></div><div class="muted">${fmt(d.mvp.tweets)} counted tweets · ${fmt(d.mvp.likes)} likes</div></div></div>`
+      + (d.mvp.best ? `<p class="muted" style="margin:6px 0 0">Most-liked minion tweet of the day:</p>${quoteHtml(d.mvp.best)}` : "");
+  } else $("#mvp").innerHTML = `<p class="muted">The first crown is handed out tomorrow. Make it yours.</p>`;
+  // intel on 333
+  const it = d.intel;
+  $("#intel").innerHTML = `<div class="intel-row"><span class="k">Posting today</span><span class="h333">${it.posting} of them</span></div>
+    <div class="intel-row"><span class="k">Carrying them</span><span>${it.carriers.length ? it.carriers.map(c => `<a class="h333" href="${xUrl(c.user)}" target="_blank" rel="noopener">@${esc(c.user)}</a> (${c.tweets})`).join(", ") : "<span class='muted'>no one yet</span>"}</span></div>
+    ${it.best ? `<p class="muted" style="margin:6px 0 0">Their best tweet today (${fmt(it.best.likes)} likes):</p>${quoteHtml(it.best)}` : ""}`;
+  // quote-tweet bait
+  $("#bait").innerHTML = d.bait.length ? d.bait.map(t => `<li>${quoteHtml(t)}<div class="row"><a class="chip" href="https://x.com/intent/tweet?url=${encodeURIComponent(tUrl(t))}" target="_blank" rel="noopener">Quote it</a><span class="muted">${fmt(t.likes)} likes</span></div></li>`).join("") : `<li class="muted">Nothing hot yet today.</li>`;
+  // hall of infamy
+  $("#infamy").innerHTML = d.top20.length ? d.top20.map(t => `<li class="${t.house ? "h" + t.house : ""}"><div class="t"><span class="by ${t.house ? "h" + t.house : "muted"}">@${esc(t.user)}</span><a href="${tUrl(t)}" target="_blank" rel="noopener">${esc(t.text) || "(a picture)"}</a></div><span class="likes">♥ ${fmt(t.likes)}</span></li>`).join("") : `<li class="muted">No tweets counted yet.</li>`;
+}
+const quoteHtml = (t) => `<blockquote class="quote"><a href="${tUrl(t)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">${esc(t.text) || "(a picture)"}</a><span class="meta"><span class="${t.house ? "h" + t.house : ""}">@${esc(t.user)}</span> · ♥ ${fmt(t.likes)} · ⟲ ${fmt(t.rts)}</span></blockquote>`;
+const CROWN = `<svg class="crown" viewBox="0 0 64 52" aria-hidden="true"><path d="M6 44 2 12l16 14L32 4l14 22 16-14-4 32z" fill="#F2D272" stroke="#7A5A10" stroke-width="2" stroke-linejoin="round"/><rect x="6" y="42" width="52" height="7" rx="2" fill="#E0B94A" stroke="#7A5A10" stroke-width="2"/><circle cx="32" cy="30" r="4" fill="#F26F96"/><circle cx="17" cy="33" r="3" fill="#8E5BD8"/><circle cx="47" cy="33" r="3" fill="#8E5BD8"/></svg>`;
+
+/* ---------------- quest, schemes, threads, cookies ---------------- */
+function drawQuest() {
+  const day = nyDay();
+  $("#questSub").textContent = `October ${day}`;
+  $("#questTag").textContent = day === 31 ? "Final quest" : `Quest ${day} of 31`;
+  $("#quest").textContent = QUESTS[day - 1] || QUESTS[0];
+}
+let schemeN = hourSlot(3), threadN = hourSlot(6);   // a fresh scheme every 3 hours and thread every 6, or tap Another
+function drawScheme() {
+  const [kind, text] = pick(SCHEMES, schemeN * 7);
+  $("#schemeKind").textContent = kind; $("#schemeText").textContent = text;
+  $("#schemeTweet").href = "https://x.com/intent/tweet";
+}
+function drawThread() {
+  const [title, steps] = pick(THREADS, threadN * 5);
+  $("#threadText").textContent = title;
+  $("#threadSteps").innerHTML = steps.map(s => `<li>${esc(s)}</li>`).join("");
+}
+$("#schemeNext").addEventListener("click", () => { schemeN++; drawScheme(); });
+$("#threadNext").addEventListener("click", () => { threadN++; drawThread(); });
+let fortuneT = 0;
+$("#jar").addEventListener("click", () => {
+  const j = $("#jar"); j.classList.remove("wiggle"); void j.offsetWidth; j.classList.add("wiggle");
+  const roll = Math.random();
+  const f = $("#fortune");
+  if (roll < .5) { const [k, t] = SCHEMES[Math.floor(Math.random() * SCHEMES.length)]; f.innerHTML = `<b>🍪 A scheme · ${esc(k)}</b>${esc(t)}`; }
+  else f.innerHTML = `<b>🍪 Your cookie says</b>${esc(FORTUNES[Math.floor(Math.random() * FORTUNES.length)])}`;
+  f.classList.add("show"); clearTimeout(fortuneT); fortuneT = setTimeout(() => f.classList.remove("show"), 6000);
+});
+document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => {
+  document.querySelectorAll(".tab").forEach(x => x.setAttribute("aria-selected", String(x === t)));
+  document.querySelectorAll(".pane").forEach(p => p.hidden = p.id !== "pane-" + t.dataset.pane);
+}));
+
+/* ---------------- trends, headlines, the minions' own ideas ---------------- */
+async function loadIdeas() {
+  try {
+    const d = await api("/api/lair/ideas");
+    $("#trends").innerHTML = d.trends.length ? d.trends.map(t => `<a class="chip" href="https://x.com/search?q=${encodeURIComponent(t.query || t.name)}" target="_blank" rel="noopener">${esc(t.name)}${t.meta ? `<small>${esc(t.meta)}</small>` : ""}</a>`).join("") : `<span class="muted">The winds are quiet. Try again later.</span>`;
+    $("#news").innerHTML = d.news.length ? d.news.map(n => `<li><a href="${esc(n.link)}" target="_blank" rel="noopener">${esc(n.title)}</a>${n.source ? `<small>${esc(n.source)}</small>` : ""}</li>`).join("") : `<li class="muted">No papers today.</li>`;
+    drawIdeas(d.ideas);
+  } catch (e) { if (e.message !== "locked") setTimeout(loadIdeas, 60000); }
+}
+function drawIdeas(list) {
+  $("#ideas").innerHTML = list.length ? list.map(i => `<li><b>@${esc(i.name)}</b>${esc(i.body)}</li>`).join("") : `<li class="muted">Nothing in the pot yet. Be the first schemer.</li>`;
+}
+$("#ideaName").value = store.get("lair-name");
+$("#ideaForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const name = $("#ideaName").value.trim().replace(/^@/, ""), body = $("#ideaBody").value.trim();
+  if (!name || !body) { $("#ideaErr").textContent = "Your handle and an idea, minion."; return; }
+  try {
+    await api("/api/lair/ideas", { method: "POST", body: JSON.stringify({ name, body }) });
+    store.set("lair-name", name); $("#ideaBody").value = ""; $("#ideaErr").textContent = "Into the pot it goes.";
+    const d = await api("/api/lair/ideas"); drawIdeas(d.ideas);
+  } catch (err) { if (err.message !== "locked") $("#ideaErr").textContent = err.message; }
+});
+
+let started = false;
+function start() {
+  if (started) return; started = true;
+  drawQuest(); drawScheme(); drawThread();
+  loadStats(); loadIdeas();
+  setInterval(() => { const s = hourSlot(3); if (s > schemeN) { schemeN = s; drawScheme(); } drawQuest(); if (STATS) $("#stamp").textContent = STATS.scannedAt ? `Updated ${ago(STATS.scannedAt)} · refreshes every ${STATS.refreshMinutes} minutes` : ""; }, 60000);
+  setInterval(loadIdeas, 30 * 60000);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) loadStats(); });
+}
+</script>
+</body>
+</html>
 
