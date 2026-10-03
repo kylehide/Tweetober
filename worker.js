@@ -500,15 +500,6 @@ async function lairStats(request, env) {
   const theirs = Object.entries(td.users).filter(([u, p]) => houseOf(u) === "333" && p[0] > 0).sort((a, b) => b[1][0] - a[1][0]);
   const theirBest = td.top.filter(x => houseOf(x[0]) === "333").sort((a, b) => b[2] - a[2])[0];
   const intel = { carriers: theirs.slice(0, 3).map(([u, p]) => ({ user: u, tweets: p[0] })), best: theirBest ? tweet(theirBest) : null, posting: theirs.length };
-  // their best tweet in full (picture, photos, counts); looked up at most every half hour
-  if (intel.best) {
-    const full = await lairCached(env, "tw:" + intel.best.id, 30 * 60000, async () => {
-      const u = new URL("https://api.twitterapi.io/twitter/tweets"); u.searchParams.set("tweet_ids", intel.best.id);
-      const d = await (await fetch(u, { headers: { "X-API-Key": env.TWITTERAPI_KEY } })).json();
-      const t = (d.tweets || [])[0]; if (!t) throw new Error("not found"); return slim(t);
-    });
-    if (full && !Array.isArray(full) && full.id) intel.full = full;
-  }
   // quote-tweet bait: today's best tweets from anyone (and the last few hours of yesterday if today is young)
   const bait = [...td.top, ...(y && now - dayStart(today) < 6 * 3600e3 ? y.top : [])].sort((a, b) => b[2] - a[2]).slice(0, 4).map(tweet);
   // the bait in full (pictures, photos, counts), looked up at most every half hour
