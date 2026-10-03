@@ -11,6 +11,7 @@
 //   GET    /api/tweets?ids=A,B       -> { tweets }  Trophy Room tweets (only ones linked in the sheet), cached
 //   GET    /api/oath                 -> { oaths }   the Roll of the Sworn: handle + drawn signature
 //   POST   /api/oath                 -> { name, sig }  sign the Honor Code (one oath per handle)
+//   /api/lair/stats, /api/lair/ideas    House of 500's lair (tweetober.com/lair); header x-lair-code: LAIR_CODE
 //
 // Settings (Cloudflare dashboard -> this Worker -> Settings -> Variables and Secrets):
 //   HALL_CODE  secret  optional. Leave unset and anyone can post. Set it (e.g. hinge) to require a password.
@@ -300,15 +301,14 @@ async function trophies(env, url) {
   return json({ tweets });
 }
 
-/* ---------- Private report for the organizers ----------
-   /api/day?key=ADMIN_KEY   today's tweets (New York time) and the month so far, from everyone on the list:
-   tweets per house, the most-liked tweets and tweets per person.
-   Each finished day is scanned once after it ends; today is re-scanned at most every REPORT_MINUTES (default 30)
-   so like counts stay fresh. The page refreshes itself while a scan is running. &fresh=1 re-scans today now. */
+/* ---------- The Lair: House of 500's secret common room (tweetober.com/lair) ----------
+   Every /api/lair/* call needs the house password (secret LAIR_CODE) in the x-lair-code header.
+   Tweet counts come from twitterapi.io, not the Ledger:
+   - today is topped up with only the tweets posted since the last look, at most every LAIR_MINUTES (default 30),
+     and the like counts on today's leading tweets are refreshed at the same time;
+   - each finished day is read once more in full shortly after midnight, so its like counts settle.
+   Scans run in small chunks; the page keeps asking until a scan is finished. */
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const page = (title, body, refresh) => new Response(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">${refresh ? `<meta http-equiv="refresh" content="${esc(refresh)}">` : ""}<title>${esc(title)}</title>
-<style>body{font:15px/1.45 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:#1c150e;color:#f3e6c8;margin:0;padding:20px}main{max-width:820px;margin:0 auto}h1{color:#f2d272;font-size:1.5rem}h3{color:#e9d6a8;font-size:1rem;margin-top:18px}details{margin-top:14px}summary{cursor:pointer;color:#f2d272}h2{color:#f2d272;font-size:1.1rem;margin-top:28px}table{border-collapse:collapse;width:100%}td,th{padding:6px 8px;border-bottom:1px solid #4a3a24;text-align:left;vertical-align:top}th{color:#c9b48a;font-weight:600}.n{text-align:right;white-space:nowrap}a{color:#f2d272}.muted{color:#a8957a}.h333{color:#e6e4e0}.h500{color:#f26f96}</style></head><body><main>${body}</main></body></html>`,
-  { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "x-robots-tag": "noindex" } });
 const LEDGER_SHEET = "https://docs.google.com/spreadsheets/d/1b3AqoSgvyc1s-21rQQuVK0-HBeTz6cZVUJuWW9BRKy4/gviz/tq?tqx=out:csv";
 function csvRows(text) {
   const rows = []; let row = [], cell = "", q = false;
@@ -339,112 +339,202 @@ async function ledgerHouses(env) {
   } catch {}
   return map;
 }
-const DAY_MS = 864e5, OCT1 = Date.UTC(2026, 9, 1, 4);   // midnight Oct 1, New York (EDT)
+
+const DAY_MS = 864e5, OCT1 = Date.UTC(2026, 9, 1, 4);   // midnight Oct 1, New York (EDT lasts all October)
 const dayStart = (d) => OCT1 + (d - 1) * DAY_MS;
-const blankDay = () => ({ users: {}, top: [], ids: [], n: { tweet: 0, quote: 0, reply: 0, retweet: 0 } });
-// one chunk of a day's scan: up to 25 pages of the list, folded into that day's running totals
-async function scanChunk(env, d, st, until) {
-  const start = dayStart(d), seen = new Set(st.data.ids);
-  for (let i = 0; i < 25; i++) {
+const blankDay = () => ({ users: {}, top: [], ids: [], n: { tweet: 0, quote: 0, reply: 0, retweet: 0 }, newest: 0 });
+const TOP_KEEP = 40;
+const trimTop = (top) => { top.sort((a, b) => b[2] - a[2] || b[3] - a[3]); if (top.length > TOP_KEEP) top.length = TOP_KEEP; return top; };
+// one chunk of a scan: up to `pages` pages of the list, folded into the working copy `w`
+async function scanChunk(env, w, since, until, cursorIn, pages) {
+  const seen = new Set(w.ids); let cursor = cursorIn;
+  for (let i = 0; i < pages; i++) {
     const u = new URL("https://api.twitterapi.io/twitter/list/tweets");
     u.searchParams.set("listId", env.LIST_ID || DEFAULT_LIST); u.searchParams.set("includeReplies", "true");
-    u.searchParams.set("sinceTime", String(Math.floor(start / 1000))); u.searchParams.set("untilTime", String(Math.floor(until / 1000)));
-    if (st.cursor) u.searchParams.set("cursor", st.cursor);
+    u.searchParams.set("sinceTime", String(Math.floor(since / 1000))); u.searchParams.set("untilTime", String(Math.ceil(until / 1000)));
+    if (cursor) u.searchParams.set("cursor", cursor);
     const r = await fetch(u, { headers: { "X-API-Key": env.TWITTERAPI_KEY } });
     const data = await r.json().catch(() => ({}));
     if (!r.ok || !Array.isArray(data.tweets)) throw new Error("twitterapi.io: " + (data.message || data.msg || r.status));
     let older = false;
     for (const t of data.tweets) {
       const created = when(t.createdAt), id = String(t.id || "");
-      if (created && created < start) older = true;
-      if (!id || seen.has(id) || created < start || created >= until) continue;
-      seen.add(id); st.data.ids.push(id);
+      if (created && created < since) older = true;
+      if (!id || seen.has(id) || created < since || created >= until) continue;
+      seen.add(id); w.ids.push(id); w.newest = Math.max(w.newest || 0, created);
       const user = String(t.author?.userName || "");
       const kind = (t.retweeted_tweet || t.retweetedTweet || /^RT @/.test(t.text || "")) ? "retweet"
         : (t.isReply && String(t.inReplyToUsername || "").toLowerCase() !== user.toLowerCase()) ? "reply"
         : (t.quoted_tweet || t.quotedTweet) ? "quote" : "tweet";
-      st.data.n[kind]++;
-      const p = st.data.users[user] ||= [0, 0, 0, 0];   // counted, likes on counted, replies, retweets
+      w.n[kind]++;
+      const p = w.users[user] ||= [0, 0, 0, 0];   // counted, likes on counted, replies, retweets
       if (kind === "reply") p[2]++; else if (kind === "retweet") p[3]++; else {
         p[0]++; p[1] += t.likeCount | 0;
-        st.data.top.push([user, id, t.likeCount | 0, t.retweetCount | 0, String(t.text || "").slice(0, 160)]);
-        if (st.data.top.length > 40) { st.data.top.sort((a, b) => b[2] - a[2]); st.data.top.length = 30; }
+        w.top.push([user, id, t.likeCount | 0, t.retweetCount | 0, String(t.text || "").slice(0, 200), created]);
+        if (w.top.length > TOP_KEEP * 2) trimTop(w.top);
       }
     }
-    st.cursor = data.has_next_page && data.next_cursor && data.tweets.length && !older ? data.next_cursor : "";
-    if (!st.cursor) return true;
+    cursor = data.has_next_page && data.next_cursor && data.tweets.length && !older ? data.next_cursor : "";
+    if (!cursor) return { done: true, cursor: "" };
   }
-  return false;
+  return { done: false, cursor };
 }
-async function dayReport(request, env, url) {
-  if (!env.ADMIN_KEY || url.searchParams.get("key") !== env.ADMIN_KEY) return page("Not allowed", "<h1>Not allowed</h1><p>Add <code>?key=</code> with your ADMIN_KEY.</p>");
-  if (!env.TWITTERAPI_KEY || !env.DB) return page("Not set up", "<h1>Not set up</h1><p>TWITTERAPI_KEY or the database is missing.</p>");
-  const now = Date.now();
-  const today = Math.max(1, Math.min(31, Math.floor((now - OCT1) / DAY_MS) + 1));
-  const ttl = Math.max(5, Number(env.REPORT_MINUTES) || 30) * 60000;
-  await env.DB.prepare("CREATE TABLE IF NOT EXISTS report_days (day INTEGER PRIMARY KEY, data TEXT NOT NULL, cursor TEXT, scanning INTEGER NOT NULL, final INTEGER NOT NULL, scanned INTEGER NOT NULL, upto INTEGER NOT NULL)").run();
-  const { results } = await env.DB.prepare("SELECT * FROM report_days").all();
-  const rows = Object.fromEntries(results.map(r => [r.day, r]));
-  // what needs scanning: a finished day that was never scanned after it ended, or today if it's stale (or &fresh=1)
-  let job = null;
+// fresh like counts for a day's leading tweets (one cheap call)
+async function refreshLikes(env, w) {
+  const ids = w.top.slice(0, TOP_KEEP).map(t => t[1]); if (!ids.length) return;
+  try {
+    const u = new URL("https://api.twitterapi.io/twitter/tweets"); u.searchParams.set("tweet_ids", ids.join(","));
+    const r = await fetch(u, { headers: { "X-API-Key": env.TWITTERAPI_KEY } });
+    const data = await r.json().catch(() => ({}));
+    const got = new Map((data.tweets || []).map(t => [String(t.id), t]));
+    for (const t of w.top) {
+      const f = got.get(t[1]); if (!f) continue;
+      const likes = f.likeCount | 0, diff = likes - t[2];
+      if (diff && w.users[t[0]]) w.users[t[0]][1] += diff;
+      t[2] = likes; t[3] = f.retweetCount | 0;
+    }
+    trimTop(w.top);
+  } catch {}
+}
+function lairAuth(request, env) {
+  if (!env.LAIR_CODE) return json({ error: "The lair isn't set up yet: add a LAIR_CODE secret to the Worker." }, 503);
+  const code = String(request.headers.get("x-lair-code") || "").trim().toLowerCase();
+  if (code !== String(env.LAIR_CODE).trim().toLowerCase()) return json({ error: "That is not the word, stranger." }, 403);
+  return null;
+}
+async function lairTables(db) {
+  await db.prepare("CREATE TABLE IF NOT EXISTS lair_days (day INTEGER PRIMARY KEY, data TEXT NOT NULL, scan TEXT, mode TEXT NOT NULL DEFAULT '', cursor TEXT, since INTEGER NOT NULL DEFAULT 0, upto INTEGER NOT NULL DEFAULT 0, final INTEGER NOT NULL DEFAULT 0, scanned INTEGER NOT NULL DEFAULT 0, lock INTEGER NOT NULL DEFAULT 0)").run();
+  await db.prepare("CREATE TABLE IF NOT EXISTS lair_cache (k TEXT PRIMARY KEY, body TEXT NOT NULL, fetched INTEGER NOT NULL)").run();
+  await db.prepare("CREATE TABLE IF NOT EXISTS lair_ideas (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, body TEXT NOT NULL, created INTEGER NOT NULL, who TEXT)").run();
+}
+// do at most one chunk of scanning work; returns true if more work is waiting
+async function lairWork(env, now, today) {
+  const ttl = Math.max(10, Number(env.LAIR_MINUTES) || 30) * 60000;
+  const rows = Object.fromEntries(((await env.DB.prepare("SELECT day, mode, final, scanned, lock FROM lair_days").all()).results || []).map(r => [r.day, r]));
+  let job = null, kind = "";
   for (let d = 1; d <= today && !job; d++) {
     const r = rows[d], ended = now >= dayStart(d) + DAY_MS;
-    if (r && r.scanning) job = d;
-    else if (ended && !(r && r.final)) job = d;
-    else if (!ended && (!r || now - r.scanned > ttl || (url.searchParams.get("fresh") && !url.searchParams.get("cont")))) job = d;
+    if (r && r.mode) { job = d; kind = "continue"; }
+    else if (ended && !(r && r.final)) { job = d; kind = "final"; }
+    else if (!ended && (!r || now - r.scanned > ttl)) { job = d; kind = "inc"; }
   }
-  if (job && now <= dayStart(31) + 2 * DAY_MS) {
-    const r = rows[job], cont = r && r.scanning;
-    const st = cont ? { data: JSON.parse(r.data), cursor: r.cursor || "" } : { data: blankDay(), cursor: "" };
-    const until = cont ? r.upto : Math.min(now, dayStart(job) + DAY_MS);
-    let done;
-    try { done = await scanChunk(env, job, st, until); }
-    catch (e) { return page("Error", `<h1>Couldn't scan</h1><p>${esc(e.message || e)}</p><p><a href="">Try again</a></p>`); }
-    if (done) { st.data.top.sort((a, b) => b[2] - a[2]); st.data.top.length = Math.min(st.data.top.length, 30); }
-    await env.DB.prepare("INSERT INTO report_days (day, data, cursor, scanning, final, scanned, upto) VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT(day) DO UPDATE SET data = excluded.data, cursor = excluded.cursor, scanning = excluded.scanning, final = excluded.final, scanned = excluded.scanned, upto = excluded.upto")
-      .bind(job, JSON.stringify(st.data), st.cursor, done ? 0 : 1, done && until >= dayStart(job) + DAY_MS ? 1 : 0, now, until).run();
-    const k = encodeURIComponent(url.searchParams.get("key"));
-    return page("Scanning", `<h1>Scanning October ${job}&hellip;</h1><p>${st.data.ids.length} posts so far. This page refreshes itself until it's done.</p>`, `1;url=?key=${k}&cont=1`);
-  }
-  // ---- render ----
-  const days = Object.fromEntries(results.map(r => [r.day, JSON.parse(r.data)]));
-  const houses = await ledgerHouses(env), houseOf = (u) => houses[String(u).toLowerCase()] || "";
-  const H = { "333": { name: "House of 333", cls: "h333" }, "500": { name: "House of 500", cls: "h500" }, "": { name: "Not in the Ledger", cls: "muted" } };
-  const who = (u) => `<span class="${H[houseOf(u)].cls}">@${esc(u)}</span>`;
-  function section(title, list) {
-    const users = {}, n = { tweet: 0, quote: 0, reply: 0, retweet: 0 }; let top = [];
-    for (const d of list) {
-      for (const [u, v] of Object.entries(d.users)) { const p = users[u] ||= [0, 0, 0, 0]; v.forEach((x, i) => p[i] += x); }
-      for (const k in n) n[k] += d.n[k] || 0;
-      top = top.concat(d.top);
+  if (!job) return false;
+  // claim it, so two visitors don't pay for the same pages
+  await env.DB.prepare("INSERT INTO lair_days (day, data) VALUES (?, ?) ON CONFLICT(day) DO NOTHING").bind(job, JSON.stringify(blankDay())).run();
+  const claim = await env.DB.prepare("UPDATE lair_days SET lock = ? WHERE day = ? AND lock < ?").bind(now + 30000, job, now).run();
+  if (!claim.meta.changes) return true;   // someone else is on it
+  const r = await env.DB.prepare("SELECT * FROM lair_days WHERE day = ?").bind(job).first();
+  let w, since, upto, cursor = "", mode;
+  if (kind === "continue") { w = JSON.parse(r.scan || r.data); since = r.since; upto = r.upto; cursor = r.cursor || ""; mode = r.mode; }
+  else if (kind === "final") { w = blankDay(); since = dayStart(job); upto = dayStart(job) + DAY_MS; mode = "final"; }
+  else { w = JSON.parse(r.data); since = w.newest ? Math.max(dayStart(job), w.newest - 120000) : dayStart(job); upto = now; mode = "inc"; }
+  try {
+    const res = await scanChunk(env, w, since, upto, cursor, 20);
+    if (res.done) {
+      if (mode === "inc") await refreshLikes(env, w);
+      trimTop(w.top);
+      const final = mode === "final" ? 1 : 0;
+      await env.DB.prepare("UPDATE lair_days SET data = ?, scan = NULL, mode = '', cursor = '', final = ?, scanned = ?, lock = 0 WHERE day = ?")
+        .bind(JSON.stringify(w), final, now, job).run();
+    } else {
+      await env.DB.prepare("UPDATE lair_days SET scan = ?, mode = ?, cursor = ?, since = ?, upto = ?, lock = 0 WHERE day = ?")
+        .bind(JSON.stringify(w), mode, res.cursor, since, upto, job).run();
     }
-    top.sort((a, b) => b[2] - a[2] || b[3] - a[3]); top = top.slice(0, 10);
-    const hs = { "333": [0, 0, 0, 0, 0], "500": [0, 0, 0, 0, 0], "": [0, 0, 0, 0, 0] };
-    for (const [u, p] of Object.entries(users)) { const h = hs[houseOf(u)]; p.forEach((x, i) => h[i] += x); h[4]++; }
-    const lead = hs["333"][0] === hs["500"][0] ? "Dead even." : `${hs["333"][0] > hs["500"][0] ? "House of 333" : "House of 500"} leads by ${Math.abs(hs["333"][0] - hs["500"][0]).toLocaleString("en-US")}.`;
-    const people = Object.entries(users).sort((a, b) => b[1][0] - a[1][0] || b[1][1] - a[1][1]);
-    const f = (x) => Number(x).toLocaleString("en-US");
-    return `<h2>${title}</h2>
-      <p class="muted">${f(n.tweet + n.quote + n.reply + n.retweet)} posts: ${f(n.tweet)} tweets, ${f(n.quote)} quote tweets, ${f(n.reply)} replies to others, ${f(n.retweet)} retweets.</p>
-      <h3>Tweets per house</h3><p>${lead}</p>
-      <table><tr><th>House</th><th class="n">Counted tweets</th><th class="n">Likes on them</th><th class="n">People posting</th><th class="n">Replies</th><th class="n">Retweets</th></tr>
-      ${["333", "500", ""].filter(k => k || hs[k][4]).map(k => `<tr><td class="${H[k].cls}">${H[k].name}</td><td class="n">${f(hs[k][0])}</td><td class="n">${f(hs[k][1])}</td><td class="n">${hs[k][4]}</td><td class="n">${f(hs[k][2])}</td><td class="n">${f(hs[k][3])}</td></tr>`).join("")}</table>
-      <h3>Top 10 most liked</h3>
-      <table><tr><th>#</th><th>Who</th><th>Tweet</th><th class="n">Likes</th><th class="n">RTs</th></tr>
-      ${top.map((t, i) => `<tr><td>${i + 1}</td><td>${who(t[0])}</td><td><a href="https://x.com/${esc(t[0])}/status/${esc(t[1])}" target="_blank" rel="noopener">${esc(t[4]) || "(media)"}</a></td><td class="n">${f(t[2])}</td><td class="n">${f(t[3])}</td></tr>`).join("")}</table>
-      <details><summary>Tweets per person (${people.length})</summary>
-      <table><tr><th>#</th><th>Who</th><th class="n">Counted</th><th class="n">Likes on them</th><th class="n">Replies</th><th class="n">Retweets</th></tr>
-      ${people.map(([u, p], i) => `<tr><td>${i + 1}</td><td>${who(u)}</td><td class="n">${f(p[0])}</td><td class="n">${f(p[1])}</td><td class="n">${f(p[2])}</td><td class="n">${f(p[3])}</td></tr>`).join("")}</table></details>`;
+  } catch (e) {
+    await env.DB.prepare("UPDATE lair_days SET lock = 0 WHERE day = ?").bind(job).run();
+    throw e;
   }
-  const ny = (t) => new Date(t).toLocaleString("en-US", { timeZone: "America/New_York", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
-  const tRow = rows[today], k = encodeURIComponent(url.searchParams.get("key"));
-  const monthDays = Object.keys(days).map(Number).filter(d => d <= today).map(d => days[d]);
-  return page("Tweetober report", `<h1>Tweetober report</h1>
-    <p class="muted">"Counted" = original tweets, quote tweets and replies to yourself (threads), per the rules. Houses come from the Ledger; "Not in the Ledger" is anyone on the list who isn't in it or is spelled differently there.</p>
-    ${days[today] ? section(`Today &middot; October ${today}`, [days[today]]) : ""}
-    <p class="muted">Today's likes as of ${tRow ? esc(ny(tRow.scanned)) : "-"} (re-checked at most every ${Math.round(ttl / 60000)} minutes). <a href="?key=${k}&fresh=1">Re-check now</a></p>
-    ${section(`October so far &middot; days 1&ndash;${today}`, monthDays)}
-    <p class="muted">Finished days are counted once, shortly after they end, so their like counts are from then.</p>`);
+  return true;
+}
+async function lairStats(request, env) {
+  const now = Date.now();
+  const today = Math.max(1, Math.min(31, Math.floor((now - OCT1) / DAY_MS) + 1));
+  let busy = false, problem = "";
+  if (now >= OCT1 && now < dayStart(31) + 2 * DAY_MS) {
+    try { busy = await lairWork(env, now, today); } catch (e) { problem = String(e.message || e).slice(0, 200); }
+  }
+  const rows = ((await env.DB.prepare("SELECT day, data, final, scanned FROM lair_days WHERE day <= ? ORDER BY day").bind(today).all()).results || []);
+  const days = Object.fromEntries(rows.map(r => [r.day, JSON.parse(r.data)]));
+  const houses = await ledgerHouses(env), houseOf = (u) => houses[String(u).toLowerCase()] || "";
+  const sum = (list) => {
+    const out = { "333": [0, 0, 0], "500": [0, 0, 0], "": [0, 0, 0] }, users = {};   // counted, likes, people
+    for (const d of list) for (const [u, p] of Object.entries(d.users)) { const x = users[u] ||= [0, 0]; x[0] += p[0]; x[1] += p[1]; }
+    for (const [u, x] of Object.entries(users)) { if (!x[0]) continue; const h = out[houseOf(u)]; h[0] += x[0]; h[1] += x[1]; h[2]++; }
+    return { houses: out, users };
+  };
+  const t = days[today] ? sum([days[today]]) : sum([]);
+  const m = sum(Object.values(days));
+  const tweet = (x) => ({ user: x[0], id: x[1], likes: x[2], rts: x[3], text: x[4], created: x[5], house: houseOf(x[0]) });
+  const allTop = [].concat(...Object.values(days).map(d => d.top)).sort((a, b) => b[2] - a[2] || b[3] - a[3]);
+  const top20 = allTop.slice(0, 20).map(tweet);
+  // Minion of the Day: yesterday's most prolific minion, plus the minion with yesterday's most-liked tweet
+  let mvp = null;
+  const y = days[today - 1];
+  if (y) {
+    const minions = Object.entries(y.users).filter(([u, p]) => houseOf(u) === "500" && p[0] > 0).sort((a, b) => b[1][0] - a[1][0] || b[1][1] - a[1][1]);
+    const best = y.top.filter(x => houseOf(x[0]) === "500").sort((a, b) => b[2] - a[2])[0];
+    mvp = { day: today - 1, user: minions[0] ? minions[0][0] : "", tweets: minions[0] ? minions[0][1][0] : 0, likes: minions[0] ? minions[0][1][1] : 0, best: best ? tweet(best) : null };
+  }
+  // Intel on 333, today
+  const td = days[today] || blankDay();
+  const theirs = Object.entries(td.users).filter(([u, p]) => houseOf(u) === "333" && p[0] > 0).sort((a, b) => b[1][0] - a[1][0]);
+  const theirBest = td.top.filter(x => houseOf(x[0]) === "333").sort((a, b) => b[2] - a[2])[0];
+  const intel = { carriers: theirs.slice(0, 3).map(([u, p]) => ({ user: u, tweets: p[0] })), best: theirBest ? tweet(theirBest) : null, posting: theirs.length };
+  // quote-tweet bait: today's best tweets from anyone (and the last few hours of yesterday if today is young)
+  const bait = [...td.top, ...(y && now - dayStart(today) < 6 * 3600e3 ? y.top : [])].sort((a, b) => b[2] - a[2]).slice(0, 6).map(tweet);
+  const minionCount = Object.values(houses).filter(h => h === "500").length;
+  const todayRow = rows.find(r => r.day === today);
+  return json({ today, now, scannedAt: todayRow ? todayRow.scanned : 0, busy, problem,
+    todayHouses: t.houses, monthHouses: m.houses, top20, mvp, intel, bait, minionCount,
+    ledgerSize: Object.keys(houses).length, refreshMinutes: Math.max(10, Number(env.LAIR_MINUTES) || 30) });
+}
+async function lairCached(env, k, maxAgeMs, load) {
+  const row = await env.DB.prepare("SELECT body, fetched FROM lair_cache WHERE k = ?").bind(k).first();
+  if (row && Date.now() - row.fetched < maxAgeMs) return JSON.parse(row.body);
+  try {
+    const fresh = await load();
+    await env.DB.prepare("INSERT INTO lair_cache (k, body, fetched) VALUES (?, ?, ?) ON CONFLICT(k) DO UPDATE SET body = excluded.body, fetched = excluded.fetched").bind(k, JSON.stringify(fresh), Date.now()).run();
+    return fresh;
+  } catch { return row ? JSON.parse(row.body) : []; }
+}
+async function lairIdeas(request, env) {
+  if (request.method === "POST") {
+    let input; try { input = await request.json(); } catch { return json({ error: "That couldn't be read." }, 400); }
+    const name = clean(input.name, MAX_NAME).replace(/^@/, ""), body = clean(input.body, 200);
+    if (!name || !body) return json({ error: "Add your name and an idea." }, 400);
+    const id = await who(request), now = Date.now();
+    const last = await env.DB.prepare("SELECT created FROM lair_ideas WHERE who = ? ORDER BY created DESC LIMIT 1").bind(id).first();
+    if (last && now - last.created < 15000) return json({ error: "Patience, minion. Try again in a few seconds." }, 429);
+    const row = await env.DB.prepare("INSERT INTO lair_ideas (name, body, created, who) VALUES (?, ?, ?, ?) RETURNING id, name, body, created").bind(name, body, now, id).first();
+    return json({ idea: row }, 201);
+  }
+  const trends = env.TWITTERAPI_KEY ? await lairCached(env, "trends", 2 * 3600e3, async () => {
+    const u = new URL("https://api.twitterapi.io/twitter/trends"); u.searchParams.set("woeid", env.TRENDS_WOEID || "23424977"); u.searchParams.set("count", "30");
+    const r = await fetch(u, { headers: { "X-API-Key": env.TWITTERAPI_KEY } });
+    const data = await r.json(); if (!Array.isArray(data.trends)) throw new Error("no trends");
+    return data.trends.map(x => x.trend || x).map(x => ({ name: String(x.name || ""), query: String(x.target?.query || x.query || x.name || ""), meta: String(x.meta_description || "") })).filter(x => x.name).slice(0, 20);
+  }) : [];
+  const news = await lairCached(env, "news", 3600e3, async () => {
+    const xml = await (await fetch(env.NEWS_RSS || "https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en")).text();
+    const tag = (s, n) => { const m = s.match(new RegExp(`<${n}[^>]*>([\\s\\S]*?)</${n}>`)); return m ? m[1].replace(/<!\[CDATA\[|\]\]>/g, "").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").trim() : ""; };
+    const items = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)].map(m => m[1]).slice(0, 15);
+    if (!items.length) throw new Error("no news");
+    return items.map(it => { const source = tag(it, "source"), title = tag(it, "title"); return { title: source && title.endsWith(" - " + source) ? title.slice(0, -(source.length + 3)) : title, link: tag(it, "link"), source }; });
+  });
+  const ideas = (await env.DB.prepare("SELECT id, name, body, created FROM lair_ideas ORDER BY id DESC LIMIT 60").all()).results || [];
+  return json({ trends, news, ideas });
+}
+async function lair(request, env, url) {
+  const denied = lairAuth(request, env); if (denied) return denied;
+  if (!env.DB) return json({ error: "No database." }, 503);
+  await lairTables(env.DB);
+  if (url.pathname === "/api/lair/stats") {
+    if (!env.TWITTERAPI_KEY) return json({ error: "TWITTERAPI_KEY is missing." }, 503);
+    return lairStats(request, env);
+  }
+  if (url.pathname === "/api/lair/ideas") return lairIdeas(request, env);
+  if (url.pathname === "/api/lair/check") return json({ ok: true });
+  return json({ error: "Not found." }, 404);
 }
 
 export default {
@@ -462,10 +552,11 @@ export default {
       try { return await oath(request, env); }
       catch (e) { return json({ error: "Something went wrong on the server." }, 500); }
     }
-    if (url.pathname === "/api/day") {
-      try { return await dayReport(request, env, url); }
-      catch (e) { return page("Error", "<h1>Something went wrong</h1><p>" + esc(String(e && e.message || e)) + "</p>"); }
+    if (url.pathname.startsWith("/api/lair/")) {
+      try { return await lair(request, env, url); }
+      catch (e) { return json({ error: "Something went wrong in the lair.", detail: String(e && e.message || e).slice(0, 200) }, 500); }
     }
+    if (url.pathname === "/api/day") return Response.redirect(new URL("/lair/", url), 302);
     if (url.pathname === "/api/trumpet") {
       try { return await trumpet(request, env); }
       catch (e) { return json({ error: "Something went wrong on the server." }, 500); }
