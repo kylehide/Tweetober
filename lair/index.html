@@ -133,13 +133,36 @@
   .scan-note:not(:empty) { animation: pulse 1.6s ease-in-out infinite; }
   /* minion of the day */
   .mvp { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; }
-  .mvp .crown { width: 64px; height: 52px; filter: drop-shadow(0 0 10px rgba(242,210,114,.45)); animation: float 3s ease-in-out infinite; }
-  @keyframes float { 50% { transform: translateY(-5px) rotate(-3deg); } }
+  .mvp .crown { filter: drop-shadow(0 0 10px rgba(242,210,114,.45)); }
   .mvp .name { font-family: "Pirata One", serif; font-size: 2rem; color: var(--pink); line-height: 1; overflow-wrap: anywhere; }
   .mvp .name a { color: inherit; text-decoration: none; }
   .quote { margin: 0; padding: 10px 12px; border-left: 3px solid var(--pink); background: rgba(0,0,0,.25); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: .82rem; line-height: 1.45; color: var(--ink); overflow-wrap: anywhere; }
   .quote .meta { display: block; margin-top: 4px; color: var(--ink-3); font-size: .74rem; }
 
+  .crowned { position: relative; display: grid; justify-items: center; width: 84px; padding-top: 30px; text-decoration: none; }
+  .crowned .crown { position: absolute; top: 0; left: 50%; width: 56px; height: 46px; margin-left: -28px; z-index: 2; animation: float 3s ease-in-out infinite; }
+  @keyframes float { 50% { transform: translateY(-4px) rotate(-4deg); } }
+  .mvp-pic { width: 76px; height: 76px; border-radius: 50%; overflow: hidden; border: 3px solid var(--pink); box-shadow: 0 0 18px rgba(242,111,150,.45); background: var(--panel-2); display: block; }
+  .mvp-pic img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  /* tweets drawn like tweets */
+  .tw { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 10px; padding: 12px; background: rgba(0,0,0,.3); border: 1px solid var(--line); border-left: 3px solid var(--pink); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: .82rem; line-height: 1.4; }
+  .tw-av { width: 44px; height: 44px; border-radius: 50%; overflow: hidden; background: var(--panel-2); border: 2px solid var(--pink); display: block; }
+  .tw-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .tw-main { min-width: 0; display: grid; gap: 6px; }
+  .tw-head { display: flex; flex-wrap: wrap; gap: 2px 6px; align-items: baseline; }
+  .tw-name { font-weight: 700; color: var(--ink); text-decoration: none; overflow-wrap: anywhere; }
+  .tw-handle, .tw-time { color: var(--ink-3); font-size: .9em; }
+  .tw-time::before { content: "· "; }
+  .tw-text { margin: 0; color: var(--ink); white-space: pre-line; overflow-wrap: anywhere; }
+  .tw-text a { color: var(--pink-hot); text-decoration: none; }
+  .tw-media { display: grid; gap: 2px; border-radius: 12px; overflow: hidden; border: 1px solid var(--line-strong); }
+  .tw-media.n2, .tw-media.n4 { grid-template-columns: 1fr 1fr; } .tw-media.n3 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; } .tw-media.n3 > :first-child { grid-row: 1 / 3; }
+  .tw-media.n2 .tw-m, .tw-media.n3 .tw-m, .tw-media.n4 .tw-m { aspect-ratio: 1 / 1; }
+  .tw-m { display: block; width: 100%; max-height: 420px; background: #000; overflow: hidden; }
+  .tw-m img, video.tw-m { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .tw-media.n1 .tw-m img, .tw-media.n1 video.tw-m { object-fit: contain; max-height: 420px; }
+  .tw-foot { display: flex; flex-wrap: wrap; gap: 4px 14px; color: var(--ink-3); font-size: .9em; }
+  .tw-foot a { margin-left: auto; color: var(--pink-hot); text-decoration: none; }
   /* quest */
   .quest { font-family: "Almendra", serif; font-size: 1.35rem; line-height: 1.35; margin: 0; color: var(--ink); }
   .quest-tag { justify-self: start; display: inline-block; font-size: .9rem; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); border: 1px solid rgba(242,210,114,.4); padding: 1px 8px; }
@@ -540,8 +563,9 @@ function drawStats(d) {
   // minion of the day
   if (d.mvp && d.mvp.user) {
     $("#mvpSub").textContent = `October ${d.mvp.day}'s most prolific minion`;
-    $("#mvp").innerHTML = `<div class="mvp">${CROWN}<div><div class="name"><a href="${xUrl(d.mvp.user)}" target="_blank" rel="noopener">@${esc(d.mvp.user)}</a></div><div class="muted">${fmt(d.mvp.tweets)} counted tweets · ${fmt(d.mvp.likes)} likes</div></div></div>`
-      + (d.mvp.best ? `<p class="muted" style="margin:6px 0 0">Most-liked minion tweet of the day:</p>${quoteHtml(d.mvp.best)}` : "");
+    const pic = bigPic(d.mvp.avatar);
+    $("#mvp").innerHTML = `<div class="mvp"><a class="crowned" href="${xUrl(d.mvp.user)}" target="_blank" rel="noopener" aria-label="@${esc(d.mvp.user)} on X">${CROWN}<span class="mvp-pic">${pic ? `<img src="${esc(pic)}" alt="" referrerpolicy="no-referrer">` : ""}</span></a><div><div class="name"><a href="${xUrl(d.mvp.user)}" target="_blank" rel="noopener">@${esc(d.mvp.user)}</a></div><div class="muted">${fmt(d.mvp.tweets)} counted tweets · ${fmt(d.mvp.likes)} likes</div></div></div>`
+      + (d.mvp.best ? `<p class="muted" style="margin:6px 0 0">Most-liked minion tweet of the day:</p>${d.mvp.full ? tweetCard(d.mvp.full) : quoteHtml(d.mvp.best)}` : "");
   } else $("#mvp").innerHTML = `<p class="muted">The first crown is handed out tomorrow. Make it yours.</p>`;
   // intel on 333
   const it = d.intel;
@@ -554,6 +578,36 @@ function drawStats(d) {
   $("#infamy").innerHTML = d.top20.length ? d.top20.map(t => `<li class="${t.house ? "h" + t.house : ""}"><div class="t"><span class="by ${t.house ? "h" + t.house : "muted"}">@${esc(t.user)}</span><a href="${tUrl(t)}" target="_blank" rel="noopener">${esc(t.text) || "(a picture)"}</a></div><span class="likes">♥ ${fmt(t.likes)}</span></li>`).join("") : `<li class="muted">No tweets counted yet.</li>`;
 }
 const quoteHtml = (t) => `<blockquote class="quote"><a href="${tUrl(t)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">${esc(t.text) || "(a picture)"}</a><span class="meta"><span class="${t.house ? "h" + t.house : ""}">@${esc(t.user)}</span> · ♥ ${fmt(t.likes)} · ⟲ ${fmt(t.rts)}</span></blockquote>`;
+/* a tweet drawn like a tweet: picture, name, text, photos or video, counts */
+const twMedia = (u) => /^https:\/\/(pbs|video)\.twimg\.com\//.test(String(u || "")) ? esc(u) : "";
+const bigPic = (u) => twMedia(u) ? String(u).replace(/_normal(\.\w+)$/, "_200x200$1") : "";
+const linkify = (txt) => esc(String(txt || "").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">"))
+  .replace(/https?:\/\/[^\s<]+/g, (u) => `<a href="${u}" target="_blank" rel="noopener">${u.replace(/^https?:\/\/(www\.)?/, "").slice(0, 30)}${u.length > 38 ? "…" : ""}</a>`)
+  .replace(/(^|[^\w&])@(\w{1,15})/g, (m, pre, h) => `${pre}<a href="https://x.com/${h}" target="_blank" rel="noopener">@${h}</a>`);
+function mediaHtml(list, link) {
+  const items = (list || []).filter(m => twMedia(m.img) || twMedia(m.video)).slice(0, 4); if (!items.length) return "";
+  const one = items.length === 1;
+  return `<div class="tw-media n${items.length}">${items.map(m => {
+    const img = twMedia(m.img), vid = twMedia(m.video), ratio = one && m.w && m.h ? `aspect-ratio:${m.w}/${m.h};` : "";
+    if (m.type === "gif" && vid) return `<video class="tw-m" style="${ratio}" src="${vid}" ${img ? `poster="${img}"` : ""} autoplay muted loop playsinline></video>`;
+    if (m.type === "video" && vid) return `<video class="tw-m" style="${ratio}" src="${vid}" ${img ? `poster="${img}"` : ""} controls playsinline preload="none"></video>`;
+    return img ? `<a class="tw-m" style="${ratio}" href="${link}" target="_blank" rel="noopener"><img src="${img}" alt="" loading="lazy" referrerpolicy="no-referrer"></a>` : "";
+  }).join("")}</div>`;
+}
+function tweetCard(t) {
+  const a = t.author || {}, link = esc(t.url) || `https://x.com/${encodeURIComponent(a.userName)}/status/${encodeURIComponent(t.id)}`;
+  const text = (t.media || []).length ? String(t.text || "").replace(/\s*https:\/\/t\.co\/\w+\s*$/, "") : t.text;
+  const when = t.created ? new Date(t.created).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "";
+  const pic = twMedia(a.avatar) ? esc(a.avatar) : "";
+  return `<article class="tw">
+    <a class="tw-av" href="${xUrl(a.userName)}" target="_blank" rel="noopener">${pic ? `<img src="${pic}" alt="" referrerpolicy="no-referrer">` : ""}</a>
+    <div class="tw-main">
+      <div class="tw-head"><a class="tw-name" href="${xUrl(a.userName)}" target="_blank" rel="noopener">${esc(a.name || a.userName)}</a><span class="tw-handle">@${esc(a.userName)}</span><span class="tw-time">${esc(when)}</span></div>
+      ${text ? `<p class="tw-text">${linkify(text)}</p>` : ""}
+      ${mediaHtml(t.media, link)}
+      <div class="tw-foot"><span>♥ ${fmt(t.likes)}</span><span>⟲ ${fmt(t.retweets)}</span><span>✎ ${fmt(t.replies)}</span><a href="${link}" target="_blank" rel="noopener">View on X ↗</a></div>
+    </div></article>`;
+}
 const CROWN = `<svg class="crown" viewBox="0 0 64 52" aria-hidden="true"><path d="M6 44 2 12l16 14L32 4l14 22 16-14-4 32z" fill="#F2D272" stroke="#7A5A10" stroke-width="2" stroke-linejoin="round"/><rect x="6" y="42" width="52" height="7" rx="2" fill="#E0B94A" stroke="#7A5A10" stroke-width="2"/><circle cx="32" cy="30" r="4" fill="#F26F96"/><circle cx="17" cy="33" r="3" fill="#8E5BD8"/><circle cx="47" cy="33" r="3" fill="#8E5BD8"/></svg>`;
 
 /* ---------------- the cannon ---------------- */
