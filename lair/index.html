@@ -59,6 +59,15 @@
   .jar:hover svg { transform: rotate(-6deg) scale(1.05); }
   .jar.wiggle svg { animation: wiggle .5s; }
   @keyframes wiggle { 25% { transform: rotate(-12deg); } 50% { transform: rotate(10deg); } 75% { transform: rotate(-5deg); } }
+  .cannon { margin-top: 10px; display: inline-flex; align-items: center; gap: 8px; font: inherit; font-size: 1.05rem; letter-spacing: .08em; text-transform: uppercase; color: var(--gold); background: rgba(0,0,0,.35); border: 1px solid rgba(242,210,114,.5); padding: 5px 14px 5px 8px; cursor: pointer; }
+  .cannon svg { width: 44px; height: 28px; transform-origin: 30% 70%; }
+  .cannon:hover { border-color: var(--gold); box-shadow: 0 0 14px rgba(242,210,114,.3); }
+  .cannon.boom svg { animation: recoil .5s cubic-bezier(.2,.8,.3,1); }
+  @keyframes recoil { 0% { transform: none; } 12% { transform: translateX(-7px) rotate(4deg); } 100% { transform: none; } }
+  body.quake .wrap { animation: quake .45s ease-out; }
+  @keyframes quake { 0%,100% { transform: none; } 15% { transform: translate(-6px, 3px); } 30% { transform: translate(5px, -4px); } 45% { transform: translate(-4px, 2px); } 60% { transform: translate(3px, -1px); } 80% { transform: translate(-1px, 1px); } }
+  .smoke { position: fixed; pointer-events: none; z-index: 30; width: 30px; height: 30px; margin: -15px 0 0 -15px; border-radius: 50%; background: radial-gradient(circle, rgba(230,220,235,.75), rgba(160,140,170,.35) 55%, transparent 72%); }
+  .flash { position: fixed; pointer-events: none; z-index: 31; width: 60px; height: 60px; margin: -30px 0 0 -30px; border-radius: 50%; background: radial-gradient(circle, #FFF6C8, rgba(255,170,60,.85) 35%, transparent 70%); }
   .fortune { position: fixed; left: 50%; bottom: 22px; transform: translate(-50%, 140%); max-width: min(560px, calc(100% - 32px)); background: #241028; border: 1px solid var(--pink); box-shadow: var(--glow), 0 12px 40px rgba(0,0,0,.6); padding: 14px 18px; z-index: 20; transition: transform .35s cubic-bezier(.2,1.2,.3,1); font-family: "Almendra", serif; font-size: 1.05rem; }
   .fortune.show { transform: translate(-50%, 0); }
   .fortune b { color: var(--gold); font-family: "VT323", monospace; font-weight: 400; letter-spacing: .08em; text-transform: uppercase; display: block; font-size: .95rem; }
@@ -169,6 +178,10 @@
     <div>
       <h1>The Lair of House 500</h1>
       <p>Come to the dark side. We have cookies.</p>
+      <button class="cannon" id="cannon" type="button">
+        <svg viewBox="0 0 64 40" aria-hidden="true"><rect x="14" y="10" width="40" height="14" rx="6" transform="rotate(-14 34 17)" fill="#2B1030" stroke="#F26F96" stroke-width="2"/><rect x="50" y="4" width="6" height="18" rx="2" transform="rotate(-14 53 13)" fill="#3A1840" stroke="#F26F96" stroke-width="2"/><circle cx="22" cy="28" r="9" fill="#5A3410" stroke="#F2D272" stroke-width="2"/><circle cx="22" cy="28" r="2.5" fill="#F2D272"/><path d="M10 37h30" stroke="#F26F96" stroke-width="2" stroke-linecap="round"/></svg>
+        Fire the cannon!
+      </button>
     </div>
     <button class="jar" id="jar" type="button" aria-label="Take a cookie">
       <svg viewBox="0 0 60 70" aria-hidden="true">
@@ -196,39 +209,6 @@
     <p class="math" id="math"><span class="skeleton">Counting the enemy…</span></p>
     <div class="month" id="month"></div>
     <div class="stamp"><span id="stamp"></span><span class="scan-note" id="scanNote"></span></div>
-  </section>
-
-  <div class="grid2">
-    <section class="panel">
-      <h2>Minion of the Day</h2>
-      <p class="sub" id="mvpSub">Yesterday's most prolific minion</p>
-      <div id="mvp"><span class="skeleton">Consulting the crystal ball…</span></div>
-    </section>
-    <section class="panel">
-      <h2>Today's Villain Quest</h2>
-      <p class="sub" id="questSub"></p>
-      <span class="quest-tag" id="questTag"></span>
-      <p class="quest" id="quest"></p>
-    </section>
-  </div>
-
-  <div class="grid2">
-    <section class="panel">
-      <h2>Intel on 333</h2>
-      <p class="sub">What the enemy is up to today. <span class="redact">classified</span></p>
-      <div id="intel"><span class="skeleton">Sending the spies…</span></div>
-    </section>
-    <section class="panel">
-      <h2>Quote-Tweet Bait</h2>
-      <p class="sub">Today's hottest tweets on the list. Quote one, add your twist, steal the thunder.</p>
-      <ul class="bait" id="bait"><li class="skeleton">Fishing…</li></ul>
-    </section>
-  </div>
-
-  <section class="panel">
-    <h2>The Hall of Infamy</h2>
-    <p class="sub">The 20 most-liked tweets of Tweetober so far, from both houses</p>
-    <ol class="infamy" id="infamy"><li class="skeleton">Unrolling the scroll…</li></ol>
   </section>
 
   <!-- inspiration -->
@@ -275,6 +255,39 @@
       <p class="err" id="ideaErr" aria-live="polite"></p>
       <ul class="ideas" id="ideas"><li class="skeleton">Nothing in the pot yet. Be the first schemer.</li></ul>
     </div>
+  </section>
+
+  <div class="grid2">
+    <section class="panel">
+      <h2>Minion of the Day</h2>
+      <p class="sub" id="mvpSub">Yesterday's most prolific minion</p>
+      <div id="mvp"><span class="skeleton">Consulting the crystal ball…</span></div>
+    </section>
+    <section class="panel">
+      <h2>Today's Villain Quest</h2>
+      <p class="sub" id="questSub"></p>
+      <span class="quest-tag" id="questTag"></span>
+      <p class="quest" id="quest"></p>
+    </section>
+  </div>
+
+  <div class="grid2">
+    <section class="panel">
+      <h2>Intel on 333</h2>
+      <p class="sub">What the enemy is up to today. <span class="redact">classified</span></p>
+      <div id="intel"><span class="skeleton">Sending the spies…</span></div>
+    </section>
+    <section class="panel">
+      <h2>Quote-Tweet Bait</h2>
+      <p class="sub">Today's hottest tweets on the list. Quote one, add your twist, steal the thunder.</p>
+      <ul class="bait" id="bait"><li class="skeleton">Fishing…</li></ul>
+    </section>
+  </div>
+
+  <section class="panel">
+    <h2>The Hall of Infamy</h2>
+    <p class="sub">The 20 most-liked tweets of Tweetober so far, from both houses</p>
+    <ol class="infamy" id="infamy"><li class="skeleton">Unrolling the scroll…</li></ol>
   </section>
 
   <footer>Mickal's Minions · House of 500 · <a href="/">back to the castle</a> · <a href="#" id="leave">leave the lair</a></footer>
@@ -482,6 +495,45 @@ function drawStats(d) {
 }
 const quoteHtml = (t) => `<blockquote class="quote"><a href="${tUrl(t)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">${esc(t.text) || "(a picture)"}</a><span class="meta"><span class="${t.house ? "h" + t.house : ""}">@${esc(t.user)}</span> · ♥ ${fmt(t.likes)} · ⟲ ${fmt(t.rts)}</span></blockquote>`;
 const CROWN = `<svg class="crown" viewBox="0 0 64 52" aria-hidden="true"><path d="M6 44 2 12l16 14L32 4l14 22 16-14-4 32z" fill="#F2D272" stroke="#7A5A10" stroke-width="2" stroke-linejoin="round"/><rect x="6" y="42" width="52" height="7" rx="2" fill="#E0B94A" stroke="#7A5A10" stroke-width="2"/><circle cx="32" cy="30" r="4" fill="#F26F96"/><circle cx="17" cy="33" r="3" fill="#8E5BD8"/><circle cx="47" cy="33" r="3" fill="#8E5BD8"/></svg>`;
+
+/* ---------------- the cannon ---------------- */
+let AC = null;
+function boom() {
+  try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); } catch { return; }
+  if (AC.state === "suspended") AC.resume();
+  const t = AC.currentTime + 0.01, out = AC.createGain(); out.gain.value = 0.9; out.connect(AC.destination);
+  // the blast: a burst of noise, darkening as it rolls away
+  const len = Math.floor(AC.sampleRate * 2.2), buf = AC.createBuffer(1, len, AC.sampleRate), ch = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) ch[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.2);
+  const n = AC.createBufferSource(), lp = AC.createBiquadFilter(), ng = AC.createGain(); n.buffer = buf;
+  lp.type = "lowpass"; lp.frequency.setValueAtTime(3200, t); lp.frequency.exponentialRampToValueAtTime(180, t + 0.6); lp.frequency.exponentialRampToValueAtTime(60, t + 2);
+  ng.gain.setValueAtTime(0.0001, t); ng.gain.exponentialRampToValueAtTime(1, t + 0.008); ng.gain.exponentialRampToValueAtTime(0.0001, t + 2.1);
+  n.connect(lp); lp.connect(ng); ng.connect(out); n.start(t);
+  // the thump in your chest
+  const o = AC.createOscillator(), og = AC.createGain(); o.type = "sine";
+  o.frequency.setValueAtTime(95, t); o.frequency.exponentialRampToValueAtTime(28, t + 0.7);
+  og.gain.setValueAtTime(0.0001, t); og.gain.exponentialRampToValueAtTime(1.2, t + 0.01); og.gain.exponentialRampToValueAtTime(0.0001, t + 0.9);
+  o.connect(og); og.connect(out); o.start(t); o.stop(t + 1);
+  // and a crack on top
+  const c = AC.createOscillator(), cg = AC.createGain(); c.type = "square"; c.frequency.setValueAtTime(140, t);
+  cg.gain.setValueAtTime(0.25, t); cg.gain.exponentialRampToValueAtTime(0.0001, t + 0.06);
+  c.connect(cg); cg.connect(out); c.start(t); c.stop(t + 0.08);
+}
+$("#cannon").addEventListener("click", () => {
+  boom();
+  const btn = $("#cannon"), r = btn.querySelector("svg").getBoundingClientRect();
+  btn.classList.remove("boom"); void btn.offsetWidth; btn.classList.add("boom");
+  document.body.classList.remove("quake"); void document.body.offsetWidth; document.body.classList.add("quake");
+  // muzzle flash and a drifting puff of smoke from the barrel
+  const x = r.right - 4, y = r.top + 6;
+  const fl = Object.assign(document.createElement("div"), { className: "flash" }); fl.style.left = x + "px"; fl.style.top = y + "px"; document.body.appendChild(fl);
+  fl.animate([{ transform: "scale(.3)", opacity: 1 }, { transform: "scale(1.6)", opacity: 0 }], { duration: 260, easing: "ease-out" }).onfinish = () => fl.remove();
+  for (let i = 0; i < 9; i++) {
+    const sm = Object.assign(document.createElement("div"), { className: "smoke" }); sm.style.left = x + "px"; sm.style.top = y + "px"; document.body.appendChild(sm);
+    const dx = 40 + Math.random() * 120, dy = -20 - Math.random() * 70, s = 1.5 + Math.random() * 2.5;
+    sm.animate([{ transform: "translate(0,0) scale(.4)", opacity: .9 }, { transform: `translate(${dx}px, ${dy}px) scale(${s})`, opacity: 0 }], { duration: 1200 + Math.random() * 900, delay: i * 25, easing: "cubic-bezier(.1,.7,.3,1)", fill: "both" }).onfinish = () => sm.remove();
+  }
+});
 
 /* ---------------- quest, schemes, threads, cookies ---------------- */
 function drawQuest() {
