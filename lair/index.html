@@ -57,6 +57,11 @@
   .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
   .act { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font: inherit; font-size: 1.05rem; letter-spacing: .08em; text-transform: uppercase; color: var(--gold); background: rgba(0,0,0,.35); border: 1px solid rgba(242,210,114,.5); padding: 5px 14px 5px 8px; cursor: pointer; min-height: 44px; }
   .act:hover { border-color: var(--gold); box-shadow: 0 0 14px rgba(242,210,114,.3); }
+  @media (min-width: 761px) {
+    header.lair-head { position: relative; padding-right: 130px; }
+    .jar.act { position: absolute; right: 0; top: 50%; transform: translateY(-50%); flex-direction: column; gap: 2px; padding: 0; min-height: 0; background: none; border: 0; box-shadow: none; font-size: .85rem; letter-spacing: .06em; }
+    .jar.act svg { width: 62px; height: 70px; filter: drop-shadow(0 0 10px rgba(242,210,114,.25)); }
+  }
   .jar svg { width: 26px; height: 30px; transition: transform .2s; filter: drop-shadow(0 0 6px rgba(242,210,114,.25)); }
   .jar:hover svg { transform: rotate(-6deg) scale(1.05); }
   .jar.wiggle svg { animation: wiggle .5s; }
@@ -172,6 +177,19 @@
   .news a { color: var(--ink); text-decoration: none; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: .82rem; }
   .news a:hover { color: var(--pink-hot); }
   .news small { color: var(--ink-3); font-size: .9rem; margin-left: 6px; }
+  .trends { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+  .trends > li { display: grid; gap: 6px; padding: 10px 12px; background: rgba(0,0,0,.25); border: 1px solid var(--line); }
+  .trends .tname { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+  .trends .tname a { font-family: "Pirata One", serif; font-size: 1.35rem; color: var(--pink-hot); text-decoration: none; }
+  .trends .tname a:hover { text-decoration: underline; }
+  .trends .tname small { color: var(--ink-3); font-size: .95rem; }
+  .trends .quote { font-size: .78rem; }
+  .pane-h { font-family: "Pirata One", serif; font-size: 1.2rem; color: var(--pink-hot); margin: 14px 0 4px; }
+  .news li { display: grid; gap: 2px; }
+  .news li > span:not(.yr):not(.blurb) { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: .82rem; color: var(--ink); }
+  .news .blurb { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: .76rem; color: var(--ink-3); line-height: 1.4; }
+  .otd .yr { color: var(--gold); font-size: 1.15rem; margin-right: 8px; }
+  .otd li { grid-template-columns: auto 1fr; align-items: baseline; }
   .bait { list-style: none; margin: 0; padding: 0 4px 0 0; display: grid; gap: 10px; max-height: 520px; overflow-y: auto; overscroll-behavior: contain; scrollbar-color: var(--pink-deep) transparent; scrollbar-width: thin; }
   .bait li { display: grid; gap: 6px; }
   .ideas { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; max-height: 360px; overflow-y: auto; }
@@ -247,7 +265,8 @@
       <button class="tab" role="tab" aria-selected="true" data-pane="schemes">Schemes</button>
       <button class="tab" role="tab" aria-selected="false" data-pane="threads">Threads</button>
       <button class="tab" role="tab" aria-selected="false" data-pane="trends">Trending</button>
-      <button class="tab" role="tab" aria-selected="false" data-pane="news">Headlines</button>
+      <button class="tab" role="tab" aria-selected="false" data-pane="news">In the News</button>
+      <button class="tab" role="tab" aria-selected="false" data-pane="otd">On This Day</button>
       <button class="tab" role="tab" aria-selected="false" data-pane="minions">From the minions</button>
     </div>
 
@@ -267,12 +286,18 @@
       </div>
     </div>
     <div class="pane" id="pane-trends" hidden>
-      <p class="sub" style="margin:0">What the rest of the world is shouting about right now (US). Tap one to see the chatter.</p>
-      <div class="chips" id="trends"><span class="skeleton">Reading the winds…</span></div>
+      <p class="sub" style="margin:0">What's trending on Twitter in the US right now, and the tweets driving it. Quote one, or jump on the topic.</p>
+      <ul class="trends" id="trends"><li class="skeleton">Reading the winds…</li></ul>
     </div>
     <div class="pane" id="pane-news" hidden>
-      <p class="sub" style="margin:0">Today's headlines. Have an opinion. Have a worse one.</p>
+      <p class="sub" style="margin:0">Today's big stories. Have an opinion. Have a worse one.</p>
       <ul class="news" id="news"><li class="skeleton">Reading the papers…</li></ul>
+      <h3 class="pane-h">What the internet is reading today</h3>
+      <ul class="news" id="mostread"></ul>
+    </div>
+    <div class="pane" id="pane-otd" hidden>
+      <p class="sub" style="margin:0" id="otdSub">On this day in history. Perfect for an "on this day in…" tweet, or thread five of them.</p>
+      <ul class="news otd" id="otd"><li class="skeleton">Opening the history books…</li></ul>
     </div>
     <div class="pane" id="pane-minions" hidden>
       <form class="idea-form" id="ideaForm" autocomplete="off">
@@ -608,8 +633,14 @@ document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () =>
 async function loadIdeas() {
   try {
     const d = await api("/api/lair/ideas");
-    $("#trends").innerHTML = d.trends.length ? d.trends.map(t => `<a class="chip" href="https://x.com/search?q=${encodeURIComponent(t.query || t.name)}" target="_blank" rel="noopener">${esc(t.name)}${t.meta ? `<small>${esc(t.meta)}</small>` : ""}</a>`).join("") : `<span class="muted">The winds are quiet. Try again later.</span>`;
-    $("#news").innerHTML = d.news.length ? d.news.map(n => `<li><a href="${esc(n.link)}" target="_blank" rel="noopener">${esc(n.title)}</a>${n.source ? `<small>${esc(n.source)}</small>` : ""}</li>`).join("") : `<li class="muted">No papers today.</li>`;
+    const sans = (t) => esc(t);
+    $("#trends").innerHTML = d.trends.length ? d.trends.map(t => `<li><div class="tname"><a href="https://x.com/search?q=${encodeURIComponent(t.query || t.name)}" target="_blank" rel="noopener">${esc(t.name)}</a>${t.meta ? `<small>${esc(t.meta)}</small>` : ""}</div>
+      ${(t.tweets || []).map(x => `<blockquote class="quote"><a href="https://x.com/${encodeURIComponent(x.user)}/status/${encodeURIComponent(x.id)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">${sans(x.text)}</a><span class="meta">@${esc(x.user)} · ♥ ${fmt(x.likes)} · <a href="https://x.com/intent/tweet?url=${encodeURIComponent(`https://x.com/${x.user}/status/${x.id}`)}" target="_blank" rel="noopener">Quote it</a></span></blockquote>`).join("")}</li>`).join("")
+      : `<li class="muted">The winds are quiet. Try again later.</li>`;
+    const W = d.wiki || {}, wl = (p, text) => p && p.link ? `<a href="${esc(p.link)}" target="_blank" rel="noopener">${esc(text)}</a>` : `<span>${esc(text)}</span>`;
+    $("#news").innerHTML = (W.news || []).length ? W.news.map(n => `<li>${wl(n.page, n.text)}</li>`).join("") : `<li class="muted">No stories yet today.</li>`;
+    $("#mostread").innerHTML = (W.mostread || []).map(a => `<li>${wl(a, a.title)}<span class="blurb">${esc(a.extract || a.blurb)}</span></li>`).join("");
+    $("#otd").innerHTML = (W.onthisday || []).length ? W.onthisday.map(e => `<li><span class="yr">${esc(e.year)}</span>${wl(e.page, e.text)}</li>`).join("") : `<li class="muted">History is quiet today.</li>`;
     drawIdeas(d.ideas);
   } catch (e) { if (e.message !== "locked") setTimeout(loadIdeas, 60000); }
 }
@@ -640,5 +671,3 @@ function start() {
 </script>
 </body>
 </html>
-
-
