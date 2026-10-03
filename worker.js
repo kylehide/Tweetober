@@ -508,23 +508,13 @@ async function lairIdeas(request, env) {
     const row = await env.DB.prepare("INSERT INTO lair_ideas (name, body, created, who) VALUES (?, ?, ?, ?) RETURNING id, name, body, created").bind(name, body, now, id).first();
     return json({ idea: row }, 201);
   }
-  // Trending on Twitter, each with the top tweets explaining why (refreshed every LAIR_TRENDS_HOURS, default 2)
+  // Trending on Twitter (refreshed every LAIR_TRENDS_HOURS, default 2)
   const trendHours = Math.max(1, Number(env.LAIR_TRENDS_HOURS) || 2);
-  const trends = env.TWITTERAPI_KEY ? await lairCached(env, "trends2", trendHours * 3600e3, async () => {
+  const trends = env.TWITTERAPI_KEY ? await lairCached(env, "trends3", trendHours * 3600e3, async () => {
     const u = new URL("https://api.twitterapi.io/twitter/trends"); u.searchParams.set("woeid", env.TRENDS_WOEID || "23424977"); u.searchParams.set("count", "30");
     const r = await fetch(u, { headers: { "X-API-Key": env.TWITTERAPI_KEY } });
     const data = await r.json(); if (!Array.isArray(data.trends)) throw new Error("no trends");
-    const list = data.trends.map(x => x.trend || x).map(x => ({ name: String(x.name || ""), query: String(x.target?.query || x.query || x.name || ""), meta: String(x.meta_description || "") })).filter(x => x.name).slice(0, 10);
-    await Promise.all(list.map(async (t) => {
-      try {
-        const q = new URL("https://api.twitterapi.io/twitter/tweet/advanced_search");
-        q.searchParams.set("query", `${t.query} -filter:replies -filter:retweets lang:en`); q.searchParams.set("queryType", "Top");
-        const rr = await fetch(q, { headers: { "X-API-Key": env.TWITTERAPI_KEY } });
-        const dd = await rr.json().catch(() => ({}));
-        t.tweets = (dd.tweets || []).filter(x => x && x.id && x.text).sort((a, b) => (b.likeCount | 0) - (a.likeCount | 0)).slice(0, 2)
-          .map(x => ({ id: String(x.id), user: String(x.author?.userName || ""), text: String(x.text).slice(0, 240), likes: x.likeCount | 0 }));
-      } catch { t.tweets = []; }
-    }));
+    const list = data.trends.map(x => x.trend || x).map(x => ({ name: String(x.name || ""), query: String(x.target?.query || x.query || x.name || ""), meta: String(x.meta_description || "") })).filter(x => x.name).slice(0, 20);
     return list;
   }) : [];
   // Wikipedia's daily feed: In the news, On this day, Most read (free; refreshed every 3 hours)
