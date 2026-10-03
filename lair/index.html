@@ -81,8 +81,10 @@
   .panel { background: var(--panel); border: 1px solid var(--line); box-shadow: 0 10px 30px rgba(0,0,0,.45); padding: 20px 22px; display: grid; gap: 12px; align-content: start; position: relative; min-width: 0; }
   .panel::before { content: ""; position: absolute; inset: 5px; border: 1px solid rgba(242,111,150,.1); pointer-events: none; }
   .panel h2 { font-size: 1.6rem; color: var(--pink-hot); }
-  .panel .sub { margin: -6px 0 0; color: var(--ink-3); font-size: 1rem; }
-  .grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
+  .panel .sub { margin: -6px 0 0; color: var(--ink-2); opacity: .85; font-size: 1.05rem; }
+  .grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; align-items: start; }
+  .stack { display: grid; gap: 22px; align-content: start; min-width: 0; }
+  #star .tw { max-width: 640px; }
   @media (max-width: 760px) { .grid2 { grid-template-columns: 1fr; } header.lair-head { grid-template-columns: 1fr; justify-items: center; text-align: center; gap: 10px; } header.lair-head img.crest { width: 76px; } .actions { justify-content: center; } .act { flex: 1 1 0; font-size: .92rem; letter-spacing: .03em; padding: 5px 6px; white-space: nowrap; gap: 6px; } .cannon svg { width: 34px; height: 22px; } }
 
   /* war room */
@@ -146,6 +148,7 @@
   .mvp-pic img { width: 100%; height: 100%; object-fit: cover; display: block; }
   /* tweets drawn like tweets */
   .tw { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 10px; padding: 12px; background: rgba(0,0,0,.3); border: 1px solid var(--line); border-left: 3px solid var(--pink); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: .82rem; line-height: 1.4; }
+  .tw.them { border-left-color: var(--grey); } .tw.them .tw-av { border-color: var(--grey); }
   .tw-av { width: 44px; height: 44px; border-radius: 50%; overflow: hidden; background: var(--panel-2); border: 2px solid var(--pink); display: block; }
   .tw-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .tw-main { min-width: 0; display: grid; gap: 6px; }
@@ -170,10 +173,12 @@
   /* intel */
   .intel-row { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; }
   .intel-row .k { color: var(--ink-3); min-width: 9em; }
-  .redact { background: #000; color: #000; padding: 0 4px; }
+  .secret { display: inline-block; margin-left: 6px; padding: 0 6px; border: 2px solid #E0443E; color: #E0443E; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; transform: rotate(-4deg); font-size: .85rem; line-height: 1.3; }
 
   /* hall of infamy */
-  .infamy { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; counter-reset: rank; max-height: 640px; overflow-y: auto; overscroll-behavior: contain; scrollbar-color: var(--pink-deep) transparent; scrollbar-width: thin; padding-right: 4px; }
+  .infamy { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; counter-reset: rank; }
+  .infamy:not(.all) li:nth-child(n+11) { display: none; }
+  .more-btn { justify-self: center; }
   .infamy li { counter-increment: rank; display: grid; grid-template-columns: 2.2em minmax(0, 1fr) auto; gap: 10px; align-items: start; padding: 9px 10px; background: var(--panel-2); border: 1px solid var(--line); }
   .infamy li.h500 { border-color: rgba(242,111,150,.45); }
   .infamy li::before { content: "#" counter(rank); color: var(--gold); font-size: 1.1rem; }
@@ -213,13 +218,41 @@
   .news .blurb { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: .76rem; color: var(--ink-3); line-height: 1.4; }
   .otd .yr { color: var(--gold); font-size: 1.15rem; margin-right: 8px; }
   .otd li { grid-template-columns: auto 1fr; align-items: baseline; }
-  .bait { list-style: none; margin: 0; padding: 0 4px 0 0; display: grid; gap: 10px; max-height: 520px; overflow-y: auto; overscroll-behavior: contain; scrollbar-color: var(--pink-deep) transparent; scrollbar-width: thin; }
+  .bait { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+  .bait .tw-m, .bait .tw-media.n1 .tw-m img, .bait .tw-media.n1 video.tw-m { max-height: 240px; }
+  @media (max-width: 760px) { .bait { grid-template-columns: 1fr; } }
   .bait li { display: grid; gap: 6px; }
   .ideas { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; max-height: 360px; overflow-y: auto; }
   .ideas li { padding: 8px 10px; background: rgba(0,0,0,.25); border-left: 3px solid var(--violet); font-family: "Almendra", serif; font-size: 1.05rem; overflow-wrap: anywhere; }
   .ideas li b { font-family: "VT323", monospace; font-weight: 400; color: var(--pink-hot); margin-right: 6px; }
   .idea-form { display: grid; grid-template-columns: 9em 1fr auto; gap: 8px; }
   @media (max-width: 560px) { .idea-form { grid-template-columns: 1fr; } }
+  .tw-m, .tw-media.n1 .tw-m img, .tw-media.n1 video.tw-m { max-height: 340px; }
+  .quote-btn { color: var(--gold) !important; border: 1px solid rgba(242,210,114,.5); padding: 0 8px; margin-left: 0 !important; text-decoration: none; }
+  .tw.other { border-left-color: var(--ink-3); } .tw.other .tw-av { border-color: var(--ink-3); }
+  .mini, .fab { display: none; }
+  @media (max-width: 760px) {
+    /* Cauldron tabs: one row you can swipe */
+    .tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; margin: 0 -22px; padding: 0 22px 4px; scroll-snap-type: x proximity;
+      -webkit-mask-image: linear-gradient(90deg, transparent, #000 18px, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(90deg, transparent, #000 18px, #000 calc(100% - 28px), transparent); }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab { flex: none; white-space: nowrap; scroll-snap-align: start; }
+    /* sticky score and tweet button once the War Room is out of sight */
+    .mini { display: flex; position: fixed; top: 0; left: 0; right: 0; z-index: 15; justify-content: center; padding: 8px 16px; background: rgba(20,9,26,.94); border-bottom: 1px solid var(--line-strong); box-shadow: 0 6px 20px rgba(0,0,0,.5); transform: translateY(-110%); transition: transform .3s ease; backdrop-filter: blur(6px); }
+    body.scrolled .mini { transform: none; }
+    #miniScore { display: flex; align-items: baseline; gap: 10px; font-size: 1.15rem; }
+    #miniScore b { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-weight: 800; font-size: 1.05rem; }
+    #miniScore .vs { color: var(--gold); font-family: "Pirata One", serif; }
+    .mini-lead { color: var(--ink-3); margin-left: 6px; } .mini-lead.ours { color: var(--gold); }
+    .fab { display: grid; place-items: center; position: fixed; right: 16px; bottom: 18px; z-index: 16; width: 54px; height: 54px; border-radius: 50%; color: #1A0A14; background: linear-gradient(180deg, var(--pink-hot), var(--pink) 60%, var(--pink-deep)); box-shadow: 0 0 18px rgba(242,111,150,.5), 0 8px 18px rgba(0,0,0,.5); opacity: 0; transform: scale(.6); pointer-events: none; transition: opacity .25s, transform .25s; }
+    body.scrolled .fab { opacity: 1; transform: none; pointer-events: auto; }
+    .fortune { bottom: 84px; }
+    /* easier reading on small screens */
+    .panel .sub { font-size: 1.1rem; color: var(--ink-2); }
+    .tw { font-size: .92rem; } .infamy .t { font-size: .88rem; } .news a, .news li > span:not(.yr):not(.blurb) { font-size: .9rem; } .news .blurb { font-size: .82rem; }
+    .stamp, footer { font-size: 1.05rem; }
+    .wrap { padding-bottom: 90px; }
+  }
   footer { text-align: center; color: var(--ink-3); font-size: 1rem; }
   footer a { color: var(--ink-2); }
   .skeleton { color: var(--ink-3); font-style: italic; }
@@ -280,96 +313,113 @@
     <div class="stamp"><span id="stamp"></span><span class="scan-note" id="scanNote"></span></div>
   </section>
 
-  <!-- inspiration -->
-  <section class="panel" id="cauldron">
-    <h2>The Cauldron</h2>
-    <p class="sub">Out of ideas? Stir the pot.</p>
-    <div class="tabs" role="tablist">
-      <button class="tab" role="tab" aria-selected="true" data-pane="schemes">Schemes</button>
-      <button class="tab" role="tab" aria-selected="false" data-pane="threads">Threads</button>
-      <button class="tab" role="tab" aria-selected="false" data-pane="trends">Trending</button>
-      <button class="tab" role="tab" aria-selected="false" data-pane="news">In the News</button>
-      <button class="tab" role="tab" aria-selected="false" data-pane="otd">On This Day</button>
-      <button class="tab" role="tab" aria-selected="false" data-pane="minions">From the minions</button>
-    </div>
+  <div class="grid2 top2">
+    <div class="stack">
+      <!-- inspiration -->
+      <section class="panel" id="cauldron">
+      <h2>The Cauldron</h2>
+      <p class="sub">Out of ideas? Stir the pot.</p>
+      <div class="tabs" role="tablist">
+        <button class="tab" role="tab" aria-selected="true" data-pane="schemes">Schemes</button>
+        <button class="tab" role="tab" aria-selected="false" data-pane="threads">Threads</button>
+        <button class="tab" role="tab" aria-selected="false" data-pane="trends">Trending</button>
+        <button class="tab" role="tab" aria-selected="false" data-pane="news">In the News</button>
+        <button class="tab" role="tab" aria-selected="false" data-pane="otd">On This Day</button>
+        <button class="tab" role="tab" aria-selected="false" data-pane="minions">From the minions</button>
+      </div>
 
-    <div class="pane" id="pane-schemes">
-      <div class="scheme">
-        <span class="kind" id="schemeKind"></span>
-        <p class="text" id="schemeText"></p>
-        <div class="row"><button class="btn" id="schemeNext" type="button">Another</button><a class="btn ghost" id="schemeTweet" target="_blank" rel="noopener" href="#">Tweet it</a></div>
+      <div class="pane" id="pane-schemes">
+        <div class="scheme">
+          <span class="kind" id="schemeKind"></span>
+          <p class="text" id="schemeText"></p>
+          <div class="row"><button class="btn" id="schemeNext" type="button">Another</button><a class="btn ghost" id="schemeTweet" target="_blank" rel="noopener" href="#">Tweet it</a></div>
+        </div>
       </div>
-    </div>
-    <div class="pane" id="pane-threads" hidden>
-      <div class="scheme">
-        <span class="kind">Thread starter · each reply to yourself counts</span>
-        <p class="text" id="threadText"></p>
-        <ol id="threadSteps"></ol>
-        <div class="row"><button class="btn" id="threadNext" type="button">Another</button></div>
+      <div class="pane" id="pane-threads" hidden>
+        <div class="scheme">
+          <span class="kind">Thread starter · each reply to yourself counts</span>
+          <p class="text" id="threadText"></p>
+          <ol id="threadSteps"></ol>
+          <div class="row"><button class="btn" id="threadNext" type="button">Another</button></div>
+        </div>
       </div>
+      <div class="pane" id="pane-trends" hidden>
+        <p class="sub" style="margin:0">What's trending on Twitter in the US right now. Tap one to see the chatter, then jump on it.</p>
+        <div class="chips" id="trends"><span class="skeleton">Reading the winds…</span></div>
+      </div>
+      <div class="pane" id="pane-news" hidden>
+        <p class="sub" style="margin:0">Today's big stories. Have an opinion. Have a worse one.</p>
+        <ul class="news" id="news"><li class="skeleton">Reading the papers…</li></ul>
+        <h3 class="pane-h">What the internet is reading today</h3>
+        <ul class="news" id="mostread"></ul>
+      </div>
+      <div class="pane" id="pane-otd" hidden>
+        <p class="sub" style="margin:0" id="otdSub">On this day in history. Perfect for an "on this day in…" tweet, or thread five of them.</p>
+        <ul class="news otd" id="otd"><li class="skeleton">Opening the history books…</li></ul>
+      </div>
+      <div class="pane" id="pane-minions" hidden>
+        <form class="idea-form" id="ideaForm" autocomplete="off">
+          <input id="ideaName" maxlength="25" placeholder="your handle" aria-label="Your handle">
+          <input id="ideaBody" maxlength="200" placeholder="A tweet idea for the house…" aria-label="Tweet idea">
+          <button class="btn" type="submit">Add</button>
+        </form>
+        <p class="err" id="ideaErr" aria-live="polite"></p>
+        <ul class="ideas" id="ideas"><li class="skeleton">Nothing in the pot yet. Be the first schemer.</li></ul>
+      </div>
+    </section>
+        <section class="panel">
+          <h2>Intel on 333</h2>
+          <p class="sub">What the enemy is up to today. <span class="secret">Top secret</span></p>
+          <div id="intel"><span class="skeleton">Sending the spies…</span></div>
+        </section>
+      </div>
+    <div class="stack">
+      <section class="panel">
+        <h2>Minion of the Day</h2>
+        <p class="sub" id="mvpSub">Yesterday's most prolific minion</p>
+        <div id="mvp"><span class="skeleton">Consulting the crystal ball…</span></div>
+      </section>
+      <section class="panel">
+        <h2>Today's Villain Quest</h2>
+        <p class="sub" id="questSub"></p>
+        <span class="quest-tag" id="questTag"></span>
+        <p class="quest" id="quest"></p>
+      </section>
     </div>
-    <div class="pane" id="pane-trends" hidden>
-      <p class="sub" style="margin:0">What's trending on Twitter in the US right now. Tap one to see the chatter, then jump on it.</p>
-      <div class="chips" id="trends"><span class="skeleton">Reading the winds…</span></div>
-    </div>
-    <div class="pane" id="pane-news" hidden>
-      <p class="sub" style="margin:0">Today's big stories. Have an opinion. Have a worse one.</p>
-      <ul class="news" id="news"><li class="skeleton">Reading the papers…</li></ul>
-      <h3 class="pane-h">What the internet is reading today</h3>
-      <ul class="news" id="mostread"></ul>
-    </div>
-    <div class="pane" id="pane-otd" hidden>
-      <p class="sub" style="margin:0" id="otdSub">On this day in history. Perfect for an "on this day in…" tweet, or thread five of them.</p>
-      <ul class="news otd" id="otd"><li class="skeleton">Opening the history books…</li></ul>
-    </div>
-    <div class="pane" id="pane-minions" hidden>
-      <form class="idea-form" id="ideaForm" autocomplete="off">
-        <input id="ideaName" maxlength="25" placeholder="your handle" aria-label="Your handle">
-        <input id="ideaBody" maxlength="200" placeholder="A tweet idea for the house…" aria-label="Tweet idea">
-        <button class="btn" type="submit">Add</button>
-      </form>
-      <p class="err" id="ideaErr" aria-live="polite"></p>
-      <ul class="ideas" id="ideas"><li class="skeleton">Nothing in the pot yet. Be the first schemer.</li></ul>
-    </div>
+  </div>
+
+  <div class="grid2 showcase">
+    <section class="panel" id="starPanel" hidden>
+      <h2>The Minions' Finest</h2>
+      <p class="sub" id="starSub">Yesterday's most-liked minion tweet</p>
+      <div id="star"></div>
+    </section>
+    <section class="panel" id="theirPanel" hidden>
+      <h2>Their Best Shot</h2>
+      <p class="sub">333's most-liked tweet today. Know your enemy.</p>
+      <div id="theirs"></div>
+    </section>
+  </div>
+
+  <section class="panel" id="baitPanel">
+    <h2>Quote-Tweet Bait</h2>
+    <p class="sub">Today's hottest tweets on the list. Quote one, add your twist, steal the thunder.</p>
+    <ul class="bait" id="bait"><li class="skeleton">Fishing…</li></ul>
   </section>
-
-  <div class="grid2">
-    <section class="panel">
-      <h2>Minion of the Day</h2>
-      <p class="sub" id="mvpSub">Yesterday's most prolific minion</p>
-      <div id="mvp"><span class="skeleton">Consulting the crystal ball…</span></div>
-    </section>
-    <section class="panel">
-      <h2>Today's Villain Quest</h2>
-      <p class="sub" id="questSub"></p>
-      <span class="quest-tag" id="questTag"></span>
-      <p class="quest" id="quest"></p>
-    </section>
-  </div>
-
-  <div class="grid2">
-    <section class="panel">
-      <h2>Intel on 333</h2>
-      <p class="sub">What the enemy is up to today. <span class="redact">classified</span></p>
-      <div id="intel"><span class="skeleton">Sending the spies…</span></div>
-    </section>
-    <section class="panel">
-      <h2>Quote-Tweet Bait</h2>
-      <p class="sub">Today's hottest tweets on the list. Quote one, add your twist, steal the thunder.</p>
-      <ul class="bait" id="bait"><li class="skeleton">Fishing…</li></ul>
-    </section>
-  </div>
 
   <section class="panel">
     <h2>The Hall of Infamy</h2>
     <p class="sub">The 20 most-liked tweets of Tweetober so far, from both houses</p>
     <ol class="infamy" id="infamy"><li class="skeleton">Unrolling the scroll…</li></ol>
+    <button class="btn ghost more-btn" id="infamyMore" type="button" hidden>Show all 20</button>
   </section>
 
   <footer>Mickal's Minions · House of 500 · <a href="/">back to the castle</a> · <a href="https://x.com/compose/post" target="_blank" rel="noopener">go tweet something</a></footer>
 </div>
 
 <div class="fortune" id="fortune" role="status" aria-live="polite"></div>
+<div class="mini" id="mini" aria-hidden="true"><div id="miniScore"></div></div>
+<a class="fab" href="https://x.com/compose/post" target="_blank" rel="noopener" aria-label="Write a tweet"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M14 6l4 4"/></svg></a>
 
 <script>
 const $ = (s) => document.querySelector(s);
@@ -528,7 +578,7 @@ async function loadStats() {
   clearTimeout(pollTimer);
   try {
     const d = await api("/api/lair/stats");
-    if (!d.busy || STATS) { STATS = d; drawStats(d); }
+    if (!d.busy || STATS) { STATS = d; drawStats(d); drawMini(d); }
     $("#war").classList.toggle("loading", !STATS);
     if (!STATS && d.busy) $("#veilNote").textContent = "The spies are counting every tweet. This takes a few seconds.";
     if (STATS) $("#scanNote").textContent = d.busy ? "Gathering fresh intel…" : d.problem ? "The spies hit a snag; trying again soon." : "";
@@ -565,16 +615,21 @@ function drawStats(d) {
     $("#mvpSub").textContent = `October ${d.mvp.day}'s most prolific minion`;
     const pic = bigPic(d.mvp.avatar);
     $("#mvp").innerHTML = `<div class="mvp"><a class="crowned" href="${xUrl(d.mvp.user)}" target="_blank" rel="noopener" aria-label="@${esc(d.mvp.user)} on X">${CROWN}<span class="mvp-pic">${pic ? `<img src="${esc(pic)}" alt="" referrerpolicy="no-referrer">` : ""}</span></a><div><div class="name"><a href="${xUrl(d.mvp.user)}" target="_blank" rel="noopener">@${esc(d.mvp.user)}</a></div><div class="muted">${fmt(d.mvp.tweets)} counted tweets · ${fmt(d.mvp.likes)} likes</div></div></div>`
-      + (d.mvp.best ? `<p class="muted" style="margin:6px 0 0">Most-liked minion tweet of the day:</p>${d.mvp.full ? tweetCard(d.mvp.full) : quoteHtml(d.mvp.best)}` : "");
+;
+    $("#starPanel").hidden = !d.mvp.best;
+    if (d.mvp.best) { $("#starSub").textContent = `October ${d.mvp.day}'s most-liked minion tweet`; $("#star").innerHTML = d.mvp.full ? tweetCard(d.mvp.full) : quoteHtml(d.mvp.best); }
   } else $("#mvp").innerHTML = `<p class="muted">The first crown is handed out tomorrow. Make it yours.</p>`;
   // intel on 333
   const it = d.intel;
   $("#intel").innerHTML = `<div class="intel-row"><span class="k">Posting today</span><span class="h333">${it.posting} of them</span></div>
     <div class="intel-row"><span class="k">Carrying them</span><span>${it.carriers.length ? it.carriers.map(c => `<a class="h333" href="${xUrl(c.user)}" target="_blank" rel="noopener">@${esc(c.user)}</a> (${c.tweets})`).join(", ") : "<span class='muted'>no one yet</span>"}</span></div>
-    ${it.best ? `<p class="muted" style="margin:6px 0 0">Their best tweet today (${fmt(it.best.likes)} likes):</p>${quoteHtml(it.best)}` : ""}`;
+    ${it.best ? `<div class="intel-row"><span class="k">Their best today</span><span>${fmt(it.best.likes)} likes (see Their Best Shot)</span></div>` : ""}`;
+  $("#theirPanel").hidden = !it.best;
+  if (it.best) $("#theirs").innerHTML = it.full ? tweetCard(it.full, "them") : quoteHtml(it.best);
   // quote-tweet bait
-  $("#bait").innerHTML = d.bait.length ? d.bait.map(t => `<li>${quoteHtml(t)}<div class="row"><a class="chip" href="https://x.com/intent/tweet?url=${encodeURIComponent(tUrl(t))}" target="_blank" rel="noopener">Quote it</a><span class="muted">${fmt(t.likes)} likes</span></div></li>`).join("") : `<li class="muted">Nothing hot yet today.</li>`;
+  $("#bait").innerHTML = d.bait.length ? d.bait.map(t => `<li>${t.full ? tweetCard(t.full, t.house === "333" ? "them" : t.house === "500" ? "" : "other", quoteBtn(t)) : quoteHtml(t) + quoteBtn(t)}</li>`).join("") : `<li class="muted">Nothing hot yet today.</li>`;
   // hall of infamy
+  $("#infamyMore").hidden = d.top20.length <= 10 || $("#infamy").classList.contains("all");
   $("#infamy").innerHTML = d.top20.length ? d.top20.map(t => `<li class="${t.house ? "h" + t.house : ""}"><div class="t"><span class="by ${t.house ? "h" + t.house : "muted"}">@${esc(t.user)}</span><a href="${tUrl(t)}" target="_blank" rel="noopener">${esc(t.text) || "(a picture)"}</a></div><span class="likes">♥ ${fmt(t.likes)}</span></li>`).join("") : `<li class="muted">No tweets counted yet.</li>`;
 }
 const quoteHtml = (t) => `<blockquote class="quote"><a href="${tUrl(t)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">${esc(t.text) || "(a picture)"}</a><span class="meta"><span class="${t.house ? "h" + t.house : ""}">@${esc(t.user)}</span> · ♥ ${fmt(t.likes)} · ⟲ ${fmt(t.rts)}</span></blockquote>`;
@@ -594,21 +649,31 @@ function mediaHtml(list, link) {
     return img ? `<a class="tw-m" style="${ratio}" href="${link}" target="_blank" rel="noopener"><img src="${img}" alt="" loading="lazy" referrerpolicy="no-referrer"></a>` : "";
   }).join("")}</div>`;
 }
-function tweetCard(t) {
+const quoteBtn = (t) => `<a class="quote-btn" href="https://x.com/intent/tweet?url=${encodeURIComponent(tUrl(t))}" target="_blank" rel="noopener">Quote it</a>`;
+function tweetCard(t, side, extra) {
   const a = t.author || {}, link = esc(t.url) || `https://x.com/${encodeURIComponent(a.userName)}/status/${encodeURIComponent(t.id)}`;
   const text = (t.media || []).length ? String(t.text || "").replace(/\s*https:\/\/t\.co\/\w+\s*$/, "") : t.text;
   const when = t.created ? new Date(t.created).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "";
   const pic = twMedia(a.avatar) ? esc(a.avatar) : "";
-  return `<article class="tw">
+  return `<article class="tw${side ? " " + side : ""}">
     <a class="tw-av" href="${xUrl(a.userName)}" target="_blank" rel="noopener">${pic ? `<img src="${pic}" alt="" referrerpolicy="no-referrer">` : ""}</a>
     <div class="tw-main">
       <div class="tw-head"><a class="tw-name" href="${xUrl(a.userName)}" target="_blank" rel="noopener">${esc(a.name || a.userName)}</a><span class="tw-handle">@${esc(a.userName)}</span><span class="tw-time">${esc(when)}</span></div>
       ${text ? `<p class="tw-text">${linkify(text)}</p>` : ""}
       ${mediaHtml(t.media, link)}
-      <div class="tw-foot"><span>♥ ${fmt(t.likes)}</span><span>⟲ ${fmt(t.retweets)}</span><span>✎ ${fmt(t.replies)}</span><a href="${link}" target="_blank" rel="noopener">View on X ↗</a></div>
+      <div class="tw-foot"><span>♥ ${fmt(t.likes)}</span><span>⟲ ${fmt(t.retweets)}</span><span>✎ ${fmt(t.replies)}</span>${extra || ""}<a href="${link}" target="_blank" rel="noopener">View on X ↗</a></div>
     </div></article>`;
 }
 const CROWN = `<svg class="crown" viewBox="0 0 64 52" aria-hidden="true"><path d="M6 44 2 12l16 14L32 4l14 22 16-14-4 32z" fill="#F2D272" stroke="#7A5A10" stroke-width="2" stroke-linejoin="round"/><rect x="6" y="42" width="52" height="7" rx="2" fill="#E0B94A" stroke="#7A5A10" stroke-width="2"/><circle cx="32" cy="30" r="4" fill="#F26F96"/><circle cx="17" cy="33" r="3" fill="#8E5BD8"/><circle cx="47" cy="33" r="3" fill="#8E5BD8"/></svg>`;
+
+$("#infamyMore").addEventListener("click", () => { $("#infamy").classList.add("all"); $("#infamyMore").hidden = true; });
+
+/* ---------------- phones: a sticky mini-scoreboard and a tweet button once the War Room scrolls away ---------------- */
+function drawMini(d) {
+  const us = d.todayHouses["500"][0], them = d.todayHouses["333"][0], gap = us - them;
+  $("#miniScore").innerHTML = `<span class="h500">500 <b>${fmt(us)}</b></span><span class="vs">vs</span><span class="h333"><b>${fmt(them)}</b> 333</span><span class="mini-lead ${gap > 0 ? "ours" : ""}">${gap === 0 ? "tied" : gap > 0 ? `up ${fmt(gap)}` : `down ${fmt(-gap)}`}</span>`;
+}
+if ("IntersectionObserver" in window) new IntersectionObserver((es) => { const off = !es[0].isIntersecting; document.body.classList.toggle("scrolled", off); }, { rootMargin: "-40px 0px 0px 0px" }).observe($("#war"));
 
 /* ---------------- the cannon ---------------- */
 let AC = null;
