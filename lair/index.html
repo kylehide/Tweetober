@@ -218,9 +218,8 @@
   .news .blurb { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: .76rem; color: var(--ink-3); line-height: 1.4; }
   .otd .yr { color: var(--gold); font-size: 1.15rem; margin-right: 8px; }
   .otd li { grid-template-columns: auto 1fr; align-items: baseline; }
-  .bait { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+  .bait { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; max-width: 680px; }
   .bait .tw-m, .bait .tw-media.n1 .tw-m img, .bait .tw-media.n1 video.tw-m { max-height: 240px; }
-  @media (max-width: 760px) { .bait { grid-template-columns: 1fr; } }
   .bait li { display: grid; gap: 6px; }
   .ideas { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; max-height: 360px; overflow-y: auto; }
   .ideas li { padding: 8px 10px; background: rgba(0,0,0,.25); border-left: 3px solid var(--violet); font-family: "Almendra", serif; font-size: 1.05rem; overflow-wrap: anywhere; }
@@ -388,16 +387,11 @@
     </div>
   </div>
 
-  <div class="grid2 showcase">
+  <div class="showcase">
     <section class="panel" id="starPanel" hidden>
       <h2>The Minions' Finest</h2>
       <p class="sub" id="starSub">Yesterday's most-liked minion tweet</p>
       <div id="star"></div>
-    </section>
-    <section class="panel" id="theirPanel" hidden>
-      <h2>Their Best Shot</h2>
-      <p class="sub">333's most-liked tweet today. Know your enemy.</p>
-      <div id="theirs"></div>
     </section>
   </div>
 
@@ -623,9 +617,7 @@ function drawStats(d) {
   const it = d.intel;
   $("#intel").innerHTML = `<div class="intel-row"><span class="k">Posting today</span><span class="h333">${it.posting} of them</span></div>
     <div class="intel-row"><span class="k">Carrying them</span><span>${it.carriers.length ? it.carriers.map(c => `<a class="h333" href="${xUrl(c.user)}" target="_blank" rel="noopener">@${esc(c.user)}</a> (${c.tweets})`).join(", ") : "<span class='muted'>no one yet</span>"}</span></div>
-    ${it.best ? `<div class="intel-row"><span class="k">Their best today</span><span>${fmt(it.best.likes)} likes (see Their Best Shot)</span></div>` : ""}`;
-  $("#theirPanel").hidden = !it.best;
-  if (it.best) $("#theirs").innerHTML = it.full ? tweetCard(it.full, "them") : quoteHtml(it.best);
+    ${it.best ? `<div class="intel-row"><span class="k">Their best today</span><span><a class="h333" href="${tUrl(it.best)}" target="_blank" rel="noopener">@${esc(it.best.user)}</a>, ${fmt(it.best.likes)} likes</span></div>` : ""}`;
   // quote-tweet bait
   $("#bait").innerHTML = d.bait.length ? d.bait.map(t => `<li>${t.full ? tweetCard(t.full, t.house === "333" ? "them" : t.house === "500" ? "" : "other", quoteBtn(t)) : quoteHtml(t) + quoteBtn(t)}</li>`).join("") : `<li class="muted">Nothing hot yet today.</li>`;
   // hall of infamy
