@@ -474,6 +474,26 @@ async function lairStats(request, env) {
     const minions = Object.entries(y.users).filter(([u, p]) => houseOf(u) === "500" && p[0] > 0).sort((a, b) => b[1][0] - a[1][0] || b[1][1] - a[1][1]);
     const best = y.top.filter(x => houseOf(x[0]) === "500").sort((a, b) => b[2] - a[2])[0];
     mvp = { day: today - 1, user: minions[0] ? minions[0][0] : "", tweets: minions[0] ? minions[0][1][0] : 0, likes: minions[0] ? minions[0][1][1] : 0, best: best ? tweet(best) : null };
+    // the minion's picture and the full best tweet (photos, video, counts), looked up once and kept
+    const extra = await lairCached(env, `mvp:${mvp.day}:${mvp.user}:${mvp.best ? mvp.best.id : ""}`, 6 * 3600e3, async () => {
+      const out = { avatar: "", tweet: null };
+      if (mvp.user) {
+        try {
+          const u = new URL("https://api.twitterapi.io/twitter/user/info"); u.searchParams.set("userName", mvp.user);
+          const d = await (await fetch(u, { headers: { "X-API-Key": env.TWITTERAPI_KEY } })).json();
+          out.avatar = String((d.data || d).profilePicture || "");
+        } catch {}
+      }
+      if (mvp.best) {
+        try {
+          const u = new URL("https://api.twitterapi.io/twitter/tweets"); u.searchParams.set("tweet_ids", mvp.best.id);
+          const d = await (await fetch(u, { headers: { "X-API-Key": env.TWITTERAPI_KEY } })).json();
+          const t = (d.tweets || [])[0]; if (t) out.tweet = slim(t);
+        } catch {}
+      }
+      return out;
+    });
+    if (extra && !Array.isArray(extra)) { mvp.avatar = extra.avatar || ""; mvp.full = extra.tweet || null; }
   }
   // Intel on 333, today
   const td = days[today] || blankDay();
