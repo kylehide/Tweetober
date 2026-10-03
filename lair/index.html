@@ -229,9 +229,39 @@
   .tw-m, .tw-media.n1 .tw-m img, .tw-media.n1 video.tw-m { max-height: 340px; }
   .quote-btn { color: var(--gold) !important; border: 1px solid rgba(242,210,114,.5); padding: 0 8px; margin-left: 0 !important; text-decoration: none; }
   .tw.other { border-left-color: var(--ink-3); } .tw.other .tw-av { border-color: var(--ink-3); }
+  /* two staggered columns under the War Room; on phones one column in this order */
+  .cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; align-items: start; }
+  .col { display: grid; gap: 22px; align-content: start; min-width: 0; }
+  @media (max-width: 760px) {
+    .cols { display: flex; flex-direction: column; gap: 22px; } .col { display: contents; }
+    #mvpPanel { order: 1; } #cauldron { order: 2; } #intelPanel { order: 3; } #questPanel { order: 4; } #starPanel { order: 5; } #baitPanel { order: 6; } #hallPanel { order: 7; }
+  }
+  /* Minion of the Day: a royal violet throne room */
+  #mvpPanel { background: radial-gradient(ellipse at 20% 0%, rgba(242,210,114,.22), transparent 55%), linear-gradient(160deg, #3B1A63, #241040 60%, #1A0B2E); border-color: rgba(242,210,114,.55); box-shadow: 0 0 26px rgba(142,91,216,.35), 0 10px 30px rgba(0,0,0,.45); }
+  #mvpPanel::before { border-color: rgba(242,210,114,.25); }
+  #mvpPanel h2 { color: var(--gold); text-shadow: 0 0 14px rgba(242,210,114,.35); }
+  #mvpPanel .sub { color: #D9C6EE; }
+  /* The Hall of Infamy: gilded */
+  #hallPanel { background: radial-gradient(ellipse at 50% 0%, #FFF0B8, transparent 70%), linear-gradient(170deg, #F2D272, #D9AE45 55%, #B88A2A); border-color: #8A6510; box-shadow: 0 0 24px rgba(242,210,114,.3), 0 10px 30px rgba(0,0,0,.5); color: #2A1A05; }
+  #hallPanel::before { border-color: rgba(90,60,10,.35); }
+  #hallPanel h2 { color: #3A2405; text-shadow: 0 1px 0 rgba(255,245,210,.6); }
+  #hallPanel .sub { color: #4A320C; opacity: 1; }
+  #hallPanel .infamy li { background: rgba(255,248,220,.55); border-color: rgba(90,60,10,.3); }
+  #hallPanel .infamy li.h500 { border-color: #A3244C; }
+  #hallPanel .infamy li::before { color: #6A4A08; }
+  #hallPanel .infamy .t a { color: #2A1A05; }
+  #hallPanel .infamy .by, #hallPanel .infamy .by.muted { color: #5A4A30; }
+  #hallPanel .infamy .by.h500 { color: #A3244C; } #hallPanel .infamy .by.h333 { color: #3E4650; }
+  #hallPanel .infamy .likes { color: #A3244C; }
+  #hallPanel .more-btn { color: #3A2405; border-color: #6A4A08; }
+  /* three quests a day, tick them off */
+  .quests { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  .quests li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; align-items: start; padding: 10px 12px; background: rgba(0,0,0,.25); border: 1px solid var(--line); }
+  .quests input { width: 22px; height: 22px; margin: 4px 0 0; accent-color: var(--pink); cursor: pointer; }
+  .quests label { font-family: "Almendra", serif; font-size: 1.15rem; line-height: 1.35; cursor: pointer; }
+  .quests li.done label { text-decoration: line-through; color: var(--ink-3); }
+  .quests .lvl { display: block; font-family: "VT323", monospace; font-size: .9rem; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); }
   .mini, .fab { display: none; }
-  /* phones: Minion of the Day comes right after the War Room */
-  @media (max-width: 760px) { .top2 { display: flex; flex-direction: column; gap: 22px; } .top2 > .stack { display: contents; } #mvpPanel { order: -1; } }
   @media (max-width: 760px) {
     /* Cauldron tabs: one row you can swipe */
     .tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; margin: 0 -22px; padding: 0 22px 4px; scroll-snap-type: x proximity;
@@ -314,101 +344,93 @@
     <div class="stamp"><span id="stamp"></span><span class="scan-note" id="scanNote"></span></div>
   </section>
 
-  <div class="grid2 top2">
-    <div class="stack">
-      <!-- inspiration -->
-      <section class="panel" id="cauldron">
-      <h2>The Cauldron</h2>
-      <p class="sub">Out of ideas? Stir the pot.</p>
-      <div class="tabs" role="tablist">
-        <button class="tab" role="tab" aria-selected="true" data-pane="schemes">Schemes</button>
-        <button class="tab" role="tab" aria-selected="false" data-pane="threads">Threads</button>
-        <button class="tab" role="tab" aria-selected="false" data-pane="trends">Trending</button>
-        <button class="tab" role="tab" aria-selected="false" data-pane="news">In the News</button>
-        <button class="tab" role="tab" aria-selected="false" data-pane="otd">On This Day</button>
-        <button class="tab" role="tab" aria-selected="false" data-pane="minions">From the minions</button>
-      </div>
-
-      <div class="pane" id="pane-schemes">
-        <div class="scheme">
-          <span class="kind" id="schemeKind"></span>
-          <p class="text" id="schemeText"></p>
-          <div class="row"><button class="btn" id="schemeNext" type="button">Another</button><a class="btn ghost" id="schemeTweet" target="_blank" rel="noopener" href="#">Tweet it</a></div>
-        </div>
-      </div>
-      <div class="pane" id="pane-threads" hidden>
-        <div class="scheme">
-          <span class="kind">Thread starter · each reply to yourself counts</span>
-          <p class="text" id="threadText"></p>
-          <ol id="threadSteps"></ol>
-          <div class="row"><button class="btn" id="threadNext" type="button">Another</button></div>
-        </div>
-      </div>
-      <div class="pane" id="pane-trends" hidden>
-        <p class="sub" style="margin:0">What's trending on Twitter in the US right now. Tap one to see the chatter, then jump on it.</p>
-        <div class="chips" id="trends"><span class="skeleton">Reading the winds…</span></div>
-      </div>
-      <div class="pane" id="pane-news" hidden>
-        <p class="sub" style="margin:0">Today's big stories. Have an opinion. Have a worse one.</p>
-        <ul class="news" id="news"><li class="skeleton">Reading the papers…</li></ul>
-        <h3 class="pane-h">What the internet is reading today</h3>
-        <ul class="news" id="mostread"></ul>
-      </div>
-      <div class="pane" id="pane-otd" hidden>
-        <p class="sub" style="margin:0" id="otdSub">On this day in history. Perfect for an "on this day in…" tweet, or thread five of them.</p>
-        <ul class="news otd" id="otd"><li class="skeleton">Opening the history books…</li></ul>
-      </div>
-      <div class="pane" id="pane-minions" hidden>
-        <form class="idea-form" id="ideaForm" autocomplete="off">
-          <input id="ideaName" maxlength="25" placeholder="your handle" aria-label="Your handle">
-          <input id="ideaBody" maxlength="200" placeholder="A tweet idea for the house…" aria-label="Tweet idea">
-          <button class="btn" type="submit">Add</button>
-        </form>
-        <p class="err" id="ideaErr" aria-live="polite"></p>
-        <ul class="ideas" id="ideas"><li class="skeleton">Nothing in the pot yet. Be the first schemer.</li></ul>
-      </div>
-    </section>
-        <section class="panel">
-          <h2>Intel on 333</h2>
-          <p class="sub">What the enemy is up to today. <span class="secret">Top secret</span></p>
-          <div id="intel"><span class="skeleton">Sending the spies…</span></div>
-        </section>
-      </div>
-    <div class="stack">
+  <!-- everything below the War Room: two staggered columns on wide screens, one on phones -->
+  <div class="cols">
+    <div class="col">
       <section class="panel" id="mvpPanel">
         <h2>Minion of the Day</h2>
         <p class="sub" id="mvpSub">Yesterday's most prolific minion</p>
         <div id="mvp"><span class="skeleton">Consulting the crystal ball…</span></div>
       </section>
-      <section class="panel">
-        <h2>Today's Villain Quest</h2>
+        <section class="panel" id="cauldron">
+        <h2>The Cauldron</h2>
+        <p class="sub">Out of ideas? Stir the pot.</p>
+        <div class="tabs" role="tablist">
+          <button class="tab" role="tab" aria-selected="true" data-pane="schemes">Schemes</button>
+          <button class="tab" role="tab" aria-selected="false" data-pane="threads">Threads</button>
+          <button class="tab" role="tab" aria-selected="false" data-pane="trends">Trending</button>
+          <button class="tab" role="tab" aria-selected="false" data-pane="news">Most Read</button>
+          <button class="tab" role="tab" aria-selected="false" data-pane="otd">On This Day</button>
+          <button class="tab" role="tab" aria-selected="false" data-pane="minions">From the minions</button>
+        </div>
+
+        <div class="pane" id="pane-schemes">
+          <div class="scheme">
+            <span class="kind" id="schemeKind"></span>
+            <p class="text" id="schemeText"></p>
+            <div class="row"><button class="btn" id="schemeNext" type="button">Another</button><a class="btn ghost" id="schemeTweet" target="_blank" rel="noopener" href="#">Tweet it</a></div>
+          </div>
+        </div>
+        <div class="pane" id="pane-threads" hidden>
+          <div class="scheme">
+            <span class="kind">Thread starter · each reply to yourself counts</span>
+            <p class="text" id="threadText"></p>
+            <ol id="threadSteps"></ol>
+            <div class="row"><button class="btn" id="threadNext" type="button">Another</button></div>
+          </div>
+        </div>
+        <div class="pane" id="pane-trends" hidden>
+          <p class="sub" style="margin:0">What's trending on Twitter in the US right now. Tap one to see the chatter, then jump on it.</p>
+          <div class="chips" id="trends"><span class="skeleton">Reading the winds…</span></div>
+        </div>
+        <div class="pane" id="pane-news" hidden>
+        <p class="sub" style="margin:0">What the internet is reading on Wikipedia today. Weigh in, explain it badly, or start a thread.</p>
+        <ul class="news" id="mostread"><li class="skeleton">Reading over everyone's shoulder…</li></ul>
+      </div>
+        <div class="pane" id="pane-otd" hidden>
+          <p class="sub" style="margin:0" id="otdSub">On this day in history. Perfect for an "on this day in…" tweet, or thread five of them.</p>
+          <ul class="news otd" id="otd"><li class="skeleton">Opening the history books…</li></ul>
+        </div>
+        <div class="pane" id="pane-minions" hidden>
+          <form class="idea-form" id="ideaForm" autocomplete="off">
+            <input id="ideaName" maxlength="25" placeholder="your handle" aria-label="Your handle">
+            <input id="ideaBody" maxlength="200" placeholder="A tweet idea for the house…" aria-label="Tweet idea">
+            <button class="btn" type="submit">Add</button>
+          </form>
+          <p class="err" id="ideaErr" aria-live="polite"></p>
+          <ul class="ideas" id="ideas"><li class="skeleton">Nothing in the pot yet. Be the first schemer.</li></ul>
+        </div>
+      </section>
+      <section class="panel" id="intelPanel">
+        <h2>Intel on 333</h2>
+        <p class="sub">What the enemy is up to today. <span class="secret">Top secret</span></p>
+        <div id="intel"><span class="skeleton">Sending the spies…</span></div>
+      </section>
+      <section class="panel" id="hallPanel">
+        <h2>The Hall of Infamy</h2>
+        <p class="sub">The 20 most-liked tweets of Tweetober so far, from both houses</p>
+        <ol class="infamy" id="infamy"><li class="skeleton">Unrolling the scroll…</li></ol>
+        <button class="btn ghost more-btn" id="infamyMore" type="button" hidden>Show all 20</button>
+      </section>
+    </div>
+    <div class="col">
+      <section class="panel" id="questPanel">
+        <h2>Today's Villain Quests</h2>
         <p class="sub" id="questSub"></p>
-        <span class="quest-tag" id="questTag"></span>
-        <p class="quest" id="quest"></p>
+        <ul class="quests" id="quests"></ul>
+      </section>
+      <section class="panel" id="starPanel" hidden>
+        <h2>The Minions' Finest</h2>
+        <p class="sub" id="starSub">Yesterday's most-liked minion tweet</p>
+        <div id="star"></div>
+      </section>
+      <section class="panel" id="baitPanel">
+        <h2>Quote-Tweet Bait</h2>
+        <p class="sub">Today's hottest tweets on the list. Quote one, add your twist, steal the thunder.</p>
+        <ul class="bait" id="bait"><li class="skeleton">Fishing…</li></ul>
       </section>
     </div>
   </div>
-
-  <div class="showcase">
-    <section class="panel" id="starPanel" hidden>
-      <h2>The Minions' Finest</h2>
-      <p class="sub" id="starSub">Yesterday's most-liked minion tweet</p>
-      <div id="star"></div>
-    </section>
-  </div>
-
-  <section class="panel" id="baitPanel">
-    <h2>Quote-Tweet Bait</h2>
-    <p class="sub">Today's hottest tweets on the list. Quote one, add your twist, steal the thunder.</p>
-    <ul class="bait" id="bait"><li class="skeleton">Fishing…</li></ul>
-  </section>
-
-  <section class="panel">
-    <h2>The Hall of Infamy</h2>
-    <p class="sub">The 20 most-liked tweets of Tweetober so far, from both houses</p>
-    <ol class="infamy" id="infamy"><li class="skeleton">Unrolling the scroll…</li></ol>
-    <button class="btn ghost more-btn" id="infamyMore" type="button" hidden>Show all 20</button>
-  </section>
 
   <footer>Mickal's Minions · House of 500 · <a href="/">back to the castle</a> · <a href="https://x.com/compose/post" target="_blank" rel="noopener">go tweet something</a></footer>
 </div>
@@ -503,37 +525,104 @@ const THREADS = [
   ["The plot of a movie I just made up 🧵", ["The setting", "The hero (it's me)", "The villain (also me)", "The twist", "The sequel bait"]],
   ["Every coffee order I've had, judged 🧵", ["The disaster", "The safe one", "The experimental one", "The holy grail", "Advice for the masses"]],
 ];
-const QUESTS = [
-  "Post a 5-tweet thread. Each self-reply counts toward the house.",
-  "Quote-tweet a House of 333 member with a respectful but devastating twist.",
-  "Tweet once every hour you're awake. Set an alarm. Be relentless.",
-  "Post something at 3 AM like a true creature of the night (or schedule it, coward).",
-  "Write a tweet in the voice of a cartoon villain. Monologue encouraged.",
+// three quests a day: one easy, one medium, one villainous. Each list is walked in order so nothing repeats for weeks.
+const QUESTS_EASY = [
+  "Tweet a compliment to a fellow minion. Unity is our weapon.",
+  "Rate today's weather out of 10, no explanation.",
+  "Post your current view, wherever you are.",
+  "Tweet the snack you'd bring to a villain meeting.",
+  "Share one song that's been stuck in your head.",
   "Tweet 3 things you're grateful for. Even villains have feelings.",
+  "Post the worst pun you know.",
+  "Describe your mood as a weather forecast.",
+  "Tweet a one-line review of the last thing you watched.",
   "Post a photo of your lair (your desk, your room, your fridge).",
-  "Live-tweet a meal, course by course.",
-  "Start a thread of 'things I'd outlaw' and keep adding to it all day.",
+  "Tweet the first thing you'd do as supreme ruler.",
+  "Ask your followers a question you actually want answered.",
+  "Tweet your current hyperfixation in under 10 words.",
+  "Post a fact you learned this week.",
+  "Tweet a fake fortune-cookie message.",
+  "Tweet something you saw outside today.",
+  "Name a villain you secretly root for.",
+  "Tweet what you'd name your evil cat.",
+  "Post your Halloween costume idea.",
+  "Rate your sleep last night out of 10.",
+  "Tweet the most villainous thing you did today.",
+  "Tweet a tiny victory from this week.",
+  "Post a word you love and why.",
+  "Tweet what you had for breakfast like it's a crime confession.",
+  "Tweet your ideal Sunday in 8 words.",
+  "Share a recommendation: something free that improved your life.",
+  "Tweet a hot take about a condiment.",
+  "Tweet your evil laugh, spelled out.",
+  "Tweet a two-word horror story.",
+  "Post a tweet that's just an emoji sentence. Let them decode it.",
+  "Tweet a good morning to the house (or good night, creature).",
+];
+const QUESTS_MEDIUM = [
+  "Post a 5-tweet thread. Each self-reply counts toward the house.",
   "Quote-tweet the most-liked tweet on today's list and make it better.",
-  "Post a hot take before noon. Defend it until midnight.",
-  "Tweet a recruitment poster for House of 500. Draw it if you dare.",
-  "Ask a question and reply to every answer you get (replies to others don't count, but they bring likes back).",
-  "Tweet 10 times before lunch. Then rest. Then 10 more.",
-  "Write a haiku. Then another. Then a third. Thread them.",
-  "Midpoint of the month: tweet your Tweetober confession.",
+  "Live-tweet a meal, course by course.",
   "Rate 5 random things in your room out of 10, one tweet each.",
+  "Write a haiku. Then another. Then a third. Thread them.",
+  "Post a hot take before noon. Defend it until midnight.",
   "Tweet a fake 'leaked memo' from House of 500 headquarters.",
   "Reply to yourself with a part two to your best tweet from this week.",
-  "Post an unpopular opinion every 2 hours. Keep score of the outrage.",
   "Describe your day as a quest log, one entry per tweet.",
-  "Tweet a compliment to a fellow minion. Unity is our weapon.",
-  "Find a trending topic in the Cauldron and give it the villain treatment.",
-  "Post the worst pun you know. Then a worse one.",
-  "Pick a headline from the Cauldron and tweet your wildest take on it.",
-  "Make a 7-tweet thread ranking anything at all.",
+  "Find a trend in the Cauldron and give it the villain treatment.",
+  "Pick a Most Read page in the Cauldron and tweet your wildest take on it.",
   "Tweet a playlist for villains, one song per tweet.",
-  "Tweet a spooky story in 5 parts, ending on a cliffhanger.",
-  "Pre-Halloween: post your costume plan and three backup costumes.",
-  "Halloween Eve: tweet a curse upon House of 333 (a gentle one).",
+  "Make a 7-tweet thread ranking anything at all.",
+  "Post an 'on this day' fact from the Cauldron, then your opinion of it.",
+  "Write a tweet in the voice of a cartoon villain. Monologue encouraged.",
+  "Tweet a recruitment poster for House of 500. Draw it if you dare.",
+  "Review every room in your home, one tweet per room.",
+  "Start a thread of 'things I'd outlaw' and add to it all day.",
+  "Tweet your villain origin story in 4 parts.",
+  "Thread 5 things you believed as a kid.",
+  "Tweet a tier list of your week, one tier per tweet.",
+  "Tweet a running commentary of your commute or walk.",
+  "Live-tweet whatever you're watching tonight.",
+  "Tweet a mini horror story in 3 parts, ending on a cliffhanger.",
+  "Thread your camera roll from the last 5 days, one pic per day.",
+  "Tweet 5 hot takes, one per tweet, spaced out through the day.",
+  "Make a 'things I'd bring to a deserted island' thread.",
+  "Tweet a dramatic movie trailer of your day, scene by scene.",
+  "Tweet a rule you'd add to Tweetober, and three loopholes in it.",
+  "Thread your current obsessions: a song, a show, a food, a thought.",
+  "Tweet a 5-part guide to something you know way too much about.",
+];
+const QUESTS_HARD = [
+  "Tweet once every hour you're awake. Set an alarm. Be relentless.",
+  "Quote-tweet a House of 333 member with a respectful but devastating twist.",
+  "Tweet 10 times before lunch. Then rest. Then 10 more.",
+  "Post something at 3 AM like a true creature of the night (or schedule it, coward).",
+  "Post an unpopular opinion every 2 hours. Keep score of the outrage.",
+  "Beat your own record: tweet more today than your best day so far.",
+  "Write a 10-tweet thread and don't stop until it's done.",
+  "Tweet 20 times today. Every one counts.",
+  "Quote-tweet three different 333 members today. Keep it classy.",
+  "Out-tweet the Minion of the Day. Steal the crown.",
+  "Run a 12-tweet countdown of anything, one per hour.",
+  "Tweet every 30 minutes for 3 hours straight.",
+  "Start a thread at breakfast and keep it alive until bedtime.",
+  "Tweet 5 times in the next 15 minutes. Go.",
+  "Live-tweet your entire evening, nothing too boring.",
+  "Make 333 regret logging off: post 15 tweets after 9 PM.",
+  "Write a 26-tweet A-to-Z thread of anything.",
+  "Double yesterday's tweet count.",
+  "Tweet a villainous thought every hour on the hour.",
+  "Post three separate 5-tweet threads today.",
+  "Tweet nonstop through your lunch break.",
+  "Reach 25 tweets before the sun goes down.",
+  "Start a chain: one tweet per waking hour, each a reply to the last.",
+  "Post 10 quote tweets of today's Quote-Tweet Bait and the Hall of Infamy.",
+  "Tweet a 15-part saga about your day as a fantasy epic.",
+  "Get a minion to quote-tweet you, then quote-tweet them back.",
+  "Pre-Halloween: post your costume plan and three backup costumes, one tweet each.",
+  "Halloween Eve: tweet a curse upon House of 333 (a gentle one) every hour.",
+  "Tweet 30 times today. Prove the dark side never sleeps.",
+  "Close out the month strong: beat your best day.",
   "Final day. Leave nothing in the tank. Every tweet is a cookie for the house. 🍪",
 ];
 const FORTUNES = [
@@ -594,7 +683,7 @@ function drawStats(d) {
   $("#score").tBodies[0].innerHTML =
     row(`Tweets today <span class="muted">(Oct ${d.today})</span>`, T["500"][0], T["333"][0], "main") +
     row("Tweets in October", M["500"][0], M["333"][0], "main") +
-    row("Minions posting today", T["500"][2], T["333"][2]) +
+    row("Tweetobies posting today", T["500"][2], T["333"][2]) +
     row("Likes on today's tweets", T["500"][1], T["333"][1]);
   // battle math
   const minions = Math.max(1, d.minionCount || d.todayHouses["500"][2] || 1), gap = them - us;
@@ -710,10 +799,19 @@ $("#cannon").addEventListener("click", () => {
 
 /* ---------------- quest, schemes, threads, cookies ---------------- */
 function drawQuest() {
-  const day = nyDay();
-  $("#questSub").textContent = `October ${day}`;
-  $("#questTag").textContent = day === 31 ? "Final quest" : `Quest ${day} of 31`;
-  $("#quest").textContent = QUESTS[day - 1] || QUESTS[0];
+  const day = nyDay(), key = "lair-quests-" + day, el = $("#quests");
+  if (el.dataset.day === String(day)) return;   // already showing today's
+  el.dataset.day = String(day);
+  let done = []; try { done = JSON.parse(store.get(key) || "[]"); } catch {}
+  const q = [["Easy", QUESTS_EASY], ["Medium", QUESTS_MEDIUM], ["Villainous", QUESTS_HARD]].map(([lvl, list]) => [lvl, list[(day - 1) % list.length]]);
+  $("#questSub").textContent = `October ${day} · tick them off as you go (only you see your ticks)`;
+  el.innerHTML = q.map(([lvl, text], i) => `<li class="${done.includes(i) ? "done" : ""}"><input type="checkbox" id="q${i}" ${done.includes(i) ? "checked" : ""}><label for="q${i}"><span class="lvl">${lvl}</span>${esc(text)}</label></li>`).join("");
+  el.querySelectorAll("input").forEach((box, i) => box.addEventListener("change", () => {
+    box.closest("li").classList.toggle("done", box.checked);
+    const now = [...el.querySelectorAll("input")].map((b, k) => b.checked ? k : -1).filter(k => k >= 0);
+    store.set(key, JSON.stringify(now));
+    if (box.checked && now.length === 3) { const f = $("#fortune"); f.innerHTML = `<b>🍪 All three quests done</b>Mickal is proud. The dark side grows stronger.`; f.classList.add("show"); setTimeout(() => f.classList.remove("show"), 5000); }
+  }));
 }
 let schemeN = hourSlot(3), threadN = hourSlot(6);   // a fresh scheme every 3 hours and thread every 6, or tap Another
 function drawScheme() {
@@ -748,8 +846,7 @@ async function loadIdeas() {
     const d = await api("/api/lair/ideas");
     $("#trends").innerHTML = d.trends.length ? d.trends.map(t => `<a class="chip" href="https://x.com/search?q=${encodeURIComponent(t.query || t.name)}" target="_blank" rel="noopener">${esc(t.name)}${t.meta ? `<small>${esc(t.meta)}</small>` : ""}</a>`).join("") : `<span class="muted">The winds are quiet. Try again later.</span>`;
     const W = d.wiki || {}, wl = (p, text) => p && p.link ? `<a href="${esc(p.link)}" target="_blank" rel="noopener">${esc(text)}</a>` : `<span>${esc(text)}</span>`;
-    $("#news").innerHTML = (W.news || []).length ? W.news.map(n => `<li>${wl(n.page, n.text)}</li>`).join("") : `<li class="muted">No stories yet today.</li>`;
-    $("#mostread").innerHTML = (W.mostread || []).map(a => `<li>${wl(a, a.title)}<span class="blurb">${esc(a.extract || a.blurb)}</span></li>`).join("");
+    $("#mostread").innerHTML = (W.mostread || []).length ? W.mostread.map(a => `<li>${wl(a, a.title)}<span class="blurb">${esc(a.extract || a.blurb)}</span></li>`).join("") : `<li class="muted">Nothing yet today. Check back soon.</li>`;
     $("#otd").innerHTML = (W.onthisday || []).length ? W.onthisday.map(e => `<li><span class="yr">${esc(e.year)}</span>${wl(e.page, e.text)}</li>`).join("") : `<li class="muted">History is quiet today.</li>`;
     drawIdeas(d.ideas);
   } catch (e) { if (e.message !== "locked") setTimeout(loadIdeas, 60000); }
