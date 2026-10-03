@@ -230,6 +230,8 @@
   .quote-btn { color: var(--gold) !important; border: 1px solid rgba(242,210,114,.5); padding: 0 8px; margin-left: 0 !important; text-decoration: none; }
   .tw.other { border-left-color: var(--ink-3); } .tw.other .tw-av { border-color: var(--ink-3); }
   .mini, .fab { display: none; }
+  /* phones: Minion of the Day comes right after the War Room */
+  @media (max-width: 760px) { .top2 { display: flex; flex-direction: column; gap: 22px; } .top2 > .stack { display: contents; } #mvpPanel { order: -1; } }
   @media (max-width: 760px) {
     /* Cauldron tabs: one row you can swipe */
     .tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; margin: 0 -22px; padding: 0 22px 4px; scroll-snap-type: x proximity;
@@ -373,7 +375,7 @@
         </section>
       </div>
     <div class="stack">
-      <section class="panel">
+      <section class="panel" id="mvpPanel">
         <h2>Minion of the Day</h2>
         <p class="sub" id="mvpSub">Yesterday's most prolific minion</p>
         <div id="mvp"><span class="skeleton">Consulting the crystal ball…</span></div>
