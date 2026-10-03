@@ -508,21 +508,42 @@ async function lairIdeas(request, env) {
     const row = await env.DB.prepare("INSERT INTO lair_ideas (name, body, created, who) VALUES (?, ?, ?, ?) RETURNING id, name, body, created").bind(name, body, now, id).first();
     return json({ idea: row }, 201);
   }
-  const trends = env.TWITTERAPI_KEY ? await lairCached(env, "trends", 2 * 3600e3, async () => {
+  // Trending on Twitter, each with the top tweets explaining why (refreshed every LAIR_TRENDS_HOURS, default 2)
+  const trendHours = Math.max(1, Number(env.LAIR_TRENDS_HOURS) || 2);
+  const trends = env.TWITTERAPI_KEY ? await lairCached(env, "trends2", trendHours * 3600e3, async () => {
     const u = new URL("https://api.twitterapi.io/twitter/trends"); u.searchParams.set("woeid", env.TRENDS_WOEID || "23424977"); u.searchParams.set("count", "30");
     const r = await fetch(u, { headers: { "X-API-Key": env.TWITTERAPI_KEY } });
     const data = await r.json(); if (!Array.isArray(data.trends)) throw new Error("no trends");
-    return data.trends.map(x => x.trend || x).map(x => ({ name: String(x.name || ""), query: String(x.target?.query || x.query || x.name || ""), meta: String(x.meta_description || "") })).filter(x => x.name).slice(0, 20);
+    const list = data.trends.map(x => x.trend || x).map(x => ({ name: String(x.name || ""), query: String(x.target?.query || x.query || x.name || ""), meta: String(x.meta_description || "") })).filter(x => x.name).slice(0, 10);
+    await Promise.all(list.map(async (t) => {
+      try {
+        const q = new URL("https://api.twitterapi.io/twitter/tweet/advanced_search");
+        q.searchParams.set("query", `${t.query} -filter:replies -filter:retweets lang:en`); q.searchParams.set("queryType", "Top");
+        const rr = await fetch(q, { headers: { "X-API-Key": env.TWITTERAPI_KEY } });
+        const dd = await rr.json().catch(() => ({}));
+        t.tweets = (dd.tweets || []).filter(x => x && x.id && x.text).sort((a, b) => (b.likeCount | 0) - (a.likeCount | 0)).slice(0, 2)
+          .map(x => ({ id: String(x.id), user: String(x.author?.userName || ""), text: String(x.text).slice(0, 240), likes: x.likeCount | 0 }));
+      } catch { t.tweets = []; }
+    }));
+    return list;
   }) : [];
-  const news = await lairCached(env, "news", 3600e3, async () => {
-    const xml = await (await fetch(env.NEWS_RSS || "https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en")).text();
-    const tag = (s, n) => { const m = s.match(new RegExp(`<${n}[^>]*>([\\s\\S]*?)</${n}>`)); return m ? m[1].replace(/<!\[CDATA\[|\]\]>/g, "").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").trim() : ""; };
-    const items = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)].map(m => m[1]).slice(0, 15);
-    if (!items.length) throw new Error("no news");
-    return items.map(it => { const source = tag(it, "source"), title = tag(it, "title"); return { title: source && title.endsWith(" - " + source) ? title.slice(0, -(source.length + 3)) : title, link: tag(it, "link"), source }; });
+  // Wikipedia's daily feed: In the news, On this day, Most read (free; refreshed every 3 hours)
+  const ny = new Date(new Date().toLocaleString("en-US", { timeZone: "America/New_York" }));
+  const ymd = `${ny.getFullYear()}/${String(ny.getMonth() + 1).padStart(2, "0")}/${String(ny.getDate()).padStart(2, "0")}`;
+  const wiki = await lairCached(env, "wiki:" + ymd, 3 * 3600e3, async () => {
+    const r = await fetch(`${env.WIKI_BASE || "https://en.wikipedia.org/api/rest_v1/feed/featured/"}${ymd}`, { headers: { "user-agent": "TweetoberLair/1.0 (https://tweetober.com)", accept: "application/json" } });
+    if (!r.ok) throw new Error("wikipedia " + r.status);
+    const d = await r.json();
+    const strip = (h) => String(h || "").replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#0?39;/g, "'").replace(/\s+/g, " ").trim();
+    const page = (p) => p ? { title: String(p.normalizedtitle || p.titles?.normalized || p.title || ""), link: String(p.content_urls?.desktop?.page || ""), blurb: String(p.description || "") } : null;
+    return {
+      news: (d.news || []).slice(0, 8).map(n => ({ text: strip(n.story), page: page((n.links || [])[0]) })).filter(n => n.text),
+      onthisday: (d.onthisday || []).slice(0, 12).map(e => ({ year: e.year, text: strip(e.text), page: page((e.pages || [])[0]) })).filter(e => e.text),
+      mostread: ((d.mostread || {}).articles || []).filter(a => !/^(Main_Page|Special:)/.test(a.title || "")).slice(0, 8).map(a => ({ ...page(a), extract: strip(a.extract).slice(0, 220), views: a.views | 0 })),
+    };
   });
   const ideas = (await env.DB.prepare("SELECT id, name, body, created FROM lair_ideas ORDER BY id DESC LIMIT 60").all()).results || [];
-  return json({ trends, news, ideas });
+  return json({ trends, wiki: wiki && !Array.isArray(wiki) ? wiki : { news: [], onthisday: [], mostread: [] }, ideas });
 }
 async function lair(request, env, url) {
   const denied = lairAuth(request, env); if (denied) return denied;
