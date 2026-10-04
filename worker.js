@@ -455,7 +455,19 @@ async function lairStats(request, env) {
   }
   const rows = ((await env.DB.prepare("SELECT day, data, final, scanned FROM lair_days WHERE day <= ? ORDER BY day").bind(today).all()).results || []);
   const days = Object.fromEntries(rows.map(r => [r.day, JSON.parse(r.data)]));
-  const houses = await ledgerHouses(env), houseOf = (u) => houses[String(u).toLowerCase()] || "";
+  // who is in which house: the Ledger as the server reads it; if Google won't answer the server, the visitor's
+  // browser (which can always read the Ledger, like the main site) sends it along; the last good copy is kept.
+  let houses = await ledgerHouses(env), houseSrc = "server";
+  if (Object.keys(houses).length < 2) {
+    let sent = {};
+    try { if (request.method === "POST") sent = (await request.json()).houses || {}; } catch {}
+    const clean = {}; for (const [h, v] of Object.entries(sent)) if (/^[a-z0-9_]{1,15}$/.test(h) && (v === "333" || v === "500")) clean[h] = v;
+    if (Object.keys(clean).length >= 2) { houses = clean; houseSrc = "browser"; }
+    else { const kept = await env.DB.prepare("SELECT body FROM lair_cache WHERE k = 'houses'").first(); if (kept) { houses = JSON.parse(kept.body); houseSrc = "saved"; } }
+  }
+  if (Object.keys(houses).length >= 2 && houseSrc !== "saved")
+    await env.DB.prepare("INSERT INTO lair_cache (k, body, fetched) VALUES ('houses', ?, ?) ON CONFLICT(k) DO UPDATE SET body = excluded.body, fetched = excluded.fetched").bind(JSON.stringify(houses), Date.now()).run();
+  const houseOf = (u) => houses[String(u).toLowerCase()] || "";
   const sum = (list) => {
     const out = { "333": [0, 0, 0], "500": [0, 0, 0], "": [0, 0, 0] }, users = {};   // counted, likes, people
     for (const d of list) for (const [u, p] of Object.entries(d.users)) { const x = users[u] ||= [0, 0]; x[0] += p[0]; x[1] += p[1]; }
@@ -515,7 +527,7 @@ async function lairStats(request, env) {
   const todayRow = rows.find(r => r.day === today);
   return json({ today, now, scannedAt: todayRow ? todayRow.scanned : 0, busy, problem,
     todayHouses: t.houses, monthHouses: m.houses, top20, mvp, intel, bait, minionCount,
-    ledgerSize: Object.keys(houses).length, refreshMinutes: Math.max(10, Number(env.LAIR_MINUTES) || 30) });
+    ledgerSize: Object.keys(houses).length, houseSrc, refreshMinutes: Math.max(10, Number(env.LAIR_MINUTES) || 30) });
 }
 async function lairCached(env, k, maxAgeMs, load) {
   const row = await env.DB.prepare("SELECT body, fetched FROM lair_cache WHERE k = ?").bind(k).first();
