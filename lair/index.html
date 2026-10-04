@@ -658,15 +658,35 @@ if (CODE) enter(); else lock("");
 const xUrl = (u) => `https://x.com/${encodeURIComponent(u)}`;
 const tUrl = (t) => `https://x.com/${encodeURIComponent(t.user)}/status/${encodeURIComponent(t.id)}`;
 const ago = (t) => { const m = Math.round((Date.now() - t) / 60000); return m < 1 ? "just now" : m < 60 ? `${m} min ago` : `${Math.floor(m / 60)} h ${m % 60} min ago`; };
-let STATS = null, pollTimer = 0;
+let STATS = null, pollTimer = 0, LEDGER_MAP = null;
+// read the Ledger here in the browser too (the same way the main site does), so houses are known even if Google refuses the server
+async function ledgerMap() {
+  if (LEDGER_MAP) return LEDGER_MAP;
+  try {
+    const text = await (await fetch("https://docs.google.com/spreadsheets/d/1b3AqoSgvyc1s-21rQQuVK0-HBeTz6cZVUJuWW9BRKy4/gviz/tq?tqx=out:csv", { cache: "no-store" })).text();
+    const rows = []; let row = [], cell = "", q = false;
+    for (let i = 0; i < text.length; i++) { const c = text[i];
+      if (q) { if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += c; }
+      else if (c === '"') q = true; else if (c === ",") { row.push(cell); cell = ""; }
+      else if (c === "\n" || c === "\r") { if (c === "\r" && text[i + 1] === "\n") i++; row.push(cell); rows.push(row); row = []; cell = ""; } else cell += c; }
+    if (cell || row.length) { row.push(cell); rows.push(row); }
+    const hi = rows.findIndex(r => r.some(v => /handle/i.test(v))); if (hi < 0) return {};
+    const head = rows[hi].map(x => x.trim().toLowerCase()), iH = head.findIndex(x => /handle|name|user/.test(x));
+    let iHouse = head.findIndex(x => /house/.test(x)); if (iHouse < 0) iHouse = iH + 1;
+    const map = {};
+    for (const r of rows.slice(hi + 1)) { const hd = String(r[iH] || "").trim().replace(/^@/, "").toLowerCase(), m = String(r[iHouse] || "").match(/333|500/); if (hd && !/\s/.test(hd) && m) map[hd] = m[0]; }
+    LEDGER_MAP = map; setTimeout(() => { LEDGER_MAP = null; }, 10 * 60000);
+    return map;
+  } catch { return {}; }
+}
 async function loadStats() {
   clearTimeout(pollTimer);
   try {
-    const d = await api("/api/lair/stats");
+    const d = await api("/api/lair/stats", { method: "POST", body: JSON.stringify({ houses: await ledgerMap() }) });
     if (!d.busy || STATS) { STATS = d; drawStats(d); drawMini(d); }
     $("#war").classList.toggle("loading", !STATS);
     if (!STATS && d.busy) $("#veilNote").textContent = "The spies are counting every tweet. This takes a few seconds.";
-    if (STATS) $("#scanNote").textContent = d.busy ? "Gathering fresh intel…" : d.problem ? "The spies hit a snag; trying again soon." : "";
+    if (STATS) $("#scanNote").textContent = d.busy ? "Gathering fresh intel…" : d.problem ? "The spies hit a snag; trying again soon." : !d.ledgerSize ? "Couldn't read the Ledger to tell the houses apart. Trying again soon." : "";
     // a scan still running: ask again shortly; otherwise check back in five minutes
     pollTimer = setTimeout(loadStats, d.busy ? 1500 : 5 * 60000);
   } catch (e) {
@@ -878,3 +898,4 @@ function start() {
 </script>
 </body>
 </html>
+
